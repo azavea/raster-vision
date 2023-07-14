@@ -444,6 +444,7 @@ class Box():
         return windows
 
     def to_dict(self) -> Dict[str, int]:
+        """Convert to a dict with keys: xmin, ymin, xmax, ymax."""
         return {
             'xmin': self.xmin,
             'ymin': self.ymin,

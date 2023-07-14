@@ -8,6 +8,7 @@ import json
 import numpy as np
 
 from rastervision.pipeline.file_system import str_to_file
+from rastervision.core.data.utils import ensure_json_serializable
 
 if TYPE_CHECKING:
     from rastervision.core.evaluation import ClassEvaluationItem
@@ -151,24 +152,3 @@ class ClassificationEvaluation(ABC):
             prediction_labels: The predicted labels to evaluate.
         """
         pass
-
-
-def ensure_json_serializable(obj: Any) -> dict:
-    """Convert numpy types to JSON serializable equivalents."""
-    if obj is None or isinstance(obj, (str, int, bool)):
-        return obj
-    if isinstance(obj, dict):
-        return {k: ensure_json_serializable(v) for k, v in obj.items()}
-    if isinstance(obj, (list, tuple)):
-        return [ensure_json_serializable(o) for o in obj]
-    if isinstance(obj, np.ndarray):
-        return ensure_json_serializable(obj.tolist())
-    if isinstance(obj, np.integer):
-        return int(obj)
-    if isinstance(obj, float):
-        if np.isnan(obj):
-            return None
-        return float(obj)
-    if isinstance(obj, np.floating):
-        return float(obj)
-    return obj

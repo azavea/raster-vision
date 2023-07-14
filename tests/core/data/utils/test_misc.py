@@ -1,6 +1,9 @@
-from typing import Any, Tuple
+from typing import Any, Callable, Tuple
 import unittest
 from os.path import join
+import json
+
+import numpy as np
 
 from rastervision.pipeline.file_system.utils import get_tmp_dir, json_to_file
 from rastervision.core.box import Box
@@ -10,6 +13,7 @@ from rastervision.core.data import (
     ChipClassificationGeoJSONStore, ObjectDetectionLabelSource,
     ObjectDetectionGeoJSONStore, SemanticSegmentationLabelSource,
     SemanticSegmentationLabelStore)
+from rastervision.core.data.utils.misc import ensure_json_serializable
 from rastervision.core.data.utils.geojson import geoms_to_geojson
 from rastervision.core.data.utils.misc import (
     match_bboxes, parse_array_slices_2d, parse_array_slices_Nd)
@@ -220,6 +224,40 @@ class TestParseArraySlices(unittest.TestCase):
         window, dim_slices = source[::2, ::3]
         self.assertEqual(window, Box(0, 0, 60, 40))
         self.assertListEqual(dim_slices, [slice(0, 60, 2), slice(0, 40, 3)])
+
+
+class TestEnsureJsonSerializable(unittest.TestCase):
+    def assertNoError(self, fn: Callable, msg: str = ''):
+        try:
+            fn()
+        except Exception:
+            self.fail(msg)
+
+    def test_serializable(self):
+        objs = [None, 'str', 1, True, False]
+        for obj in objs:
+            self.assertEqual(ensure_json_serializable(obj), obj, msg=str(obj))
+
+    def test_numpy(self):
+        arr = np.ones(5, dtype=int)
+        self.assertListEqual(ensure_json_serializable(arr), [1] * 5)
+        self.assertIsInstance(ensure_json_serializable(arr[0]), int)
+        arr = np.ones(5, dtype=np.float32)
+        self.assertIsInstance(ensure_json_serializable(arr[0]), float)
+
+    def test_dict(self):
+        arr = {'a': np.ones(5, dtype=int)}
+        self.assertDictEqual(ensure_json_serializable(arr), dict(a=([1] * 5)))
+
+    def test_float_edge_cases(self):
+        d = dict(a=np.nan, b=np.inf, c=-np.inf)
+        d_serializable = ensure_json_serializable(d)
+        self.assertNoError(lambda: json.dumps(d_serializable))
+
+    def test_box(self):
+        box = Box(0, 1, 2, 3)
+        box_dict = dict(ymin=0, xmin=1, ymax=2, xmax=3)
+        self.assertDictEqual(ensure_json_serializable(box), box_dict)
 
 
 if __name__ == '__main__':
