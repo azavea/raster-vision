@@ -29,7 +29,7 @@ class ClassificationVisualizer(Visualizer):
 
         # plot label
         class_names = self.class_names
-        class_names = ['-\n-'.join(wrap(c, width=8)) for c in class_names]
+        class_names = ['-\n-'.join(wrap(c, width=16)) for c in class_names]
         if z is None:
             # just display the class name as text
             class_name = class_names[y]
@@ -40,7 +40,7 @@ class ClassificationVisualizer(Visualizer):
                 ha='center',
                 va='center',
                 fontdict={
-                    'size': 24,
+                    'size': 20,
                     'family': 'sans-serif'
                 })
             label_ax.set_xlim((0, 1))
