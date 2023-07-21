@@ -19,10 +19,19 @@ class RasterStats:
     def __init__(self,
                  means: Optional[np.ndarray] = None,
                  stds: Optional[np.ndarray] = None,
-                 count: Optional[np.ndarray] = None):
+                 counts: Optional[np.ndarray] = None):
+        """Constructor.
+
+        Args:
+            means (Optional[np.ndarray]): Band means. Defaults to None.
+            stds (Optional[np.ndarray]): Band standard deviations.
+                Defaults to None.
+            counts (Optional[np.ndarray]): Band pixel counts (used to compute
+                the specified means and stds). Defaults to None.
+        """
         self.means = means
         self.stds = stds
-        self.count = count
+        self.counts = counts
 
     @classmethod
     def load(cls, stats_uri: str) -> 'RasterStats':
@@ -32,7 +41,7 @@ class RasterStats:
         stats = RasterStats(
             means=stats_json['means'],
             stds=stats_json['stds'],
-            count=stats_json.get('count'))
+            counts=stats_json.get('counts'))
         return stats
 
     def compute(self,
@@ -73,11 +82,11 @@ class RasterStats:
                 sample_prob,
                 nodata_value=nodata_value)
 
-        means, vars, count = self.compute_from_chips(
+        means, vars, counts = self.compute_from_chips(
             chip_stream,
             running_mean=self.means,
             running_var=self.vars,
-            running_count=self.count)
+            running_count=self.counts)
         if means is None or vars is None:
             raise ValueError('No valid chips found in raster sources to '
                              'compute stats from. This may be because all '
@@ -85,7 +94,7 @@ class RasterStats:
                              'pixels.')
         self.means = means
         self.stds = np.sqrt(vars)
-        self.count = count
+        self.counts = counts
 
     def compute_from_chips(
             self,
@@ -136,7 +145,7 @@ class RasterStats:
         return running_mean, running_var, running_count
 
     def to_dict(self) -> dict:
-        stats_dict = dict(means=self.means, stds=self.stds, count=self.count)
+        stats_dict = dict(means=self.means, stds=self.stds, counts=self.counts)
         return stats_dict
 
     def save(self, stats_uri: str) -> None:
