@@ -38,7 +38,7 @@ class XarraySource(RasterSource):
             crs_transformer (CRSTransformer): A CRSTransformer defining the
                 mapping between pixel and map coords.
             raster_transformers (List['RasterTransformer']): RasterTransformers
-                to use to trasnform chips after they are read.
+                to use to transform chips after they are read.
             channel_order (Optional[Sequence[int]]): List of indices of
                 channels to extract from raw imagery. Can be a subset of the
                 available channels. If None, all channels available in the

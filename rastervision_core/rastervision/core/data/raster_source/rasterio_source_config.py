@@ -11,7 +11,7 @@ def rasterio_source_config_upgrader(cfg_dict: dict, version: int) -> dict:
         y_shift = cfg_dict.get('y_shift', 0)
         if x_shift != 0 or y_shift != 0:
             raise ConfigError('x_shift and y_shift are deprecated. '
-                              'Use the ShiftTrasnformer instead.')
+                              'Use the ShiftTransformer instead.')
         try:
             del cfg_dict['x_shift']
             del cfg_dict['y_shift']
