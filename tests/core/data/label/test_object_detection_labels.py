@@ -6,7 +6,7 @@ from rastervision.core.box import Box
 from rastervision.core.data.class_config import ClassConfig
 from rastervision.core.data.label.object_detection_labels import (
     ObjectDetectionLabels)
-from rastervision.core.data.label.tfod_utils.np_box_list import BoxList
+from rastervision.core.data.label.tfod_utils.np_box_list import NpBoxList
 
 
 class TestObjectDetectionLabels(unittest.TestCase):
@@ -22,7 +22,7 @@ class TestObjectDetectionLabels(unittest.TestCase):
             self.npboxes, self.class_ids, scores=self.scores)
 
     def test_from_boxlist(self):
-        boxlist = BoxList(self.npboxes)
+        boxlist = NpBoxList(self.npboxes)
         boxlist.add_field('classes', self.class_ids)
         boxlist.add_field('scores', self.scores)
         labels = ObjectDetectionLabels.from_boxlist(boxlist)
