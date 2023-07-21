@@ -5,6 +5,7 @@ import subprocess
 from datetime import datetime
 from urllib.parse import urlparse
 
+import boto3
 from everett.manager import ConfigurationMissingError
 from tqdm.auto import tqdm
 
@@ -26,8 +27,7 @@ def get_matching_s3_objects(bucket, prefix='', suffix='',
     :param suffix: Only fetch objects whose keys end with
         this suffix (optional).
     """
-    import boto3
-    s3 = boto3.client('s3')
+    s3 = S3FileSystem.get_client()
     kwargs = {'Bucket': bucket, 'RequestPayer': request_payer}
 
     # If the prefix is a single string (not a tuple of strings), we can
@@ -108,9 +108,16 @@ class S3FileSystem(FileSystem):
 
     @staticmethod
     def get_session():
-        # Lazily load boto
-        import boto3
         return boto3.Session()
+
+    @staticmethod
+    def get_client():
+        if os.getenv('AWS_NO_SIGN_REQUEST', '').lower() == 'yes':
+            from botocore import UNSIGNED
+            from botocore.config import Config
+            s3 = boto3.client('s3', config=Config(signature_version=UNSIGNED))
+            return s3
+        return S3FileSystem.get_session().client('s3')
 
     @staticmethod
     def matches_uri(uri: str, mode: str) -> bool:
@@ -135,7 +142,7 @@ class S3FileSystem(FileSystem):
         request_payer = S3FileSystem.get_request_payer()
 
         if include_dir:
-            s3 = S3FileSystem.get_session().client('s3')
+            s3 = S3FileSystem.get_client()
             try:
                 # Ensure key ends in slash so that this won't pick up files that
                 # contain the key as a prefix, but aren't actually directories.
@@ -168,7 +175,7 @@ class S3FileSystem(FileSystem):
     def read_bytes(uri: str) -> bytes:
         import botocore
 
-        s3 = S3FileSystem.get_session().client('s3')
+        s3 = S3FileSystem.get_client()
         request_payer = S3FileSystem.get_request_payer()
         bucket, key = S3FileSystem.parse_uri(uri)
         with io.BytesIO() as file_buffer:
@@ -193,7 +200,7 @@ class S3FileSystem(FileSystem):
 
     @staticmethod
     def write_bytes(uri: str, data: bytes) -> None:
-        s3 = S3FileSystem.get_session().client('s3')
+        s3 = S3FileSystem.get_client()
         bucket, key = S3FileSystem.parse_uri(uri)
         file_size = len(data)
         with io.BytesIO(data) as str_buffer:
@@ -225,7 +232,7 @@ class S3FileSystem(FileSystem):
 
     @staticmethod
     def copy_to(src_path: str, dst_uri: str) -> None:
-        s3 = S3FileSystem.get_session().client('s3')
+        s3 = S3FileSystem.get_client()
         bucket, key = S3FileSystem.parse_uri(dst_uri)
         if os.path.isfile(src_path):
             file_size = os.path.getsize(src_path)
@@ -245,7 +252,7 @@ class S3FileSystem(FileSystem):
     def copy_from(src_uri: str, dst_path: str) -> None:
         import botocore
 
-        s3 = S3FileSystem.get_session().client('s3')
+        s3 = S3FileSystem.get_client()
         request_payer = S3FileSystem.get_request_payer()
         bucket, key = S3FileSystem.parse_uri(src_uri)
         try:
@@ -270,7 +277,7 @@ class S3FileSystem(FileSystem):
     @staticmethod
     def last_modified(uri: str) -> datetime:
         bucket, key = S3FileSystem.parse_uri(uri)
-        s3 = S3FileSystem.get_session().client('s3')
+        s3 = S3FileSystem.get_client()
         request_payer = S3FileSystem.get_request_payer()
         head_data = s3.head_object(
             Bucket=bucket, Key=key, RequestPayer=request_payer)
