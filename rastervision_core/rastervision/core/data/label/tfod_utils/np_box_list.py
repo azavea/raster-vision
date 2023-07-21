@@ -19,7 +19,7 @@ from typing import List, Tuple
 import numpy as np
 
 
-class BoxList(object):
+class NpBoxList(object):
     """A list of bounding boxes as a [y_min, x_min, y_max, x_max] numpy array.
 
     It is assumed that all bounding boxes within a given list correspond to a

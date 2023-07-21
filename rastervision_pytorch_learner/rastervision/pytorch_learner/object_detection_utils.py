@@ -162,6 +162,15 @@ class BoxList():
             cond=lambda k, v: torch.is_tensor(v))
 
     def to(self, *args, **kwargs) -> 'BoxList':
+        """Recursively apply :meth:`torch.Tensor.to` to Tensors.
+
+        Args:
+            *args: Args for :meth:`torch.Tensor.to`.
+            **kwargs: Keyword args for :meth:`torch.Tensor.to`.
+
+        Returns:
+            BoxList: New BoxList with to'd Tensors.
+        """
         boxes = self.boxes.to(*args, **kwargs)
         extras = self._map_extras(
             func=lambda k, v: v.to(*args, **kwargs),

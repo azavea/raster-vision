@@ -98,11 +98,11 @@ class StatsTransformer(RasterTransformer):
                             raster_sources: List['RasterSource'],
                             sample_prob: Optional[float] = 0.1,
                             max_stds: float = 3.) -> 'StatsTransformer':
-        """Create a StatsTransformer with stats from the given raster sources.
+        """Build with stats from the given raster sources.
 
         Args:
-            raster_sources (List[&#39;RasterSource&#39;]): List of raster
-                sources to compute stats from.
+            raster_sources (List[RasterSource]): List of raster sources to
+                compute stats from.
             sample_prob (float, optional): Fraction of each raster to sample
                 for computing stats. For details see docs for
                 RasterStats.compute(). Defaults to 0.1.
@@ -120,6 +120,18 @@ class StatsTransformer(RasterTransformer):
 
     @classmethod
     def from_stats_json(cls, uri: str, **kwargs) -> 'StatsTransformer':
+        """Build with stats from a JSON file.
+
+        The file is expected to be in the same format as written by
+        :meth:`.RasterStats.save`.
+
+        Args:
+            uri (str): URI of the JSON file.
+            **kwargs: Extra args for :meth:`.__init__`.
+
+        Returns:
+            StatsTransformer: A StatsTransformer.
+        """
         stats = RasterStats.load(uri)
         stats_transformer = StatsTransformer.from_raster_stats(stats, **kwargs)
         return stats_transformer
@@ -127,11 +139,25 @@ class StatsTransformer(RasterTransformer):
     @classmethod
     def from_raster_stats(cls, stats: RasterStats,
                           **kwargs) -> 'StatsTransformer':
+        """Build with stats from a :class:`.RasterStats` instance.
+
+        The file is expected to be in the same format as written by
+        :meth:`.RasterStats.save`.
+
+        Args:
+            stats (RasterStats): A :class:`.RasterStats` instance with
+                non-None stats.
+            **kwargs: Extra args for :meth:`.__init__`.
+
+        Returns:
+            StatsTransformer: A StatsTransformer.
+        """
         stats_transformer = StatsTransformer(stats.means, stats.stds, **kwargs)
         return stats_transformer
 
     @property
-    def stats(self):
+    def stats(self) -> RasterStats:
+        """Current statistics as a :class:`.RasterStats` instance."""
         return RasterStats(self.means, self.stds)
 
     def __repr__(self) -> str:

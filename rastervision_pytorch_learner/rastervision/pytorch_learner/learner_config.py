@@ -264,6 +264,7 @@ class ModelConfig(Config):
                 if specified. Defaults to None.
             hubconf_dir (Optional[str], optional): Used for building
                 external_def if specified. Defaults to None.
+            **kwargs: Extra args for :meth:`.build_default_model`.
 
         Returns:
             nn.Module: a PyTorch nn.Module.
@@ -405,7 +406,16 @@ class SolverConfig(Config):
 
         return loss
 
-    def build_optimizer(self, model: nn.Module, **kwargs) -> optim.Optimizer:
+    def build_optimizer(self, model: nn.Module, **kwargs) -> optim.Adam:
+        """Build and return an Adam optimizer for the given model.
+
+        Args:
+            model (nn.Module): Model to be trained.
+            **kwargs: Extra args for the optimizer constructor.
+
+        Returns:
+            optim.Optimizer: An Adam optimzer instance.
+        """
         return optim.Adam(model.parameters(), lr=self.lr, **kwargs)
 
     def build_step_scheduler(self,
@@ -416,7 +426,17 @@ class SolverConfig(Config):
         """Returns an LR scheduler that changes the LR each step.
 
         This is used to implement the "one cycle" schedule popularized by
-        fastai.
+        FastAI.
+
+        Args:
+            optimizer (optim.Optimizer): Optimizer to build scheduler for.
+            train_ds_sz (int): Size of the training dataset.
+            last_epoch (int): Last epoch. Defaults to -1.
+            **kwargs: Extra args for the scheduler constructor.
+
+        Returns:
+            Optional[_LRScheduler]: A step scheduler, if applicable. Otherwise,
+                None.
         """
         scheduler = None
         if self.one_cycle and self.num_epochs > 1:
@@ -447,7 +467,16 @@ class SolverConfig(Config):
                               **kwargs) -> Optional[_LRScheduler]:
         """Returns an LR scheduler tha changes the LR each epoch.
 
-        This is used to divide the LR by 10 at certain epochs.
+        This is used to divide the learning rate by 10 at certain epochs.
+
+        Args:
+            optimizer (optim.Optimizer): Optimizer to build scheduler for.
+            last_epoch (int): Last epoch. Defaults to -1.
+            **kwargs: Extra args for the scheduler constructor.
+
+        Returns:
+            Optional[_LRScheduler]: An epoch scheduler, if applicable. Otherwise,
+                None.
         """
         scheduler = None
         if self.multi_stage:
@@ -1242,7 +1271,7 @@ class GeoDataConfig(DataConfig):
                 validation dataset. Defaults to None.
             test_tf (Optional[A.BasicTransform], optional): Transform for the
                 test dataset. Defaults to None.
-            kwargs: Kwargs to pass to self.scene_to_dataset()
+            **kwargs: Kwargs to pass to :meth:`.scene_to_dataset`.
 
         Returns:
             Tuple[Dataset, Dataset, Dataset]: PyTorch-compatiable training,

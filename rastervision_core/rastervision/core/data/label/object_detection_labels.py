@@ -4,7 +4,7 @@ from shapely.geometry import shape
 
 from rastervision.core.box import Box
 from rastervision.core.data.label.labels import Labels
-from rastervision.core.data.label.tfod_utils.np_box_list import BoxList
+from rastervision.core.data.label.tfod_utils.np_box_list import NpBoxList
 from rastervision.core.data.label.tfod_utils.np_box_list_ops import (
     prune_non_overlapping_boxes, clip_to_window, concatenate,
     non_max_suppression)
@@ -33,7 +33,7 @@ class ObjectDetectionLabels(Labels):
             class_ids: int numpy array of size n with class ids
             scores: float numpy array of size n
         """
-        self.boxlist = BoxList(npboxes)
+        self.boxlist = NpBoxList(npboxes)
         # This field name actually needs to be 'classes' to be able to use
         # certain utility functions in the TF Object Detection API.
         self.boxlist.add_field('classes', class_ids)
@@ -103,7 +103,7 @@ class ObjectDetectionLabels(Labels):
         return cls(npboxes, class_ids, scores)
 
     @staticmethod
-    def from_boxlist(boxlist: BoxList):
+    def from_boxlist(boxlist: NpBoxList):
         """Make ObjectDetectionLabels from BoxList object."""
         scores = (boxlist.get_field('scores')
                   if boxlist.has_field('scores') else None)
@@ -166,7 +166,7 @@ class ObjectDetectionLabels(Labels):
     def __str__(self) -> str:
         return str(self.boxlist.get())
 
-    def to_boxlist(self) -> BoxList:
+    def to_boxlist(self) -> NpBoxList:
         return self.boxlist
 
     def to_dict(self, round_boxes: bool = True) -> dict:
@@ -245,7 +245,7 @@ class ObjectDetectionLabels(Labels):
             clip: If True, clip label boxes to the window.
         """
         window_npbox = window.npbox_format()
-        window_boxlist = BoxList(np.expand_dims(window_npbox, axis=0))
+        window_boxlist = NpBoxList(np.expand_dims(window_npbox, axis=0))
         boxlist = prune_non_overlapping_boxes(
             labels.boxlist, window_boxlist, minoverlap=ioa_thresh)
         if clip:

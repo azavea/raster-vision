@@ -18,12 +18,19 @@ class TransformType(Enum):
     semantic_segmentation = 'semantic_segmentation'
 
 
-def apply_transform(transform: A.BasicTransform,
-                    **kwargs) -> Callable[..., dict]:
+def apply_transform(transform: A.BasicTransform, **kwargs) -> dict:
     """Apply Albumentations transform to possibly batched images.
 
     In case of batched images, the same transform is applied to all of them.
     This is useful for when the images represent a time-series.
+
+    Args:
+        transform (A.BasicTransform): An albumentations transform.
+        **kwargs: Extra args for ``transform``.
+
+    Returns:
+        dict: Output of ``transform``. If ndim == 4, the transformed image in
+            the dict is also 4-dimensional.
     """
     img = kwargs['image']
     if img.ndim == 3:

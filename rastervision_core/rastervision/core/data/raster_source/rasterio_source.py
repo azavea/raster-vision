@@ -190,7 +190,7 @@ class RasterioSource(RasterSource):
             uris (Union[str, List[str]]): One or more URIs of images. If more
                 than one, the images will be mosaiced together using GDAL.
             raster_transformers (List['RasterTransformer']): RasterTransformers
-                to use to trasnform chips after they are read.
+                to use to transform chips after they are read.
             allow_streaming (bool): If True, read data without downloading the
                 entire file first. Defaults to False.
             channel_order (Optional[Sequence[int]]): List of indices of

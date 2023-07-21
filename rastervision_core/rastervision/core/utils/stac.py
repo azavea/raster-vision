@@ -128,13 +128,17 @@ def parse_stac(stac_uri: str, item_limit: Optional[int] = None) -> List[dict]:
 
 def read_stac(uri: str, extract_dir: Optional[str] = None,
               **kwargs) -> List[dict]:
-    """Parse the contents of a STAC catalog (downloading it first, if
-    remote). If the uri is a zip file, unzip it, find catalog.json inside it
-    and parse that.
+    """Parse the contents of a STAC catalog.
+
+    The file is downloaded if needed. If it is a zip file, it is unzipped and
+    the catalog.json inside is parsed.
 
     Args:
         uri (str): Either a URI to a STAC catalog JSON file or a URI to a zip
             file containing a STAC catalog JSON file.
+        extract_dir (Optional[str]): Dir to extract to, if URI is a zip file.
+            If None, a temporary dir will be used. Defaults to None.
+        **kwargs: Extra args for :func:`.parse_stac`.
 
     Raises:
         FileNotFoundError: If catalog.json is not found inside the zip file.

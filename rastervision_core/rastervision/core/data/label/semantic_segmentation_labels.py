@@ -11,6 +11,7 @@ from rastervision.core.data.label import Labels
 from rastervision.core.data.label.utils import discard_prediction_edges
 
 if TYPE_CHECKING:
+    from shapely.geometry import Polygon
     from rastervision.core.data import (ClassConfig, CRSTransformer,
                                         VectorOutputConfig)
 
@@ -66,21 +67,34 @@ class SemanticSegmentationLabels(Labels):
         pass
 
     def get_windows(self, **kwargs) -> List[Box]:
-        """Generate sliding windows over the local extent. The keyword args
-        are passed to Box.get_windows() and can therefore be used to control
-        the specifications of the windows.
+        """Generate sliding windows over the local extent.
+
+        The keyword args are passed to :meth:`.Box.get_windows` and can
+        therefore be used to control the specifications of the windows.
 
         If the keyword args do not contain size, a list of length 1,
         containing the full extent is returned.
+
+        Args:
+            **kwargs: Extra args for :meth:`.Box.get_windows`.
         """
         size: Optional[int] = kwargs.pop('size', None)
         if size is None:
             return [self.extent]
         return self.extent.get_windows(size, size, **kwargs)
 
-    def filter_by_aoi(self, aoi_polygons: list, null_class_id: int,
+    def filter_by_aoi(self, aoi_polygons: List['Polygon'], null_class_id: int,
                       **kwargs) -> 'SemanticSegmentationLabels':
-        """Keep only the values that lie inside the AOI."""
+        """Keep only the values that lie inside the AOI.
+
+        Args:
+            aoi_polygons (List[Polygon]): AOI polygons to filter by, in pixel
+                coordinates.
+            null_class_id (int): Class ID to assign to pixels falling outside
+                the AOI polygons.
+            **kwargs: Extra args for
+                :meth:`.SemanticSegmentationLabels.get_windows`.
+        """
         if not aoi_polygons:
             return self
         for window in self.get_windows(**kwargs):
@@ -95,7 +109,7 @@ class SemanticSegmentationLabels(Labels):
         """
         pass
 
-    def _filter_window_by_aoi(self, window: Box, aoi_polygons: list,
+    def _filter_window_by_aoi(self, window: Box, aoi_polygons: List['Polygon'],
                               null_class_id: int) -> None:
         window_geom = window.to_shapely()
         label_arr = self[window]

@@ -1,9 +1,10 @@
 """Defines the abstract Labels class."""
 
-from typing import TYPE_CHECKING, Any, Iterable
+from typing import TYPE_CHECKING, Any, Iterable, List
 from abc import (ABC, abstractclassmethod, abstractmethod)
 
 if TYPE_CHECKING:
+    from shapely.geometry import Polygon
     from rastervision.core.box import Box
 
 
@@ -15,7 +16,7 @@ class Labels(ABC):
     """
 
     @abstractmethod
-    def __add__(self, other):
+    def __add__(self, other: 'Labels'):
         """Add labels to these labels.
 
         Returns a concatenation of this and the other labels.
@@ -23,16 +24,17 @@ class Labels(ABC):
         pass
 
     @abstractmethod
-    def filter_by_aoi(self, aoi_polygons):
-        """Returns a copy of these labels filtered by a given set of AOI polygons
+    def filter_by_aoi(self, aoi_polygons: List['Polygon']) -> 'Labels':
+        """Return a copy of these labels filtered by given AOI polygons.
 
         Args:
-          aoi_polygons - A list of AOI polygons to filter by, in pixel coordinates.
+          aoi_polygons: List of AOI polygons to filter by, in pixel
+            coordinates.
         """
         pass
 
     @abstractmethod
-    def __eq__(self, other):
+    def __eq__(self, other: 'Labels'):
         pass
 
     @abstractmethod

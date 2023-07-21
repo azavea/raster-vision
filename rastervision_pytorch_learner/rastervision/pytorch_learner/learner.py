@@ -238,7 +238,7 @@ class Learner(ABC):
                 inference rather than the PyTorch weights. Defaults to the
                 boolean environment variable RASTERVISION_USE_ONNX if set,
                 False otherwise.
-            **kwargs: See :meth:`.Learner.__init__`.
+            **kwargs: Extra args for :meth:`.__init__`.
 
         Raises:
             FileNotFoundError: If using custom Albumentations transforms and
@@ -1101,7 +1101,7 @@ class Learner(ABC):
                        sample_input: Optional[Tensor] = None,
                        validate_export: bool = True,
                        **kwargs) -> None:
-        """Export model to ONNX format via torch.onnx.export.
+        """Export model to ONNX format via :func:`torch.onnx.export`.
 
         Args:
             path (str): File path to save to.
@@ -1110,11 +1110,12 @@ class Learner(ABC):
             sample_input (Optional[Tensor]): Sample input to the model. If
                 None, a single batch from any available DataLoader in this
                 Learner will be used. Defaults to None.
-            validate_export (bool): If True, use onnx.checker.check_model to
-                validate exported model. An exception is raised if the check
-                fails. Defaults to True.
-            **kwargs (dict): Keyword args to pass to torch.onnx.export. These
-                override the default values used in the function definition.
+            validate_export (bool): If True, use
+                :func:`onnx.checker.check_model` to validate exported model.
+                An exception is raised if the check fails. Defaults to True.
+            **kwargs (dict): Keyword args to pass to :func:`torch.onnx.export`.
+                These override the default values used in the function
+                definition.
 
         Raises:
             ValueError: If sample_input is None and the Learner has no valid
@@ -1290,7 +1291,12 @@ class Learner(ABC):
         self.load_weights(uri=uri, **args)
 
     def load_weights(self, uri: str, **kwargs) -> None:
-        """Load model weights from a file."""
+        """Load model weights from a file.
+
+        Args:
+            uri (str): URI.
+            **kwargs: Extra args for :meth:`nn.Module.load_state_dict`.
+        """
         weights_path = download_if_needed(uri)
         self.model.load_state_dict(
             torch.load(weights_path, map_location=self.device), **kwargs)

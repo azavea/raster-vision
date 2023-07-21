@@ -64,7 +64,7 @@ def get_hubconf_dir_from_cfg(cfg, parent: Optional[str] = '') -> str:
 
 def torch_hub_load_github(repo: str, hubconf_dir: str, entrypoint: str, *args,
                           **kwargs) -> Any:
-    """Load an entrypoint from a github repo using torch.hub.load().
+    """Load an entrypoint from a github repo using :func:`torch.hub.load`.
 
     Args:
         repo (str): <repo-owner>/<erpo-name>[:tag]
@@ -149,6 +149,12 @@ def torch_hub_load_uri(uri: str, hubconf_dir: str, entrypoint: str, *args,
 
 def torch_hub_load_local(hubconf_dir: str, entrypoint: str, *args,
                          **kwargs) -> Any:
+    """Wrapper around :func:`torch.hub.load` with ``source='local'``.
+
+    Historical note: the code that was previously here was moved to
+    :func:`torch.hub.load` (for its implementation of ``source='local'``),
+    so now it just calls that function.
+    """
     return torch.hub.load(
         hubconf_dir,
         entrypoint,
