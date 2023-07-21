@@ -12,6 +12,17 @@ class VectorTransformer(ABC):
                  geojson: dict,
                  crs_transformer: Optional['CRSTransformer'] = None,
                  **kwargs) -> dict:
+        """Shortcut for :meth:`.transform`.
+
+        Args:
+            geojson (dict): A GeoJSON-like mapping of a FeatureCollection.
+            crs_transformer (Optional[CRSTransformer]): CRSTransformer.
+                Defaults to None.
+            **kwargs: Extra args for :meth:`.transform`.
+
+        Returns:
+            dict: Transformed GeoJSON.
+        """
         return self.transform(
             geojson, crs_transformer=crs_transformer, **kwargs)
 

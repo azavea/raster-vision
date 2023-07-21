@@ -157,6 +157,7 @@ class RasterStats:
 
     @property
     def vars(self) -> Optional[np.ndarray]:
+        """Channel variances, if self.stds is set."""
         if self.stds is None:
             return None
         return self.stds**2

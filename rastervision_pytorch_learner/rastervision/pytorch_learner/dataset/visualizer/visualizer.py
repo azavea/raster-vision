@@ -195,7 +195,13 @@ class Visualizer(ABC):
 
         This is a convenience method for generating a batch of data to plot.
 
-        Returns (x, y) tuple where x is images and y is labels
+        Args:
+            dataset (Dataset): A Pytorch Datset.
+            batch_sz (int): Batch size. Defaults to 4.
+            **kwargs: Extra args for :class:`~torch.utils.data.DataLoader`.
+
+        Returns:
+            Tuple[Tensor, Any]: (x, y) tuple where x is images and y is labels.
         """
         collate_fn = self.get_collate_fn()
         dl = DataLoader(dataset, batch_sz, collate_fn=collate_fn, **kwargs)

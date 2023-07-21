@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Optional, Union
 from pyproj import Transformer
 
 import numpy as np
@@ -99,10 +99,16 @@ class RasterioCRSTransformer(CRSTransformer):
         return map_point
 
     @classmethod
-    def from_dataset(cls,
-                     dataset,
-                     map_crs: Optional[str] = 'epsg:4326',
-                     **kwargs) -> 'RasterioCRSTransformer':
+    def from_dataset(
+            cls, dataset: Any, map_crs: Optional[str] = 'epsg:4326', **kwargs
+    ) -> Union[IdentityCRSTransformer, 'RasterioCRSTransformer']:
+        """Build from rasterio dataset.
+
+        Args:
+            dataset (Any): Rasterio dataset.
+            map_crs (Optional[str]): Target map CRS. Defaults to 'epsg:4326'.
+            **kwargs: Extra args for :meth:`.__init__`.
+        """
         transform = dataset.transform
         image_crs = None if dataset.crs is None else dataset.crs.wkt
         map_crs = image_crs if map_crs is None else map_crs
@@ -118,7 +124,14 @@ class RasterioCRSTransformer(CRSTransformer):
         return cls(transform, image_crs, map_crs, **kwargs)
 
     @classmethod
-    def from_uri(cls, uri: str, map_crs: Optional[str] = 'epsg:4326',
-                 **kwargs) -> 'RasterioCRSTransformer':
+    def from_uri(cls, uri: str, map_crs: Optional[str] = 'epsg:4326', **kwargs
+                 ) -> Union[IdentityCRSTransformer, 'RasterioCRSTransformer']:
+        """Build from raster URI.
+
+        Args:
+            uri (Any): Raster URI.
+            map_crs (Optional[str]): Target map CRS. Defaults to 'epsg:4326'.
+            **kwargs: Extra args for :meth:`.__init__`.
+        """
         with rio.open(uri) as ds:
             return cls.from_dataset(ds, map_crs=map_crs, **kwargs)

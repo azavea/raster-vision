@@ -200,6 +200,10 @@ intersphinx_mapping = {
         'https://pytorch.org/docs/stable/',
         'https://pytorch.org/docs/stable/objects.inv',
     ),
+    'onnx': (
+        'https://onnx.ai/onnx/',
+        'https://onnx.ai/onnx/objects.inv',
+    ),
 }
 
 #########################

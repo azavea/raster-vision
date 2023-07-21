@@ -65,6 +65,7 @@ class ClassEvaluationItem(EvaluationItem):
             conf_mat (np.ndarray): A multi-class confusion matrix.
             class_id (int): The ID of the target class.
             class_name (str): The name of the target class.
+            **kwargs: Extra args for :meth:`.__init__`.
 
         Returns:
             ClassEvaluationItem: ClassEvaluationItem for target class.
