@@ -183,9 +183,9 @@ class SemanticSegmentationLabelStore(LabelStore):
             score_arr = score_arr.astype(np.float16)
             score_arr /= 255
 
+        _, h, w = score_arr.shape
         labels = SemanticSegmentationSmoothLabels(
-            extent=Box(0, 0, *score_arr.shape),
-            num_classes=len(self.class_config))
+            extent=Box(0, 0, h, w), num_classes=len(self.class_config))
         labels.pixel_scores = score_arr * hits_arr
         labels.pixel_hits = hits_arr
         return labels
