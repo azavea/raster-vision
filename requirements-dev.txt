@@ -1,5 +1,5 @@
 flake8==5.0.4
-moto==4.0.8
+moto==4.1.14
 coverage==7.2.0
 yapf==0.23.0
 unify==0.5
