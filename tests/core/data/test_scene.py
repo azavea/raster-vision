@@ -43,6 +43,19 @@ class TestScene(unittest.TestCase):
         self.assertListEqual(scene.aoi_polygons_bbox_coords,
                              aoi_polygons_bbox_coords)
 
+    def test_invalid_aoi_polygons(self):
+        bbox = Box(100, 100, 200, 200)
+        rs = RasterioSource(self.img_uri, bbox=bbox)
+
+        aoi_polygons = [
+            Box(50, 50, 150, 150).to_shapely(),
+            Box(150, 150, 250, 250).to_shapely(),
+            # not a polygon:
+            Box(150, 150, 250, 250).to_shapely().exterior,
+        ]
+        with self.assertRaises(ValueError):
+            _ = Scene(id='', raster_source=rs, aoi_polygons=aoi_polygons)
+
 
 if __name__ == '__main__':
     unittest.main()

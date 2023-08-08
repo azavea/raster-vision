@@ -45,6 +45,11 @@ class Scene:
             self.aoi_polygons = []
             self.aoi_polygons_bbox_coords = []
         else:
+            for p in aoi_polygons:
+                if p.geom_type not in ['Polygon', 'MultiPolygon']:
+                    raise ValueError(
+                        'Expected all AOI geometries to be Polygons or '
+                        f'MultiPolygons. Found: {p.geom_type}.')
             bbox = self.raster_source.bbox
             bbox_geom = bbox.to_shapely()
             self.aoi_polygons = [
