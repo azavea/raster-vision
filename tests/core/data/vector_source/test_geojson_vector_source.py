@@ -1,16 +1,17 @@
+from typing import Callable
 import unittest
 import os
 
 from shapely.geometry import shape
 
+from rastervision.core.data import (
+    BufferTransformerConfig, ClassConfig, ClassInferenceTransformerConfig,
+    GeoJSONVectorSource, GeoJSONVectorSourceConfig, IdentityCRSTransformer)
 from rastervision.core.data.vector_source.geojson_vector_source_config import (
-    GeoJSONVectorSourceConfig, geojson_vector_source_config_upgrader)
-from rastervision.core.data import (ClassConfig, IdentityCRSTransformer,
-                                    ClassInferenceTransformerConfig,
-                                    BufferTransformerConfig)
+    geojson_vector_source_config_upgrader)
 from rastervision.pipeline.file_system import json_to_file, get_tmp_dir
 
-from tests import test_config_upgrader
+from tests import test_config_upgrader, data_file_path
 from tests.core.data.mock_crs_transformer import DoubleCRSTransformer
 
 
@@ -29,6 +30,12 @@ class TestGeoJSONVectorSourceConfig(unittest.TestCase):
 
 class TestGeoJSONVectorSource(unittest.TestCase):
     """This also indirectly tests the ClassInference class."""
+
+    def assertNoError(self, fn: Callable, msg: str = ''):
+        try:
+            fn()
+        except Exception:
+            self.fail(msg)
 
     def setUp(self):
         self.tmp_dir = get_tmp_dir()
@@ -154,6 +161,19 @@ class TestGeoJSONVectorSource(unittest.TestCase):
             to_map_coords=True)
         trans_geom = trans_geojson['features'][0]['geometry']
         self.assertTrue(shape(geom).equals(shape(trans_geom)))
+
+    def test_ignore_crs_field(self):
+        uri = data_file_path('0-aoi.geojson')
+        crs_transformer = IdentityCRSTransformer()
+
+        vs = GeoJSONVectorSource(uri, crs_transformer=crs_transformer)
+        with self.assertRaises(NotImplementedError):
+            _ = vs.get_geojson()
+
+        vs = GeoJSONVectorSource(
+            uri, crs_transformer=crs_transformer, ignore_crs_field=True)
+        self.assertNoError(lambda: vs.get_geojson())
+        self.assertNotIn('crs', vs.get_geojson())
 
 
 if __name__ == '__main__':
