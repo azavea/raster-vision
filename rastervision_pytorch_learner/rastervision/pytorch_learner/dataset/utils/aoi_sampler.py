@@ -1,7 +1,7 @@
-from typing import Sequence, Tuple
+from typing import Sequence, Tuple, Union
 
 import numpy as np
-from shapely.geometry import Polygon, MultiPolygon
+from shapely.geometry import Polygon, MultiPolygon, LinearRing
 from shapely.ops import unary_union
 from triangle import triangulate
 
@@ -86,7 +86,9 @@ class AoiSampler():
 
             # the triangulation algorithm requires a sample point inside each
             # hole
-            hole_centroids = np.stack([hole.centroid for hole in holes])
+            hole_centroids = [hole.centroid for hole in holes]
+            hole_centroids = np.concatenate(
+                [np.array(c.coords) for c in hole_centroids], axis=0)
 
             args = {
                 'vertices': vertices,
@@ -108,18 +110,20 @@ class AoiSampler():
         }
         return out
 
-    def polygon_to_graph(self,
-                         polygon: Polygon) -> Tuple[np.ndarray, np.ndarray]:
+    def polygon_to_graph(self, polygon: Union[Polygon, LinearRing]
+                         ) -> Tuple[np.ndarray, np.ndarray]:
         """Given a polygon, return its graph representation.
 
         Args:
-            polygon (Polygon): A polygon.
+            polygon (Union[Polygon, LinearRing]): A polygon or
+                polygon-exterior.
 
         Returns:
             Tuple[np.ndarray, np.ndarray]: An (N, 2) array of vertices and
             an (N, 2) array of indices to vertices representing edges.
         """
-        vertices = np.array(polygon.exterior.coords)
+        exterior = getattr(polygon, 'exterior', polygon)
+        vertices = np.array(exterior.coords)
         # Discard the last vertex - it is a duplicate of the first vertex and
         # duplicates cause problems for the Triangle library.
         vertices = vertices[:-1]
