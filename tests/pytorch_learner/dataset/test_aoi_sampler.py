@@ -1,3 +1,4 @@
+from typing import Callable
 import unittest
 from itertools import product
 
@@ -9,6 +10,18 @@ from rastervision.pytorch_learner.dataset.utils import AoiSampler
 
 
 class TestAoiSampler(unittest.TestCase):
+    def assertNoError(self, fn: Callable, msg: str = ''):
+        try:
+            fn()
+        except Exception:
+            self.fail(msg)
+
+    def test_polygon_with_holes(self):
+        p1 = Polygon.from_bounds(0, 0, 20, 20)
+        p2 = Polygon.from_bounds(5, 5, 15, 15)
+        polygon_with_holes = p1 - p2
+        self.assertNoError(lambda: AoiSampler([polygon_with_holes]).sample())
+
     def test_sampler(self, nsamples: int = 200):
         """Attempt to check if points are distributed uniformly within an AOI.
 
