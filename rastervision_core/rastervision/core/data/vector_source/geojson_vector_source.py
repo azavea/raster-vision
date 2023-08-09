@@ -69,4 +69,10 @@ class GeoJSONVectorSource(VectorSource):
                 # geojson is passed to code that *does* respect the CRS field
                 # (e.g. geopandas).
                 del geojson['crs']
+                # Also delete any "crs" keys in features' properties.
+                for f in geojson.get('features', []):
+                    try:
+                        del f['properties']['crs']
+                    except KeyError:
+                        pass
         return geojson
