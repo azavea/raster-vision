@@ -28,9 +28,9 @@ def write_chip(chip: np.ndarray, path: str) -> None:
 
 def get_image_ext(chip: np.ndarray) -> str:
     """Decide which format to store the image in."""
-    if len(chip.shape) not in (2, 3):
+    if chip.ndim not in (2, 3):
         raise ValueError('chip shape must be (H, W) or (H, W, C)')
-    if len(chip.shape) == 2 or chip.shape[-1] == 3:
+    if chip.ndim == 2 or chip.shape[-1] == 3:
         return 'png'
     else:
         return 'npy'
