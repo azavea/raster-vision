@@ -1,2 +1,2 @@
 rastervision_pipeline==0.21
-gdal==3.6.3
+gdal==3.7.1.1
