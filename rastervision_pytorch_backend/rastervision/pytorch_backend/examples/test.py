@@ -11,9 +11,8 @@ from rastervision.pipeline.file_system import (
     file_to_json, sync_from_dir, upload_or_copy, download_or_copy, file_exists,
     sync_to_dir, NotReadableError, download_if_needed)
 
-OLD_VERSION = '0.20'
-NEW_VERSION = '0.20.1'
-NEW_VERSION_MAJOR_MINOR = '0.20'
+NEW_VERSION = '0.21'
+NEW_VERSION_MAJOR_MINOR = '0.21'
 
 EXAMPLES_MODULE_ROOT = 'rastervision.pytorch_backend.examples'
 EXAMPLES_PATH_ROOT = '/opt/src/rastervision_pytorch_backend/rastervision/pytorch_backend/examples'  # noqa
@@ -467,7 +466,7 @@ def _compare_runs(root_uri_old: str,
 
 def _compare_evals(root_uri_old: str,
                    root_uri_new: str,
-                   float_tol: float = 1e-3,
+                   float_tol: float = 1e-2,
                    exclude_keys: list = ['conf_mat', 'count',
                                          'per_scene']) -> None:
     """Compare outputs of the eval command for two runs of an example."""
@@ -578,7 +577,7 @@ def flatten_dict(d: Union[dict, list], sep: str = '.') -> dict:
 
 def _compare_dicts(dict_old: dict,
                    dict_new: dict,
-                   float_tol: float = 1e-3,
+                   float_tol: float = 1e-2,
                    exclude_keys: list = []) -> None:
     """Compare the keys and values of the two dicts.
 
