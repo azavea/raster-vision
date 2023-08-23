@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING, Callable, Dict, Union, Tuple, Optional, List
+from typing import (TYPE_CHECKING, Callable, Dict, List, Optional, Sequence,
+                    Tuple, Union)
 from typing_extensions import Literal
 from pydantic import PositiveInt as PosInt, conint
 import math
@@ -484,3 +485,22 @@ class Box():
             if w.within(polygon):
                 return True
         return False
+
+    def __contains__(self, query: Union['Box', Sequence]) -> bool:
+        """Check if box or point is contained within this box.
+
+        Args:
+            query: Box or single point (x, y).
+
+        Raises:
+            NotImplementedError: if query is not a Box or tuple/list.
+        """
+        if isinstance(query, Box):
+            ymin, xmin, ymax, xmax = query
+            return (ymin >= self.ymin and xmin >= self.xmin
+                    and ymax <= self.ymax and xmax <= self.xmax)
+        elif isinstance(query, (tuple, list)):
+            x, y = query
+            return self.xmin <= x <= self.xmax and self.ymin <= y <= self.ymax
+        else:
+            raise NotImplementedError()

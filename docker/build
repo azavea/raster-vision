@@ -13,7 +13,7 @@ function usage() {
 Build Docker images.
 
 Options:
---arm64 will build image for arm64 architecture
+--arm64   Build image for arm64 architecture.
 "
 }
 
@@ -27,13 +27,28 @@ then
 
     PLATFORM="amd64"
     IMAGE_EXT=""
-    if [ "${1:-}" = "--arm64" ]
-    then
-        PLATFORM="arm64"
-        IMAGE_EXT="-arm64"
-    fi
+    CUDA_VERSION="12.1.1"
+    UBUNTU_VERSION="22.04"
+
+    while [[ $# -gt 0 ]]
+    do
+        case "$1" in
+            --arm64)
+                PLATFORM="arm64"
+                IMAGE_EXT="-arm64"
+                shift
+                ;;
+            *)
+                echo "Unknown option: $1"
+                usage
+                exit 1
+                ;;
+        esac
+    done
 
     DOCKER_BUILDKIT=1 docker build \
-        --platform linux/${PLATFORM} --build-arg CUDA_VERSION="11.7.1" \
+        --platform linux/${PLATFORM} \
+        --build-arg CUDA_VERSION="${CUDA_VERSION}" \
+        --build-arg UBUNTU_VERSION="${UBUNTU_VERSION}" \
         -t raster-vision-pytorch${IMAGE_EXT} -f Dockerfile .
 fi

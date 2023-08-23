@@ -1,5 +1,4 @@
-from typing import (TYPE_CHECKING, Any, Iterable, List, Optional, Sequence,
-                    Union)
+from typing import (TYPE_CHECKING, Any, Iterable, List, Optional, Sequence)
 from abc import abstractmethod
 
 import numpy as np
@@ -23,8 +22,8 @@ class SemanticSegmentationLabels(Labels):
         """Constructor.
 
         Args:
-            extent (Box): The extent of the region to which
-                the labels belong, in global coordinates.
+            extent (Box): The extent of the region to which the labels belong,
+                in global coordinates.
             num_classes (int): Number of classes.
         """
         self.extent = extent
@@ -143,9 +142,8 @@ class SemanticSegmentationLabels(Labels):
             del self[window]
 
     @classmethod
-    def make_empty(cls, extent: Box, num_classes: int, smooth: bool = False
-                   ) -> Union['SemanticSegmentationDiscreteLabels',
-                              'SemanticSegmentationSmoothLabels']:
+    def make_empty(cls, extent: Box, num_classes: int,
+                   smooth: bool = False) -> 'SemanticSegmentationLabels':
         """Instantiate an empty instance.
 
         Args:
@@ -157,8 +155,7 @@ class SemanticSegmentationLabels(Labels):
                 SemanticSegmentationDiscreteLabels object. Defaults to False.
 
         Returns:
-            Union[SemanticSegmentationDiscreteLabels,
-            SemanticSegmentationSmoothLabels]: If smooth=True, returns a
+            SemanticSegmentationLabels: If smooth=True, returns a
                 SemanticSegmentationSmoothLabels. Otherwise, a
                 SemanticSegmentationDiscreteLabels.
 
@@ -174,15 +171,14 @@ class SemanticSegmentationLabels(Labels):
                 extent=extent, num_classes=num_classes)
 
     @classmethod
-    def from_predictions(cls,
-                         windows: Iterable['Box'],
-                         predictions: Iterable[Any],
-                         extent: Box,
-                         num_classes: int,
-                         smooth: bool = False,
-                         crop_sz: Optional[int] = None
-                         ) -> Union['SemanticSegmentationDiscreteLabels',
-                                    'SemanticSegmentationSmoothLabels']:
+    def from_predictions(
+            cls,
+            windows: Iterable['Box'],
+            predictions: Iterable[Any],
+            extent: Box,
+            num_classes: int,
+            smooth: bool = False,
+            crop_sz: Optional[int] = None) -> 'SemanticSegmentationLabels':
         """Instantiate from windows and their corresponding predictions.
 
         Args:
@@ -202,8 +198,7 @@ class SemanticSegmentationLabels(Labels):
                 windows. Defaults to None.
 
         Returns:
-            Union[SemanticSegmentationDiscreteLabels,
-            SemanticSegmentationSmoothLabels]: If smooth=True, returns a
+            SemanticSegmentationLabels: If smooth=True, returns a
                 SemanticSegmentationSmoothLabels. Otherwise, a
                 SemanticSegmentationDiscreteLabels.
         """
@@ -349,8 +344,7 @@ class SemanticSegmentationDiscreteLabels(SemanticSegmentationLabels):
                          extent: Box,
                          num_classes: int,
                          crop_sz: Optional[int] = None
-                         ) -> Union['SemanticSegmentationDiscreteLabels',
-                                    'SemanticSegmentationSmoothLabels']:
+                         ) -> 'SemanticSegmentationDiscreteLabels':
         labels = cls.make_empty(extent, num_classes)
         labels.add_predictions(windows, predictions, crop_sz=crop_sz)
         return labels
@@ -522,8 +516,7 @@ class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
                          extent: Box,
                          num_classes: int,
                          crop_sz: Optional[int] = None
-                         ) -> Union['SemanticSegmentationDiscreteLabels',
-                                    'SemanticSegmentationSmoothLabels']:
+                         ) -> 'SemanticSegmentationSmoothLabels':
         labels = cls.make_empty(extent, num_classes)
         labels.add_predictions(windows, predictions, crop_sz=crop_sz)
         return labels

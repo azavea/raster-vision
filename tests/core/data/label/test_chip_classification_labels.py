@@ -1,8 +1,14 @@
 import unittest
+from os.path import join
 
+from rastervision.pipeline.file_system.utils import get_tmp_dir, file_exists
 from rastervision.core.box import Box
+from rastervision.core.data import (ClassConfig, IdentityCRSTransformer,
+                                    ChipClassificationGeoJSONStore)
 from rastervision.core.data.label.chip_classification_labels import (
-    ChipClassificationLabels)
+    ClassificationLabel, ChipClassificationLabels)
+
+from tests import data_file_path
 
 
 class TestChipClassificationLabels(unittest.TestCase):
@@ -79,6 +85,35 @@ class TestChipClassificationLabels(unittest.TestCase):
 
         exp_labels = ChipClassificationLabels()
         self.assertEqual(filt_labels, exp_labels)
+
+    def test_len(self):
+        self.assertEqual(len(self.labels), 2)
+
+    def test_get_values(self):
+        values_expected = [
+            ClassificationLabel(class_id=self.class_id1),
+            ClassificationLabel(class_id=self.class_id2)
+        ]
+        self.assertListEqual(self.labels.get_values(), values_expected)
+
+    def test_get_scores(self):
+        self.assertIsNone(self.labels.get_cell_scores(self.cell1))
+        self.assertIsNone(self.labels.get_cell_scores(Box(0, 0, 10, 10)))
+
+    def test_save(self):
+        uri = data_file_path('bboxes.geojson')
+        class_config = ClassConfig(names=['1', '2'])
+        crs_transformer = IdentityCRSTransformer()
+        ls = ChipClassificationGeoJSONStore(
+            uri,
+            class_config=class_config,
+            crs_transformer=crs_transformer,
+        )
+        labels = ls.get_labels()
+        with get_tmp_dir() as tmp_dir:
+            save_uri = join(tmp_dir, 'labels.geojson')
+            labels.save(save_uri, class_config, crs_transformer)
+            self.assertTrue(file_exists(save_uri))
 
 
 if __name__ == '__main__':

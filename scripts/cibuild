@@ -18,7 +18,9 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
         usage
     else
         docker build \
-            --platform linux/amd64 --build-arg CUDA_VERSION="11.7.1" \
+            --platform linux/amd64 \
+            --build-arg CUDA_VERSION="12.1.1" \
+            --build-arg UBUNTU_VERSION="22.04" \
             -t "raster-vision-${IMAGE_TYPE}" \
             -f Dockerfile .
 

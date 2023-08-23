@@ -85,10 +85,12 @@ def get_config(runner,
                 raster_uri,
                 crop_uri,
                 label_uri=label_uri,
+                vector_labels=True,
                 label_crop_uri=label_crop_uri,
                 size=600,
                 min_features=20,
-                class_config=class_config)
+                class_config=class_config,
+                default_class_id=1)
             raster_uri = crop_uri
             label_uri = label_crop_uri
 

@@ -80,8 +80,10 @@ def get_config(runner,
                 raster_uri,
                 crop_uri,
                 label_uri=label_uri,
+                vector_labels=True,
                 size=2000,
-                min_features=5)
+                min_features=5,
+                default_class_id=0)
             raster_uri = crop_uri
 
         raster_source = RasterioSourceConfig(

@@ -17,7 +17,7 @@ def nodata_below_threshold(chip: np.ndarray,
         bool: Whether the fraction of NODATA pixels is below the given
             threshold.
     """
-    if len(chip.shape) == 3:
+    if chip.ndim == 3:
         # (H, W, C) --> (H, W)
         chip = chip.sum(axis=-1)
     nodata_prop = (chip == nodata_val).mean()

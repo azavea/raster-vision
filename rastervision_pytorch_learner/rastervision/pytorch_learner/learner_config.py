@@ -1015,12 +1015,12 @@ class ImageDataConfig(DataConfig):
         Args:
             uri (Union[str, List[str]]): a URI or a list of URIs of one of the
                 following:
-                    (1) a URI of a directory containing "train", "valid", and
-                        (optinally) "test" subdirectories
-                    (2) a URI of a zip file containing (1)
-                    (3) a list of (2)
-                    (4) a URI of a directory containing zip files
-                        containing (1)
+
+                (1) a URI of a directory containing "train", "valid", and
+                    (optinally) "test" subdirectories
+                (2) a URI of a zip file containing (1)
+                (3) a list of (2)
+                (4) a URI of a directory containing zip files containing (1)
 
         Returns:
             paths to directories that each contain contents of one zip file

@@ -37,6 +37,11 @@ s3://raster-vision/examples/0.20.1/processed-data/ \
 python "rastervision_pytorch_backend/rastervision/pytorch_backend/examples/test.py" \
 run "spacenet-rio-cc" \
 --remote
+
+python "rastervision_pytorch_backend/rastervision/pytorch_backend/examples/test.py" \
+run "isprs-potsdam-ss" \
+-o "remote.raw_uri" "s3://raster-vision-ahassan/potsdam/data/raw" \
+--remote
 ```
 
 **All examples**:
@@ -60,8 +65,8 @@ compare \
 ```sh
 python "rastervision_pytorch_backend/rastervision/pytorch_backend/examples/test.py" \
 compare \
---examples_root_old "s3://raster-vision/examples/0.20/output/" \
---examples_root_new "s3://raster-vision/examples/0.20.1/output/"
+--examples_root_old "s3://raster-vision/examples/0.20.1/output/" \
+--examples_root_new "s3://raster-vision/examples/0.21/output/"
 ```
 
 ### Collect

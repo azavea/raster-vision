@@ -2,7 +2,7 @@ import unittest
 
 from rastervision.core.data import ClassConfig
 from rastervision.core.data.vector_transformer import (
-    ClassInferenceTransformer)
+    ClassInferenceTransformer, ClassInferenceTransformerConfig)
 from rastervision.core.data.utils import (geometries_to_geojson,
                                           geometry_to_feature)
 from rastervision.core.data.vector_transformer.label_maker.filter import (
@@ -12,6 +12,13 @@ from rastervision.core.data.vector_transformer.label_maker.filter import (
 def make_feature(**kwargs) -> dict:
     geometry = dict(type='Polygon', coordinates=[])
     return geometry_to_feature(geometry, properties=kwargs)
+
+
+class TestClassInferenceTransformerConfig(unittest.TestCase):
+    def test_build(self):
+        cfg = ClassInferenceTransformerConfig()
+        tf = cfg.build()
+        self.assertIsInstance(tf, ClassInferenceTransformer)
 
 
 class TestClassInferenceTransformer(unittest.TestCase):

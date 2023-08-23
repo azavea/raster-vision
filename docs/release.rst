@@ -9,32 +9,44 @@ Minor or Major Version Release
 ------------------------------
 
 #.  It's a good idea to update any major dependencies before the release.
-#.  Update the docs if needed. See the `docs README <{{ repo }}/docs/README.md>`__ for instructions.
-#.  Checkout the ``master`` branch, re-build the docker image (``docker/build``), and push it to ECR (``docker/ecr_publish``).
-#.  Execute all `tutorial notebooks <{{ repo }}/docs/usage/tutorials/>`__ and make sure they work correctly. Do not commit output changes unless code behavior has changed.
-#.  Run all :ref:`rv examples` and check that evaluation metrics are close to the scores from the last release. (For each example, there should be a link to a JSON file with the evaluation metrics from the last release.) This stage often uncovers bugs, and is the most time consuming part of the release process. There is a `script <{{ repo_examples }}/test.py>`__ to help run the examples and collect their outputs. See the associated `README <{{ repo_examples }}/README.md>`__ for details.
-#.  Collect all model bundles, and check that they work with the ``predict`` command and sanity check output in QGIS.
-#.  Update the :ref:`model zoo` by uploading model bundles and sample images to the right place on S3. If you use the ``collect`` command (`described here <{{ repo_examples }}/README.md>`__), you should be able to sync the ``collect_dir`` to ``s3://azavea-research-public-data/raster-vision/examples/model-zoo-<version>``.
-#.  Update the notebooks that use models from the model zoo so that they use the latest version and re-run.
-#.  Update `tiny_spacenet.py <{{ repo_examples }}/tiny_spacenet.py>`__ if needed and ensure the line numbers in every ``literalinclude`` of that file are correct. Tip: you can find all instances by searching the repo using the regex: ``\.\. literalinclude:: .+tiny_spacenet\.py$``.
-#.  Test :ref:`setup` and :ref:`quickstart` instructions and make sure they work.
-#.  Test examples from :ref:`pipelines plugins`.
+#.  Test examples:
 
-    .. code-block:: console
+    #.  Checkout the ``master`` branch, re-build the docker image (``docker/build``), and push it to ECR (``docker/ecr_publish``).
+    #. Follow the instructions in `this README <{{ repo_examples }}/README.md>`__ to do the following:
+        
+       #.  Run all :ref:`rv examples` and check that evaluation metrics are close to the scores from the last release. (For each example, there should be a link to a JSON file with the evaluation metrics from the last release.) This stage often uncovers bugs, and is the most time consuming part of the release process.
+       #.  Collect all model bundles, and check that they work with the ``predict`` command and sanity check output in QGIS.
+       #.  Update the :ref:`model zoo` by uploading model bundles and sample images to the right place on S3. If you use the ``collect`` command (`see <{{ repo_examples }}/README.md>`__), you should be able to sync the ``collect_dir`` to ``s3://azavea-research-public-data/raster-vision/examples/model-zoo-<version>``.
+       #. Screenshot the outputs of the ``compare`` command (for each example) and include them in the PR described below.
 
-        rastervision run inprocess rastervision.pipeline_example_plugin1.config1 -a root_uri /opt/data/pipeline-example/1/ --splits 2
-        rastervision run inprocess rastervision.pipeline_example_plugin1.config2 -a root_uri /opt/data/pipeline-example/2/ --splits 2
-        rastervision run inprocess rastervision.pipeline_example_plugin2.config3 -a root_uri /opt/data/pipeline-example/3/ --splits 2
+#.  Test notebooks:
 
-#.  Test examples from :ref:`bootstrap`.
+    #.  Update the `tutorial notebooks <{{ repo }}/docs/usage/tutorials/>`__ that use models from the model zoo so that they use the latest version.
+    #.  Execute all `tutorial notebooks <{{ repo }}/docs/usage/tutorials/>`__ and make sure they work correctly. Do not commit output changes unless code behavior has changed.
 
-    .. code-block:: console
+#. Test/update docs:
 
-        cookiecutter /opt/src/cookiecutter_template
+   #.  Update the docs if needed. See the `docs README <{{ repo }}/docs/README.md>`__ for instructions.
+   #.  Update `tiny_spacenet.py <{{ repo_examples }}/tiny_spacenet.py>`__ if needed and ensure the line numbers in every ``literalinclude`` of that file are correct. Tip: you can find all instances by searching the repo using the regex: ``\.\. literalinclude:: .+tiny_spacenet\.py$``.
+   #.  Test :ref:`setup` and :ref:`quickstart` instructions and make sure they work.
+   #.  Test examples from :ref:`pipelines plugins`.
 
-#.  Update the `the changelog <{{ repo }}/docs/changelog.rst>`__, and point out API changes.
-#.  Fix any broken badges on the GitHub repo readme.
-#.  Update the version number. This occurs in several places, so it's best to do this with a find and replace over the entire repo.
+        .. code-block:: console
+
+            rastervision run inprocess rastervision.pipeline_example_plugin1.config1 -a root_uri /opt/data/pipeline-example/1/ --splits 2
+            rastervision run inprocess rastervision.pipeline_example_plugin1.config2 -a root_uri /opt/data/pipeline-example/2/ --splits 2
+            rastervision run inprocess rastervision.pipeline_example_plugin2.config3 -a root_uri /opt/data/pipeline-example/3/ --splits 2
+
+   #.  Test examples from :ref:`bootstrap`.
+
+       .. code-block:: console
+
+           cookiecutter /opt/src/cookiecutter_template
+
+   #.  Update the `the changelog <{{ repo }}/docs/changelog.rst>`__, and point out API changes.
+   #.  Fix any broken badges on the GitHub repo readme.
+
+#.  Update the version number. This occurs in several places, so it's best to do this with a find-and-replace over the entire repo.
 #.  Make a PR to the ``master`` branch with the preceding updates. In the PR, there should be a link to preview the docs. Check that they are building and look correct.
 #.  Make a git branch with the version as the name, and push to GitHub.
 #.  Ensure that the docs are building correctly for the new version branch on `readthedocs <https://readthedocs.org/projects/raster-vision/>`_. You will need to have admin access on your RTD account. Once the branch is building successfully, Under *Versions -> Activate a Version*, you can activate the version to add it to the sidebar of the docs for the latest version. (This might require manually triggering a rebuild of the docs.) Then, under *Admin -> Advanced Settings*, change the default version to the new version.

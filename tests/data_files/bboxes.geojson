@@ -2,11 +2,11 @@
 	"features": [
 		{
 			"type": "Feature",
+			"properties": {
+				"class_id": 1
+			},
 			"geometry": {
 				"type": "Polygon",
-				"properties": {
-					"class_id": 1
-				},
 				"coordinates": [
 					[
 						[
@@ -35,11 +35,11 @@
 		},
 		{
 			"type": "Feature",
+			"properties": {
+				"class_id": 1
+			},
 			"geometry": {
 				"type": "Polygon",
-				"properties": {
-					"class_id": 1
-				},
 				"coordinates": [
 					[
 						[
@@ -68,11 +68,11 @@
 		},
 		{
 			"type": "Feature",
+			"properties": {
+				"class_id": 1
+			},
 			"geometry": {
 				"type": "Polygon",
-				"properties": {
-					"class_id": 1
-				},
 				"coordinates": [
 					[
 						[
@@ -101,11 +101,11 @@
 		},
 		{
 			"type": "Feature",
+			"properties": {
+				"class_id": 1
+			},
 			"geometry": {
 				"type": "Polygon",
-				"properties": {
-					"class_id": 1
-				},
 				"coordinates": [
 					[
 						[
@@ -134,11 +134,11 @@
 		},
 		{
 			"type": "Feature",
+			"properties": {
+				"class_id": 1
+			},
 			"geometry": {
 				"type": "Polygon",
-				"properties": {
-					"class_id": 1
-				},
 				"coordinates": [
 					[
 						[

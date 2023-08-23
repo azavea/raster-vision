@@ -163,7 +163,7 @@ class ObjectDetectionLabels(Labels):
     def __len__(self) -> int:
         return self.boxlist.get().shape[0]
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # prama: no cover
         return str(self.boxlist.get())
 
     def to_boxlist(self) -> NpBoxList:
