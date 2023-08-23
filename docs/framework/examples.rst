@@ -274,7 +274,7 @@ Note that the input file is assumed to have the same channel order and statistic
 
 When unzipped, the model bundle contains a ``model.pth`` file which can be used for fine-tuning.
 
-.. note:: The model bundles linked below are only compatible with Raster Vision version ``0.20`` or greater.
+.. note:: The model bundles linked below are only compatible with Raster Vision version ``0.21`` or greater.
 
 .. list-table:: Model Zoo
    :header-rows: 1
