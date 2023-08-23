@@ -1,5 +1,5 @@
-ARG UBUNTU_VERSION=22.04
 ARG CUDA_VERSION
+ARG UBUNTU_VERSION
 FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu${UBUNTU_VERSION}
 
 # wget: needed below to install conda
