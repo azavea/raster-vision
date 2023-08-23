@@ -4,12 +4,31 @@ import numpy as np
 
 from rastervision.core import Box
 from rastervision.core.data import (
-    ClassConfig, SemanticSegmentationLabelSource, RGBClassTransformer)
+    ClassConfig, ClassInferenceTransformerConfig, GeoJSONVectorSourceConfig,
+    IdentityCRSTransformer, RasterizedSourceConfig, RasterizerConfig,
+    RGBClassTransformer, SemanticSegmentationLabelSource,
+    SemanticSegmentationLabelSourceConfig)
+
 from tests.core.data.mock_raster_source import MockRasterSource
+from tests import data_file_path
 
 
 class TestSemanticSegmentationLabelSourceConfig(unittest.TestCase):
-    pass
+    def test_build_rasterized_source(self):
+        class_config = ClassConfig(names=['bg', 'fg'])
+        crs_transformer = IdentityCRSTransformer()
+        uri = data_file_path('bboxes.geojson')
+        rs_cfg = RasterizedSourceConfig(
+            vector_source=GeoJSONVectorSourceConfig(
+                uris=uri,
+                ignore_crs_field=True,
+                transformers=[
+                    ClassInferenceTransformerConfig(default_class_id=1)
+                ]),
+            rasterizer_config=RasterizerConfig(background_class_id=0))
+        cfg = SemanticSegmentationLabelSourceConfig(raster_source=rs_cfg)
+        rs = cfg.build(class_config, crs_transformer)
+        self.assertIsInstance(rs, SemanticSegmentationLabelSource)
 
 
 class TestSemanticSegmentationLabelSource(unittest.TestCase):

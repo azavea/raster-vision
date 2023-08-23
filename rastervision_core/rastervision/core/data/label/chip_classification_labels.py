@@ -118,7 +118,7 @@ class ChipClassificationLabels(Labels):
         """
         result = self.cell_to_label.get(cell)
         if result is not None:
-            return result.score
+            return result.scores
         else:
             return None
 

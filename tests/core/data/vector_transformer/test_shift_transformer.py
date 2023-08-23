@@ -3,11 +3,19 @@ import unittest
 from shapely.geometry import (Point, mapping, shape)
 
 from rastervision.core.data.crs_transformer import RasterioCRSTransformer
-from rastervision.core.data.vector_transformer import ShiftTransformer
+from rastervision.core.data.vector_transformer import (ShiftTransformer,
+                                                       ShiftTransformerConfig)
 from rastervision.core.data.utils import (geometry_to_feature,
                                           geometries_to_geojson)
 
 from tests import data_file_path
+
+
+class TestShiftTransformerConfig(unittest.TestCase):
+    def test_build(self):
+        cfg = ShiftTransformerConfig(x_shift=0, y_shift=0)
+        tf = cfg.build()
+        self.assertIsInstance(tf, ShiftTransformer)
 
 
 class TestShiftTransformer(unittest.TestCase):

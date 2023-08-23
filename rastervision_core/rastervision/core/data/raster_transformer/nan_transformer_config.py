@@ -14,9 +14,5 @@ class NanTransformerConfig(RasterTransformerConfig):
     to_value: Optional[float] = Field(
         0.0, description=('Turn all NaN values into this value.'))
 
-    def update(self, pipeline=None, scene=None):
-        if pipeline is not None and self.to_value is None:
-            self.to_value = pipeline.to_value
-
     def build(self):
         return NanTransformer(to_value=self.to_value)

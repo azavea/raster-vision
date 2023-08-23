@@ -2,9 +2,17 @@ import unittest
 
 from shapely.geometry import (Polygon, Point, LineString, mapping, shape)
 
-from rastervision.core.data.vector_transformer import BufferTransformer
+from rastervision.core.data.vector_transformer import (BufferTransformer,
+                                                       BufferTransformerConfig)
 from rastervision.core.data.utils import (geometry_to_feature,
                                           geometries_to_geojson)
+
+
+class TestBufferTransformerConfig(unittest.TestCase):
+    def test_build(self):
+        cfg = BufferTransformerConfig(geom_type='Point')
+        tf = cfg.build()
+        self.assertIsInstance(tf, BufferTransformer)
 
 
 class TestBufferTransformer(unittest.TestCase):

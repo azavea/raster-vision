@@ -1,12 +1,17 @@
 import unittest
+from os.path import join
 
 import numpy as np
 
+from rastervision.pipeline.file_system.utils import get_tmp_dir, file_exists
 from rastervision.core.box import Box
-from rastervision.core.data.class_config import ClassConfig
+from rastervision.core.data import (ClassConfig, IdentityCRSTransformer,
+                                    ObjectDetectionGeoJSONStore)
 from rastervision.core.data.label.object_detection_labels import (
     ObjectDetectionLabels)
 from rastervision.core.data.label.tfod_utils.np_box_list import NpBoxList
+
+from tests import data_file_path
 
 
 class TestObjectDetectionLabels(unittest.TestCase):
@@ -195,6 +200,21 @@ class TestObjectDetectionLabels(unittest.TestCase):
         filt_labels = self.labels.filter_by_aoi(aois)
         exp_labels = ObjectDetectionLabels.make_empty()
         self.assertEqual(filt_labels, exp_labels)
+
+    def test_save(self):
+        uri = data_file_path('bboxes.geojson')
+        class_config = ClassConfig(names=['1', '2'])
+        crs_transformer = IdentityCRSTransformer()
+        ls = ObjectDetectionGeoJSONStore(
+            uri,
+            class_config=class_config,
+            crs_transformer=crs_transformer,
+        )
+        labels = ls.get_labels()
+        with get_tmp_dir() as tmp_dir:
+            save_uri = join(tmp_dir, 'labels.geojson')
+            labels.save(save_uri, class_config, crs_transformer)
+            self.assertTrue(file_exists(save_uri))
 
 
 if __name__ == '__main__':
