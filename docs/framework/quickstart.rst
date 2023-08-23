@@ -76,7 +76,7 @@ If you go to ``${RV_QUICKSTART_OUT_DIR}`` you should see a directory structure l
     > tree -L 3
     ├── Makefile
     ├── bundle
-    │   └── model-bundle.zip
+    │   └── model-bundle.zip
     ├── eval
     │   └── validation_scenes
     │       └── eval.json
