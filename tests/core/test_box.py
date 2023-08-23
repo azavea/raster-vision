@@ -415,6 +415,17 @@ class TestBox(unittest.TestCase):
         self.assertEqual(Box(2, 3, 5, 7).extent, Box(0, 0, 3, 4))
         self.assertEqual(Box(0, 0, 5, 7).extent, Box(0, 0, 5, 7))
 
+    def test_in(self):
+        self.assertIn(Box(2, 2, 4, 4), Box(0, 0, 5, 5))
+        self.assertIn(Box(2, 2, 4, 4), Box(2, 2, 4, 4))
+        self.assertNotIn(Box(2, 2, 4, 4), Box(2, 2, 3, 4))
+
+        self.assertIn((4, 4), Box(2, 2, 4, 4))
+        self.assertNotIn((4, 4), Box(2, 2, 3, 4))
+
+        with self.assertRaises(NotImplementedError):
+            _ = '' in Box(0, 0, 1, 1)
+
 
 if __name__ == '__main__':
     unittest.main()

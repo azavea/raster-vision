@@ -7,22 +7,10 @@ from rastervision.core.data import ClassConfig
 from rastervision.core.data.label import SemanticSegmentationLabels
 from rastervision.core.data.label_source.label_source import LabelSource
 from rastervision.core.data.raster_source import RasterSource
+from rastervision.core.data.utils import pad_to_window_size
 
 if TYPE_CHECKING:
     from rastervision.core.data import CRSTransformer
-
-
-def fill_edge(label_arr: np.ndarray, window: Box, extent: Box,
-              fill_value: int) -> np.ndarray:
-    """If window goes over the edge of the extent, buffer with fill_value."""
-    if window.ymax <= extent.ymax and window.xmax <= extent.xmax:
-        return label_arr
-
-    x = np.full(window.size, fill_value)
-    ylim = extent.ymax - window.ymin
-    xlim = extent.xmax - window.xmin
-    x[0:ylim, 0:xlim] = label_arr[0:ylim, 0:xlim]
-    return x
 
 
 class SemanticSegmentationLabelSource(LabelSource):
@@ -101,8 +89,9 @@ class SemanticSegmentationLabelSource(LabelSource):
         of the null class as defined by the class_config.
 
         Args:
-            window (Optional[Box], optional): Window to get labels for. If
-            None, returns a label array covering the full extent of the scene.
+            window (Optional[Box], optional): Window (in pixel coords) to get
+                labels for. If None, returns a label array covering the full
+                extent of the scene.
 
         Returns:
             np.ndarray: Label array.
@@ -113,8 +102,10 @@ class SemanticSegmentationLabelSource(LabelSource):
         label_arr = self.raster_source.get_chip(window)
         if label_arr.ndim == 3:
             label_arr = np.squeeze(label_arr, axis=2)
-        label_arr = fill_edge(label_arr, window, self.extent,
-                              self.class_config.null_class_id)
+        h, w = label_arr.shape
+        if h < window.height or w < window.width:
+            label_arr = pad_to_window_size(label_arr, window, self.extent,
+                                           self.class_config.null_class_id)
         return label_arr
 
     @property

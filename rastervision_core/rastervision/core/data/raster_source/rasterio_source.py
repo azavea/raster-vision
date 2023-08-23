@@ -1,162 +1,23 @@
 from typing import TYPE_CHECKING, Any, List, Optional, Sequence, Tuple, Union
 import logging
-import os
-import subprocess
 
 import numpy as np
 import rasterio
-from rasterio.enums import (ColorInterp, MaskFlags, Resampling)
 
 from rastervision.pipeline.file_system import download_if_needed, get_tmp_dir
 from rastervision.core.box import Box
 from rastervision.core.data.crs_transformer import RasterioCRSTransformer
 from rastervision.core.data.raster_source import RasterSource
-from rastervision.core.data.utils import listify_uris, parse_array_slices_Nd
+from rastervision.core.data.utils import (listify_uris, parse_array_slices_Nd)
+from rastervision.core.data.utils.raster import fill_overflow
+from rastervision.core.data.utils.rasterio import (
+    read_window, get_channel_order_from_dataset, download_and_build_vrt,
+    is_masked)
 
 if TYPE_CHECKING:
-    from rasterio.io import DatasetReader
     from rastervision.core.data import RasterTransformer
 
 log = logging.getLogger(__name__)
-
-
-def build_vrt(vrt_path: str, image_uris: List[str]) -> None:
-    """Build a VRT for a set of TIFF files.
-
-    Args:
-        vrt_path (str): Local path for the VRT to be created.
-        image_uris (List[str]): Image URIs.
-    """
-    log.info('Building VRT...')
-    cmd = ['gdalbuildvrt', vrt_path]
-    cmd.extend(image_uris)
-    subprocess.run(cmd)
-
-
-def download_and_build_vrt(image_uris: List[str],
-                           vrt_dir: str,
-                           stream: bool = False) -> str:
-    """Download images (if needed) and build a VRT for a set of TIFF files.
-
-    Args:
-        image_uris (List[str]): Image URIs.
-        vrt_dir (str): Dir where the VRT will be created.
-        stream (bool, optional): If true, do not download images.
-            Defaults to False.
-
-    Returns:
-        str: The path to the created VRT file.
-    """
-    if not stream:
-        image_uris = [download_if_needed(uri) for uri in image_uris]
-    vrt_path = os.path.join(vrt_dir, 'index.vrt')
-    build_vrt(vrt_path, image_uris)
-    return vrt_path
-
-
-def load_window(
-        image_dataset: 'DatasetReader',
-        bands: Optional[Union[int, Sequence[int]]] = None,
-        window: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None,
-        is_masked: bool = False,
-        out_shape: Optional[Tuple[int, ...]] = None) -> np.ndarray:
-    """Load a window of an image using Rasterio.
-
-    Args:
-        image_dataset: a Rasterio dataset.
-        bands (Optional[Union[int, Sequence[int]]]): Band index or indices to
-            read. Must be 1-indexed.
-        window (Optional[Tuple[Tuple[int, int], Tuple[int, int]]]):
-            ((row_start, row_stop), (col_start, col_stop)) or
-            ((y_min, y_max), (x_min, x_max)). If None, reads the entire raster.
-            Defaults to None.
-        is_masked (bool): If True, read a masked array from rasterio.
-            Defaults to False.
-        out_shape (Optional[Tuple[int, int]]): (hieght, width) of the output
-            chip. If None, no resizing is done. Defaults to None.
-
-    Returns:
-        np.ndarray: array of shape (height, width, channels).
-    """
-    if bands is not None:
-        bands = tuple(bands)
-    im = image_dataset.read(
-        indexes=bands,
-        window=window,
-        boundless=True,
-        masked=is_masked,
-        out_shape=out_shape,
-        resampling=Resampling.bilinear)
-
-    if is_masked:
-        im = np.ma.filled(im, fill_value=0)
-
-    # Handle non-zero NODATA values by setting the data to 0.
-    if bands is None:
-        for channel, nodataval in enumerate(image_dataset.nodatavals):
-            if nodataval is not None and nodataval != 0:
-                im[channel, im[channel] == nodataval] = 0
-    else:
-        for channel, src_band in enumerate(bands):
-            src_band_0_indexed = src_band - 1
-            nodataval = image_dataset.nodatavals[src_band_0_indexed]
-            if nodataval is not None and nodataval != 0:
-                im[channel, im[channel] == nodataval] = 0
-
-    im = np.transpose(im, axes=[1, 2, 0])
-    return im
-
-
-def fill_overflow(extent: Box,
-                  window: Box,
-                  chip: np.ndarray,
-                  fill_value: int = 0) -> np.ndarray:
-    """Where ``chip``'s ``window`` overflows extent, fill with ``fill_value``.
-
-    Args:
-        extent (Box): Extent.
-        window (Box): Window from which ``chip`` was read.
-        chip (np.ndarray): (H, W, C) array.
-        fill_value (int, optional): Value to set oveflowing pixels to.
-            Defaults to 0.
-
-    Returns:
-        np.ndarray: Chip with overflowing regions filled with ``fill_value``.
-    """
-    top_overflow = max(0, extent.ymin - window.ymin)
-    bottom_overflow = max(0, window.ymax - extent.ymax)
-    left_overflow = max(0, extent.xmin - window.xmin)
-    right_overflow = max(0, window.xmax - extent.xmax)
-
-    *_, h, w, _ = chip.shape
-    chip[..., :top_overflow, :, :] = fill_value
-    chip[..., h - bottom_overflow:, :, :] = fill_value
-    chip[..., :, :left_overflow, :] = fill_value
-    chip[..., :, w - right_overflow:, :] = fill_value
-    return chip
-
-
-def get_channel_order_from_dataset(
-        image_dataset: 'DatasetReader') -> List[int]:
-    """Get channel order from rasterio image dataset.
-
-    Accounts for dataset's ``colorinterp`` if defined.
-
-    Args:
-        image_dataset (DatasetReader): Rasterio image dataset.
-
-    Returns:
-        List[int]: List of channel indices.
-    """
-    colorinterp = image_dataset.colorinterp
-    if colorinterp:
-        channel_order = [
-            i for i, color_interp in enumerate(colorinterp)
-            if color_interp != ColorInterp.alpha
-        ]
-    else:
-        channel_order = list(range(0, image_dataset.count))
-    return channel_order
 
 
 class RasterioSource(RasterSource):
@@ -230,13 +91,11 @@ class RasterioSource(RasterSource):
         if channel_order is None:
             channel_order = get_channel_order_from_dataset(self.image_dataset)
         self.bands_to_read = np.array(channel_order, dtype=int) + 1
+        self.is_masked = is_masked(self.image_dataset)
 
         # number of output channels
         if len(raster_transformers) == 0:
             self._num_channels = len(self.bands_to_read)
-
-        mask_flags = self.image_dataset.mask_flag_enums
-        self.is_masked = any(m for m in mask_flags if m != MaskFlags.all_valid)
 
         height = self.image_dataset.height
         width = self.image_dataset.width
@@ -302,7 +161,7 @@ class RasterioSource(RasterSource):
                   bands: Optional[Sequence[int]] = None,
                   out_shape: Optional[Tuple[int, ...]] = None) -> np.ndarray:
         window = window.to_global_coords(self.bbox)
-        chip = load_window(
+        chip = read_window(
             self.image_dataset,
             bands=bands,
             window=window.rasterio_format(),

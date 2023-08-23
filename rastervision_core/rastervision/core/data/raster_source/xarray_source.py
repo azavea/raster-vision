@@ -7,8 +7,7 @@ from xarray import DataArray
 from rastervision.core.box import Box
 from rastervision.core.data.crs_transformer import RasterioCRSTransformer
 from rastervision.core.data.raster_source import RasterSource
-from rastervision.core.data.raster_source.rasterio_source import fill_overflow
-from rastervision.core.data.utils import parse_array_slices_Nd
+from rastervision.core.data.utils import parse_array_slices_Nd, fill_overflow
 
 if TYPE_CHECKING:
     from rastervision.core.data import RasterTransformer, CRSTransformer

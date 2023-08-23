@@ -10,7 +10,7 @@ from rastervision.pipeline.file_system import get_tmp_dir
 from rastervision.core import (Box, RasterStats)
 from rastervision.core.utils.misc import save_img
 from rastervision.core.data.raster_source import (
-    ChannelOrderError, RasterioSource, RasterioSourceConfig, fill_overflow)
+    ChannelOrderError, RasterioSource, RasterioSourceConfig)
 from rastervision.core.data.raster_transformer import StatsTransformerConfig
 
 from tests import data_file_path
@@ -229,24 +229,6 @@ class TestRasterioSource(unittest.TestCase):
         # test validators
         rs_cfg = RasterioSourceConfig(uris=[img_path], bbox=(0, 0, 1, 1))
         self.assertIsInstance(rs_cfg.bbox, Box)
-
-    def test_fill_overflow(self):
-        extent = Box(10, 10, 90, 90)
-        window = Box(0, 0, 100, 100)
-        arr = np.ones((100, 100, 1), dtype=np.uint8)
-        out = fill_overflow(extent, window, arr)
-        mask = np.zeros_like(arr).astype(bool)
-        mask[10:90, 10:90] = 1
-        self.assertTrue(np.all(out[mask] == 1))
-        self.assertTrue(np.all(out[~mask] == 0))
-
-        window = Box(0, 0, 80, 100)
-        arr = np.ones((80, 100, 1), dtype=np.uint8)
-        out = fill_overflow(extent, window, arr)
-        mask = np.zeros((80, 100), dtype=bool)
-        mask[10:90, 10:90] = 1
-        self.assertTrue(np.all(out[mask] == 1))
-        self.assertTrue(np.all(out[~mask] == 0))
 
     def test_extent_overflow(self):
         arr = np.ones((100, 100), dtype=np.uint8)

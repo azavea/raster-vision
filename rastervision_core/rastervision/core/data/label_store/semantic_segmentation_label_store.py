@@ -17,6 +17,7 @@ from rastervision.core.data.label_store import LabelStore
 from rastervision.core.data.label_source import SemanticSegmentationLabelSource
 from rastervision.core.data.raster_transformer import RGBClassTransformer
 from rastervision.core.data.raster_source import RasterioSource
+from rastervision.core.data.utils import write_window
 
 if TYPE_CHECKING:
     from rastervision.core.data import (VectorOutputConfig,
@@ -266,7 +267,8 @@ class SemanticSegmentationLabelStore(LabelStore):
                         score_arr = self._scores_to_uint8(score_arr)
                     else:
                         score_arr = score_arr.astype(dtype)
-                    self._write_array(ds, window, score_arr)
+                    score_arr = score_arr.transpose(1, 2, 0)
+                    write_window(ds, score_arr, window)
 
         # save pixel hits too
         np.save(hits_path, labels.pixel_hits)
@@ -291,8 +293,7 @@ class SemanticSegmentationLabelStore(LabelStore):
                     if self.class_transformer is not None:
                         label_arr = self.class_transformer.class_to_rgb(
                             label_arr)
-                        label_arr = label_arr.transpose(2, 0, 1)
-                    self._write_array(ds, window, label_arr)
+                    write_window(ds, label_arr, window)
 
     def write_vector_outputs(self, labels: SemanticSegmentationLabels,
                              vector_output_dir: str) -> None:
@@ -313,18 +314,6 @@ class SemanticSegmentationLabelStore(LabelStore):
                 geojson = geoms_to_geojson(polys)
                 out_uri = vo.get_uri(vector_output_dir, self.class_config)
                 json_to_file(geojson, out_uri)
-
-    def _write_array(self, dataset: rio.DatasetReader, window: Box,
-                     arr: np.ndarray) -> None:
-        """Write array out to a rasterio dataset. Array must be of shape
-        (C, H, W).
-        """
-        rio_window = window.rasterio_format()
-        if len(arr.shape) == 2:
-            dataset.write_band(1, arr, window=rio_window)
-        else:
-            for i, band in enumerate(arr, start=1):
-                dataset.write_band(i, band, window=rio_window)
 
     def _clip_to_extent(self,
                         extent: Box,
