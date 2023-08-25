@@ -1,11 +1,11 @@
-ARG BUILDERA=newbuild
+ARG BUILD_TYPE
 ARG CUDA_VERSION
 ARG PYTHON_VERSION=3.10
 ARG UBUNTU_VERSION
 
 ########################################################################
 
-FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu${UBUNTU_VERSION} as newbuild
+FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu${UBUNTU_VERSION} as thinbuild
 
 ARG PYTHON_VERSION=3.10
 
@@ -14,20 +14,16 @@ ARG PYTHON_VERSION=3.10
 # ImportError: libGL.so.1: cannot open shared object file: No such file or directory
 # See https://stackoverflow.com/questions/55313610/importerror-libgl-so-1-cannot-open-shared-object-file-no-such-file-or-directo
 RUN --mount=type=cache,target=/var/cache/apt apt update && \
-    apt install -y wget=1.21.2-2ubuntu1 build-essential=12.9ubuntu3 libgl1=1.4.0-1 curl=7.81.0-1ubuntu1.13 git=1:2.34.1-1ubuntu1.10 tree=2.0.2-1 && \
-    apt install -y gdal-bin=3.4.1+dfsg-1build4 libgdal-dev=3.4.1+dfsg-1build4 && \
+    apt install -y wget=1.21.2-2ubuntu1 build-essential=12.9ubuntu3 libgl1=1.4.0-1 curl=7.81.0-1ubuntu1.13 git=1:2.34.1-1ubuntu1.10 tree=2.0.2-1 gdal-bin=3.4.1+dfsg-1build4 libgdal-dev=3.4.1+dfsg-1build4 python${PYTHON_VERSION} python3-pip && \
     curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
     apt install -y nodejs=16.20.2-deb-1nodesource1 && \
-    apt autoremove
-
-RUN --mount=type=cache,target=/var/cache/apt apt install -y python${PYTHON_VERSION} python$(echo ${PYTHON_VERSION} | sed 's,\(.\).*,\1,')-pip && \
-    update-alternatives --install /usr/bin/python$(echo ${PYTHON_VERSION} | sed 's,\(.\).*,\1,') python$(echo ${PYTHON_VERSION} | sed 's,\(.\).*,\1,') /usr/bin/python${PYTHON_VERSION} 1 && \
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python${PYTHON_VERSION} 1 && \
     update-alternatives --install /usr/bin/python python /usr/bin/python${PYTHON_VERSION} 1 && \
     apt autoremove
 
 ########################################################################
 
-FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu${UBUNTU_VERSION} as legacybuild
+FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu${UBUNTU_VERSION} as fullbuild
 
 ARG PYTHON_VERSION=3.10
 ARG TARGETPLATFORM
@@ -75,9 +71,16 @@ ENV GDAL_DATA=/opt/conda/lib/python${PYTHON_VERSION}/site-packages/rasterio/gdal
 RUN rm /opt/conda/lib/libtinfo.so.6 && \
     ln -s /lib/$(cat /root/linux_arch)-linux-gnu/libtinfo.so.6 /opt/conda/lib/libtinfo.so.6
 
+# This gets rid of the following error when importing cv2 on arm64.
+# We cannot use the ENV directive since it cannot be used conditionally.
+# See https://github.com/opencv/opencv/issues/14884
+# ImportError: /lib/aarch64-linux-gnu/libGLdispatch.so.0: cannot allocate memory in static TLS block
+RUN if [${TARGETARCH} == "arm64"]; \
+    then echo "export LD_PRELOAD=/lib/$(cat /root/linux_arch)-linux-gnu/libGLdispatch.so.0:$LD_PRELOAD" >> /root/.bashrc; fi
+
 ########################################################################
 
-FROM ${BUILDERA:-newbuild} AS final_stage
+FROM ${BUILD_TYPE:-fullbuild} AS final_stage
 
 ARG TARGETARCH
 
@@ -119,15 +122,6 @@ COPY ./docs/requirements.txt /opt/src/docs/pandoc-requirements.txt
 RUN --mount=type=cache,target=/root/.cache/pip pip install -r docs/pandoc-requirements.txt && \
     wget https://github.com/jgm/pandoc/releases/download/2.19.2/pandoc-2.19.2-1-${TARGETARCH}.deb && \
     dpkg -i pandoc-2.19.2-1-${TARGETARCH}.deb && rm pandoc-2.19.2-1-${TARGETARCH}.deb
-
-#------------------------------------------------------------------------
-
-# This gets rid of the following error when importing cv2 on arm64.
-# We cannot use the ENV directive since it cannot be used conditionally.
-# See https://github.com/opencv/opencv/issues/14884
-# ImportError: /lib/aarch64-linux-gnu/libGLdispatch.so.0: cannot allocate memory in static TLS block
-RUN if [${TARGETARCH} == "arm64"]; \
-    then echo "export LD_PRELOAD=/lib/$(cat /root/linux_arch)-linux-gnu/libGLdispatch.so.0:$LD_PRELOAD" >> /root/.bashrc; fi
 
 #------------------------------------------------------------------------
 

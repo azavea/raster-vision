@@ -19,6 +19,7 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
     else
         DOCKER_BUILDKIT=1 docker build \
 	    --build-arg BUILDKIT_INLINE_CACHE=1 \
+	    --build-arg BUILD_TYPE=fullbuild \
             --platform linux/amd64 \
             --build-arg CUDA_VERSION="12.1.1" \
             --build-arg UBUNTU_VERSION="22.04" \
