@@ -95,17 +95,24 @@ ENV PYTHONPATH=/opt/src/rastervision_pytorch_backend/:$PYTHONPATH
 
 WORKDIR /opt/src/
 
-COPY ./requirements-dev.txt /opt/src/requirements-dev.txt
-COPY ./rastervision_pipeline/requirements.txt /opt/src/pipeline-requirements.txt
+#------------------------------------------------------------------------
+
+COPY ./rastervision_gdal_vsi/requirements.txt /opt/src/gdal-requirements.txt
 COPY ./rastervision_aws_s3/requirements.txt /opt/src/s3-requirements.txt
 COPY ./rastervision_aws_batch/requirements.txt /opt/src/batch-requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip cat gdal-requirements.txt s3-requirements.txt batch-requirements.txt | sort | uniq > all-requirements.txt && \
+    pip install $(grep -ivE "^\s*$|^#|rastervision_*" all-requirements.txt) && \
+    rm all-requirements.txt
+
+COPY ./rastervision_pipeline/requirements.txt /opt/src/pipeline-requirements.txt
 COPY ./rastervision_core/requirements.txt /opt/src/core-requirements.txt
 COPY ./rastervision_pytorch_learner/requirements.txt /opt/src/pytorch-requirements.txt
-COPY ./rastervision_gdal_vsi/requirements.txt /opt/src/gdal-requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip cat pipeline-requirements.txt core-requirements.txt pytorch-requirements.txt | sort | uniq > all-requirements.txt && \
+    pip install $(grep -ivE "^\s*$|^#|rastervision_*" all-requirements.txt) && \
+    rm all-requirements.txt
 
-RUN --mount=type=cache,target=/root/.cache/pip cat *-requirements.txt | sort | uniq > all-requirements.txt && \
-    pip install -r requirements-dev.txt && \
-    pip install $(grep -ivE "^\s*$|^#|rastervision_*" all-requirements.txt)
+COPY ./requirements-dev.txt /opt/src/requirements-dev.txt
+RUN --mount=type=cache,target=/root/.cache/pip pip install -r requirements-dev.txt
 
 # pandoc
 COPY ./docs/requirements.txt /opt/src/docs/pandoc-requirements.txt
@@ -113,12 +120,16 @@ RUN --mount=type=cache,target=/root/.cache/pip pip install -r docs/pandoc-requir
     wget https://github.com/jgm/pandoc/releases/download/2.19.2/pandoc-2.19.2-1-${TARGETARCH}.deb && \
     dpkg -i pandoc-2.19.2-1-${TARGETARCH}.deb && rm pandoc-2.19.2-1-${TARGETARCH}.deb
 
+#------------------------------------------------------------------------
+
 # This gets rid of the following error when importing cv2 on arm64.
 # We cannot use the ENV directive since it cannot be used conditionally.
 # See https://github.com/opencv/opencv/issues/14884
 # ImportError: /lib/aarch64-linux-gnu/libGLdispatch.so.0: cannot allocate memory in static TLS block
 RUN if [${TARGETARCH} == "arm64"]; \
     then echo "export LD_PRELOAD=/lib/$(cat /root/linux_arch)-linux-gnu/libGLdispatch.so.0:$LD_PRELOAD" >> /root/.bashrc; fi
+
+#------------------------------------------------------------------------
 
 COPY scripts /opt/src/scripts/
 COPY scripts/rastervision /usr/local/bin/rastervision
