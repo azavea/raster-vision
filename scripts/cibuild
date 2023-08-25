@@ -17,10 +17,12 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
     if [[ "${1:-}" == "--help" ]]; then
         usage
     else
-        docker build \
+        DOCKER_BUILDKIT=1 docker build \
+	    --build-arg BUILDKIT_INLINE_CACHE=1 \
             --platform linux/amd64 \
             --build-arg CUDA_VERSION="12.1.1" \
             --build-arg UBUNTU_VERSION="22.04" \
+	    --cache-from=quay.io/azavea/raster-vision:latest \
             -t "raster-vision-${IMAGE_TYPE}" \
             -f Dockerfile .
 
