@@ -1,0 +1,2 @@
+rastervision_pipeline==0.21
+sagemaker==2.180.0
