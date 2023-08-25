@@ -1,0 +1,133 @@
+import logging
+import os
+import uuid
+from typing import List, Optional
+
+from rastervision.pipeline import rv_config_ as rv_config
+from rastervision.pipeline.runner import Runner
+
+from sagemaker.workflow.pipeline_context import PipelineSession
+from sagemaker.workflow.steps import ProcessingStep
+from sagemaker.processing import ScriptProcessor
+from sagemaker.workflow.pipeline import Pipeline
+import boto3
+import sagemaker
+
+log = logging.getLogger(__name__)
+SAGEMAKER = 'sagemaker'
+
+
+def make_step(
+        step_name: str,
+        cmd: List[str],
+        role: str,
+        image_uri: str ,
+        instance_type: str,
+        sagemaker_session: PipelineSession,
+):
+
+    step_processor = ScriptProcessor(
+        role=role,
+        image_uri=image_uri,
+        instance_count=1,
+        instance_type=instance_type,
+        sagemaker_session=sagemaker_session,
+        instance_count=1,
+        use_spot=True,
+        command=[cmd[0]],
+    )
+
+    step_args = step_processor.run(
+        inputs=[],
+        outputs=[],
+        code=cmd[1],
+        arguments=cmd[2:]
+    )
+
+    step = ProcessingStep(step_name, step_args=step_args)
+
+    return step
+
+
+class SageMakerRunner(Runner):
+    """Runs pipelines remotely using AWS Batch.
+
+    Requires Everett configuration of form:
+
+    ```
+    [SAGEMAKER]
+    exec_role=
+    cpu_image=
+    cpu_inst_type=
+    gpu_image=
+    gpu_inst_type=
+    ```
+    """
+
+    def run(self,
+            cfg_json_uri,
+            pipeline,
+            commands,
+            num_splits=1,
+            pipeline_run_name: str = 'raster-vision'):
+        parent_job_ids = []
+
+        config = rv_config.get_namespace_config(SAGEMAKER)
+        exec_role = config("exec_role")
+        cpu_image = config("cpu_image")
+        cpu_inst_type = config("cpu_inst_type")
+        gpu_image = config("gpu_image")
+        gpu_inst_type = config("gpu_inst_type")
+        sagemaker_session = PipelineSession()
+
+        steps = []
+
+        for command in commands:
+
+            use_gpu = command in pipeline.gpu_commands
+            # job_name = f'{pipeline_run_name}-{command}-{uuid.uuid4()}'
+            job_name = command
+            cmd = ["python", "/opt/src/rastervision_pipeline/rastervision/pipeline/cli.py"]
+            # cmd = ['python', '-m', 'rastervision.pipeline.cli']
+            if rv_config.get_verbosity() > 1:
+                cmd.append('-' + 'v' * (rv_config.get_verbosity() - 1))
+            cmd.extend(['run_command', cfg_json_uri, command])
+
+            if command in pipeline.split_commands and num_splits > 1:
+                _steps = []
+                for i in range(num_splits):
+                    cmd += ["--split-ind", str(i), "--num-splits", str(num_splits)]
+                    step = make_step(
+                        f"{job_name}_{i+1}of{num_splits}",
+                        cmd,
+                        exec_role,
+                        gpu_image if use_gpu else cpu_image,
+                        gpu_inst_type if use_gpu else cpu_inst_type,
+                        sagemaker_session,
+                    )
+                    step.add_depends_on(steps)
+                    _steps.append(step)
+                steps.extend(_steps)
+            else:
+                step = make_step(
+                    job_name,
+                    cmd,
+                    exec_role,
+                    gpu_image if use_gpu else cpu_image,
+                    gpu_inst_type if use_gpu else cpu_inst_type,
+                    sagemaker_session,
+                )
+                step.add_depends_on(steps)
+                steps.append(step)
+
+        role_arn = sagemaker.get_execution_role()
+        pipeline = Pipeline(
+            name=pipeline_run_name,
+            steps=steps,
+            sagemaker_session=sagemaker_session,
+        )
+        pipeline.upsert(role_arn=role_arn)
+        execution = pipeline.start()
+        execution.wait()
+        print(execution.list_steps())
+        print(execution.describe())
