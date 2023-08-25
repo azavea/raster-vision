@@ -18,12 +18,12 @@ RUN --mount=type=cache,target=/var/cache/apt apt update && \
     apt install -y gdal-bin=3.4.1+dfsg-1build4 libgdal-dev=3.4.1+dfsg-1build4 && \
     curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
     apt install -y nodejs=16.20.2-deb-1nodesource1 && \
-    apt autoremove && apt autoclean && apt clean
+    apt autoremove
 
 RUN --mount=type=cache,target=/var/cache/apt apt install -y python${PYTHON_VERSION} python$(echo ${PYTHON_VERSION} | sed 's,\(.\).*,\1,')-pip && \
     update-alternatives --install /usr/bin/python$(echo ${PYTHON_VERSION} | sed 's,\(.\).*,\1,') python$(echo ${PYTHON_VERSION} | sed 's,\(.\).*,\1,') /usr/bin/python${PYTHON_VERSION} 1 && \
     update-alternatives --install /usr/bin/python python /usr/bin/python${PYTHON_VERSION} 1 && \
-    apt autoremove && apt autoclean && apt clean
+    apt autoremove
 
 ########################################################################
 
