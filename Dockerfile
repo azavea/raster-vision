@@ -22,6 +22,7 @@ RUN --mount=type=cache,target=/var/cache/apt apt update && \
 
 RUN --mount=type=cache,target=/var/cache/apt apt install -y python${PYTHON_VERSION} python$(echo ${PYTHON_VERSION} | sed 's,\(.\).*,\1,')-pip && \
     update-alternatives --install /usr/bin/python$(echo ${PYTHON_VERSION} | sed 's,\(.\).*,\1,') python$(echo ${PYTHON_VERSION} | sed 's,\(.\).*,\1,') /usr/bin/python${PYTHON_VERSION} 1 && \
+    update-alternatives --install /usr/bin/python python /usr/bin/python${PYTHON_VERSION} 1 && \
     apt autoremove && apt autoclean && apt clean
 
 ########################################################################
@@ -33,6 +34,7 @@ ARG TARGETPLATFORM
 
 ENV PATH /opt/conda/bin:$PATH
 ENV LD_LIBRARY_PATH /opt/conda/lib/:$LD_LIBRARY_PATH
+ENV PROJ_LIB /opt/conda/share/proj/
 
 # wget: needed below to install conda
 # build-essential: installs gcc which is needed to install some deps like rasterio
@@ -81,7 +83,6 @@ ARG TARGETARCH
 
 ENV LC_ALL C.UTF-8
 ENV LANG C.UTF-8
-ENV PROJ_LIB /opt/conda/share/proj/
 
 ENV PYTHONPATH=/opt/src:$PYTHONPATH
 ENV PYTHONPATH=/opt/src/rastervision_pipeline/:$PYTHONPATH
@@ -102,13 +103,9 @@ COPY ./rastervision_core/requirements.txt /opt/src/core-requirements.txt
 COPY ./rastervision_pytorch_learner/requirements.txt /opt/src/pytorch-requirements.txt
 COPY ./rastervision_gdal_vsi/requirements.txt /opt/src/gdal-requirements.txt
 
-RUN --mount=type=cache,target=/root/.cache/pip pip install -r requirements-dev.txt && \
-    pip install $(grep -ivE "^\s*$|^#|rastervision_*" pipeline-requirements.txt) && \
-    pip install $(grep -ivE "^\s*$|^#|rastervision_*" s3-requirements.txt) && \
-    pip install $(grep -ivE "^\s*$|^#|rastervision_*" batch-requirements.txt) && \
-    pip install $(grep -ivE "^\s*$|^#|rastervision_*" core-requirements.txt) && \
-    pip install $(grep -ivE "^\s*$|^#|rastervision_*" pytorch-requirements.txt) && \
-    pip install $(grep -ivE "^\s*$|^#|rastervision_*" gdal-requirements.txt)
+RUN --mount=type=cache,target=/root/.cache/pip cat *-requirements.txt | sort | uniq > all-requirements.txt && \
+    pip install -r requirements-dev.txt && \
+    pip install $(grep -ivE "^\s*$|^#|rastervision_*" all-requirements.txt)
 
 # pandoc
 COPY ./docs/requirements.txt /opt/src/docs/pandoc-requirements.txt
