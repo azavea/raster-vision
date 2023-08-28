@@ -1,6 +1,5 @@
 ARG BUILD_TYPE
 ARG CUDA_VERSION
-ARG PYTHON_VERSION=3.10
 ARG UBUNTU_VERSION
 
 ########################################################################
