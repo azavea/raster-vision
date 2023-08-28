@@ -86,15 +86,6 @@ ARG TARGETARCH
 ENV LC_ALL C.UTF-8
 ENV LANG C.UTF-8
 
-ENV PYTHONPATH=/opt/src:$PYTHONPATH
-ENV PYTHONPATH=/opt/src/rastervision_pipeline/:$PYTHONPATH
-ENV PYTHONPATH=/opt/src/rastervision_aws_s3/:$PYTHONPATH
-ENV PYTHONPATH=/opt/src/rastervision_aws_batch/:$PYTHONPATH
-ENV PYTHONPATH=/opt/src/rastervision_gdal_vsi/:$PYTHONPATH
-ENV PYTHONPATH=/opt/src/rastervision_core/:$PYTHONPATH
-ENV PYTHONPATH=/opt/src/rastervision_pytorch_learner/:$PYTHONPATH
-ENV PYTHONPATH=/opt/src/rastervision_pytorch_backend/:$PYTHONPATH
-
 WORKDIR /opt/src/
 
 #------------------------------------------------------------------------
@@ -123,6 +114,15 @@ RUN --mount=type=cache,target=/root/.cache/pip pip install -r docs/pandoc-requir
     dpkg -i pandoc-2.19.2-1-${TARGETARCH}.deb && rm pandoc-2.19.2-1-${TARGETARCH}.deb
 
 #------------------------------------------------------------------------
+
+ENV PYTHONPATH=/opt/src:$PYTHONPATH
+ENV PYTHONPATH=/opt/src/rastervision_pipeline/:$PYTHONPATH
+ENV PYTHONPATH=/opt/src/rastervision_aws_s3/:$PYTHONPATH
+ENV PYTHONPATH=/opt/src/rastervision_aws_batch/:$PYTHONPATH
+ENV PYTHONPATH=/opt/src/rastervision_gdal_vsi/:$PYTHONPATH
+ENV PYTHONPATH=/opt/src/rastervision_core/:$PYTHONPATH
+ENV PYTHONPATH=/opt/src/rastervision_pytorch_learner/:$PYTHONPATH
+ENV PYTHONPATH=/opt/src/rastervision_pytorch_backend/:$PYTHONPATH
 
 COPY scripts /opt/src/scripts/
 COPY scripts/rastervision /usr/local/bin/rastervision
