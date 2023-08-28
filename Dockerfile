@@ -90,25 +90,49 @@ WORKDIR /opt/src/
 
 #------------------------------------------------------------------------
 
-COPY ./rastervision_gdal_vsi/requirements.txt /opt/src/gdal-requirements.txt
-COPY ./rastervision_aws_s3/requirements.txt /opt/src/s3-requirements.txt
-COPY ./rastervision_aws_batch/requirements.txt /opt/src/batch-requirements.txt
-RUN --mount=type=cache,target=/root/.cache/pip cat gdal-requirements.txt s3-requirements.txt batch-requirements.txt | sort | uniq > all-requirements.txt && \
-    pip install $(grep -ivE "^\s*$|^#|rastervision_*" all-requirements.txt) && \
-    rm all-requirements.txt
+# Ideally we'd just pip install each package, but if we do that, then
+# a lot of the image will have to be re-built each time we make a
+# change to the code. So, we split the install into installing all the
+# requirements in bunches (filtering out any prefixed with
+# rastervision_*), and then copy over the source code.  The
+# dependencies are installed in bunches rather than package-by-package
+# or on a per-RV component basis to reduce the build time, the number
+# of layers, and the overall image size, and to reduce churn
+# (installing and uninstalling of Python packages during the build).
+#
+# The bunches are heuristic and are meant to keep the heaviest and/or
+# least-frequently-changing dependencies before the more variable
+# ones.  At time of writing, the amount of image size attributable to
+# PyTorch (and the amount of image size overall) is heavily dominated
+# by PyTorch, so it is first.
 
-COPY ./rastervision_pipeline/requirements.txt /opt/src/pipeline-requirements.txt
-COPY ./rastervision_core/requirements.txt /opt/src/core-requirements.txt
+# Install requirements.
+# -E "^\s*$|^#|rastervision_*" means exclude blank lines, comment lines,
+# and rastervision plugins.
+
 COPY ./rastervision_pytorch_learner/requirements.txt /opt/src/pytorch-requirements.txt
-RUN --mount=type=cache,target=/root/.cache/pip cat pipeline-requirements.txt core-requirements.txt pytorch-requirements.txt | sort | uniq > all-requirements.txt && \
+RUN --mount=type=cache,target=/root/.cache/pip cat pytorch-requirements.txt | sort | uniq > all-requirements.txt && \
     pip install $(grep -ivE "^\s*$|^#|rastervision_*" all-requirements.txt) && \
     rm all-requirements.txt
 
+COPY ./rastervision_aws_batch/requirements.txt /opt/src/batch-requirements.txt
+COPY ./rastervision_aws_s3/requirements.txt /opt/src/s3-requirements.txt
+COPY ./rastervision_core/requirements.txt /opt/src/core-requirements.txt
+COPY ./rastervision_gdal_vsi/requirements.txt /opt/src/gdal-requirements.txt
+COPY ./rastervision_pipeline/requirements.txt /opt/src/pipeline-requirements.txt
 COPY ./requirements-dev.txt /opt/src/requirements-dev.txt
-RUN --mount=type=cache,target=/root/.cache/pip pip install -r requirements-dev.txt
+RUN --mount=type=cache,target=/root/.cache/pip cat batch-requirements.txt s3-requirements.txt core-requirements.txt gdal-requirements.txt pipeline-requirements.txt requirements-dev.txt | sort | uniq > all-requirements.txt && \
+    pip install $(grep -ivE "^\s*$|^#|rastervision_*" all-requirements.txt) && \
+    rm all-requirements.txt
 
-# pandoc
+#########################
+# Docs
+#########################
+# Install docs/requirements.txt
 COPY ./docs/requirements.txt /opt/src/docs/pandoc-requirements.txt
+
+# Install pandoc, needed for rendering notebooks
+# Get latest release link from here: https://github.com/jgm/pandoc/releases
 RUN --mount=type=cache,target=/root/.cache/pip pip install -r docs/pandoc-requirements.txt && \
     wget https://github.com/jgm/pandoc/releases/download/2.19.2/pandoc-2.19.2-1-${TARGETARCH}.deb && \
     dpkg -i pandoc-2.19.2-1-${TARGETARCH}.deb && rm pandoc-2.19.2-1-${TARGETARCH}.deb
