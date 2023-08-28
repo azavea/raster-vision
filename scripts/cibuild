@@ -23,7 +23,7 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
             --platform linux/amd64 \
             --build-arg CUDA_VERSION="12.1.1" \
             --build-arg UBUNTU_VERSION="22.04" \
-	    --cache-from=quay.io/azavea/raster-vision:latest \
+	    --cache-from=quay.io/azavea/raster-vision:pytorch-latest \
             -t "raster-vision-${IMAGE_TYPE}" \
             -f Dockerfile .
 
