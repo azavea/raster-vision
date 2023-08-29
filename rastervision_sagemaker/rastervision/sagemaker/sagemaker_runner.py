@@ -32,8 +32,7 @@ def make_step(
         instance_count=1,
         instance_type=instance_type,
         sagemaker_session=sagemaker_session,
-        instance_count=1,
-        use_spot=True,
+        # use_spot=True,
         command=[cmd[0]],
     )
 
@@ -69,7 +68,7 @@ class SageMakerRunner(Runner):
             pipeline,
             commands,
             num_splits=1,
-            pipeline_run_name: str = 'raster-vision'):
+            pipeline_run_name: str = "raster-vision"):
         parent_job_ids = []
 
         config = rv_config.get_namespace_config(SAGEMAKER)
@@ -85,13 +84,11 @@ class SageMakerRunner(Runner):
         for command in commands:
 
             use_gpu = command in pipeline.gpu_commands
-            # job_name = f'{pipeline_run_name}-{command}-{uuid.uuid4()}'
             job_name = command
-            cmd = ["python", "/opt/src/rastervision_pipeline/rastervision/pipeline/cli.py"]
-            # cmd = ['python', '-m', 'rastervision.pipeline.cli']
+            cmd = ["python", "/opt/src/rastervision_pipeline/rastervision/pipeline/cli.py"]  # XXX
             if rv_config.get_verbosity() > 1:
-                cmd.append('-' + 'v' * (rv_config.get_verbosity() - 1))
-            cmd.extend(['run_command', cfg_json_uri, command])
+                cmd.append("-" + "v" * (rv_config.get_verbosity() - 1))
+            cmd.extend(["run_command", cfg_json_uri, command])
 
             if command in pipeline.split_commands and num_splits > 1:
                 _steps = []
@@ -120,7 +117,9 @@ class SageMakerRunner(Runner):
                 step.add_depends_on(steps)
                 steps.append(step)
 
-        role_arn = sagemaker.get_execution_role()
+        iam_client = boto3.client("iam")
+        role_arn = iam_client.get_role(RoleName=exec_role)["Role"]["Arn"]
+        # role_arn = sagemaker.get_execution_role()
         pipeline = Pipeline(
             name=pipeline_run_name,
             steps=steps,
@@ -128,6 +127,6 @@ class SageMakerRunner(Runner):
         )
         pipeline.upsert(role_arn=role_arn)
         execution = pipeline.start()
-        execution.wait()
-        print(execution.list_steps())
-        print(execution.describe())
+        # execution.wait()
+        # print(execution.list_steps())
+        # print(execution.describe())
