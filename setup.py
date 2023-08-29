@@ -9,7 +9,7 @@ from setuptools import (setup, find_namespace_packages)
 from imp import load_source
 
 here = op.abspath(op.dirname(__file__))
-__version__ = '0.21'
+__version__ = '0.21.1-dev'
 
 # get the dependencies and installs
 with io.open(op.join(here, 'requirements.txt'), encoding='utf-8') as f:

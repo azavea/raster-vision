@@ -1,4 +1,4 @@
-rastervision_pipeline==0.21
+rastervision_pipeline==0.21.1-dev
 boto3==1.28.8
 awscli==1.29.8
 tqdm==4.65.0
