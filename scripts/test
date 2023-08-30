@@ -8,8 +8,8 @@ fi
 
 function usage() {
     echo -n \
-        "Usage: $(basename "$0")
-Run linters and tests.
+        "Usage: $(basename "$0") [style_tests|unit_tests|integration_tests|coverage]
+Run linters and tests based on the provided argument.
 "
 }
 
@@ -17,30 +17,43 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     if [[ "${1:-}" == "--help" ]]; then
         usage
     else
-        if [[ -n "${CI}" ]]; then
-            # Execute test suites
-            docker run \
-                --rm -t \
-                "raster-vision-${IMAGE_TYPE}" \
-                /opt/src/scripts/style_tests
-            docker run \
-                -w "/opt/src" \
-                -v "$(pwd):/opt/src" \
-                --rm -t \
-                "raster-vision-${IMAGE_TYPE}" \
-                /opt/src/scripts/unit_tests
-            docker run \
-                --rm -t \
-                "raster-vision-${IMAGE_TYPE}" \
-                /opt/src/scripts/integration_tests
+        COMMAND=${1:-"all"}
 
-            # Create new coverage reports
-            docker run \
-                -w "/opt/src" \
-                -v "$(pwd):/opt/src" \
-                --rm -t \
-                "raster-vision-${IMAGE_TYPE}" \
-                coverage xml
+        if [[ -n "${CI}" ]]; then
+            case $COMMAND in
+                "style_tests")
+                    docker run \
+                        --rm -t \
+                        "raster-vision-${IMAGE_TYPE}" \
+                        /opt/src/scripts/style_tests
+                    ;;
+                "unit_tests")
+                    docker run \
+                        -w "/opt/src" \
+                        -v "$(pwd):/opt/src" \
+                        --rm -t \
+                        "raster-vision-${IMAGE_TYPE}" \
+                        /opt/src/scripts/unit_tests
+                    ;;
+                "integration_tests")
+                    docker run \
+                        --rm -t \
+                        "raster-vision-${IMAGE_TYPE}" \
+                        /opt/src/scripts/integration_tests
+                    ;;
+                "coverage")
+                    docker run \
+                        -w "/opt/src" \
+                        -v "$(pwd):/opt/src" \
+                        --rm -t \
+                        "raster-vision-${IMAGE_TYPE}" \
+                        coverage xml
+                    ;;
+                *)
+                    echo "Invalid argument. Run --help for usage."
+                    exit 1
+                    ;;
+            esac
         else
             # Local test suite runs against pytorch image by default
             IMAGE_TYPE=${IMAGE_TYPE:-pytorch}

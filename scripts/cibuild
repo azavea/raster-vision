@@ -26,7 +26,5 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
 	    --cache-from=quay.io/azavea/raster-vision:pytorch-latest \
             -t "raster-vision-${IMAGE_TYPE}" \
             -f Dockerfile .
-
-        ./scripts/test
     fi
 fi
