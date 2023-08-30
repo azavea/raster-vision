@@ -25,6 +25,16 @@ jobs:
 
       - run: ./scripts/cibuild
 
+      - run: docker system prune -f
+
+      - run: ./scripts/test "style_tests"
+
+      - run: ./scripts/test "unit_tests"
+
+      - run: ./scripts/test "integration_tests"
+
+      - run: ./scripts/test "coverage"
+
       - uses: codecov/codecov-action@v2
 
       - run: ./scripts/cipublish
