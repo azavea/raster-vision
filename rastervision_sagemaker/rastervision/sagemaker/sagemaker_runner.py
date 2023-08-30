@@ -11,7 +11,6 @@ from sagemaker.workflow.pipeline import Pipeline
 from sagemaker.workflow.pipeline_context import PipelineSession
 from sagemaker.workflow.steps import ProcessingStep, TrainingStep
 
-import os
 import tempfile
 
 log = logging.getLogger(__name__)
@@ -32,32 +31,35 @@ def make_step(
     python_executable = cmd[0]
     script_name = cmd[1]
     script_arguments = cmd[2:]
-    assert python_executable == "python" or python_executable == "python3"
+    assert python_executable == 'python' or python_executable == 'python3'
 
-    if 'train' in cmd or 'predict' in cmd:
+    if True and ('train' in cmd or 'predict' in cmd):
         # For (possibly) GPU-enabled steps, create an "Estimator".
         # Formally this should probably not be used for prediction in
         # this way, but it is expedient (especially given default
         # service quotas, and other stuff).
-        random_py_file = tempfile.mktemp(suffix=".py", dir=tempdir)
+        random_py_file = tempfile.mktemp(suffix='.py', dir=tempdir)
 
         code = f'''#!/usr/bin/env python3
 
-        import os
+    import os
 
-        os.system({" ".join(cmd)})
-        '''
+    os.system(\"" ".join(cmd)\")
+'''
 
-        with open(random_py_file, "w") as f:
+        with open(random_py_file, 'w') as f:
             f.write(code)
 
         step_estimator = sagemaker.pytorch.PyTorch(
             entry_point=random_py_file,
+            container_entry_point=["python3"],
             image_uri=image_uri,
             instance_count=1,
             instance_type=instance_type,
+            max_retry_attempts=1,
             role=role,
             sagemaker_session=sagemaker_session,
+            use_spot=use_spot_instances,
             # use_spot_instances=use_spot_instances,
             # wait_time=60,
         )
@@ -105,7 +107,6 @@ class SageMakerRunner(Runner):
             commands,
             num_splits=1,
             pipeline_run_name: str = 'raster-vision'):
-        # parent_job_ids = []
 
         config = rv_config.get_namespace_config(SAGEMAKER)
         exec_role = config('exec_role')
@@ -113,7 +114,7 @@ class SageMakerRunner(Runner):
         cpu_inst_type = config('cpu_inst_type')
         gpu_image = config('gpu_image')
         gpu_inst_type = config('gpu_inst_type')
-        use_spot_instances = config('use_spot_instances').lower() == "yes"
+        use_spot_instances = config('use_spot_instances').lower() == 'yes'
         sagemaker_session = PipelineSession()
 
         steps = []
@@ -152,7 +153,7 @@ class SageMakerRunner(Runner):
                             sagemaker_session,
                             tempdir,
                         )
-                        step.add_depends_on(steps)
+                        # step.add_depends_on(steps)
                         _steps.append(step)
                     steps.extend(_steps)
                 else:
@@ -162,7 +163,7 @@ class SageMakerRunner(Runner):
                         cmd,
                         exec_role,
                         gpu_image if use_gpu else cpu_image,
-                        gpu_inst_type if use_gpu else cpu_inst_type,
+                        cpu_inst_type if use_gpu else cpu_inst_type,  # XXX
                         use_spot_instances,
                         sagemaker_session,
                         tempdir,
