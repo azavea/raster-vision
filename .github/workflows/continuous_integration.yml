@@ -16,6 +16,24 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - run: df -hT
+
       - run: ./scripts/cibuild
+
+      - run: df -hT
+
+      - run: docker system prune -f
+
+      - run: df -hT
+
+      - run: ./scripts/test "style_tests"
+
+      - run: ./scripts/test "unit_tests"
+
+      - run: df -hT
+
+      - run: ./scripts/test "integration_tests"
+
+      - run: ./scripts/test "coverage"
 
       - uses: codecov/codecov-action@v2
