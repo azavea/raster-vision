@@ -52,7 +52,7 @@ def make_step(
 
         step_estimator = sagemaker.pytorch.PyTorch(
             entry_point=random_py_file,
-            container_entry_point=["python3"],
+            container_entry_point=['python3'],
             image_uri=image_uri,
             instance_count=1,
             instance_type=instance_type,
@@ -163,7 +163,7 @@ class SageMakerRunner(Runner):
                         cmd,
                         exec_role,
                         gpu_image if use_gpu else cpu_image,
-                        cpu_inst_type if use_gpu else cpu_inst_type,  # XXX
+                        gpu_inst_type if use_gpu else cpu_inst_type,
                         use_spot_instances,
                         sagemaker_session,
                         tempdir,
