@@ -50,10 +50,10 @@ RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
     apt-get install -y nodejs
 
 # Install Python and conda
-RUN wget -q -O ~/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-$(cat /root/linux_arch).sh && \
-    chmod +x ~/miniconda.sh && \
-    bash ~/miniconda.sh -b -p /opt/conda && \
-    rm ~/miniconda.sh
+RUN wget -q -O ~/micromamba.sh https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge-pypy3-Linux-$(cat /root/linux_arch).sh && \
+    chmod +x ~/micromamba.sh && \
+    bash ~/micromamba.sh -b -p /opt/conda && \
+    rm ~/micromamba.sh
 ENV PATH /opt/conda/bin:$PATH
 ENV LD_LIBRARY_PATH /opt/conda/lib/:$LD_LIBRARY_PATH
 RUN conda install -y python=${PYTHON_VERSION}
@@ -61,7 +61,7 @@ RUN python -m pip install --upgrade pip
 
 # We need to install GDAL first to install Rasterio on non-AMD64 architectures.
 # The Rasterio wheels contain GDAL in them, but they are only built for AMD64 now.
-RUN conda update conda -y && conda install -y -c conda-forge gdal=3.6.3
+RUN mamba update mamba -y && mamba install -y -c conda-forge gdal=3.6.3
 ENV GDAL_DATA=/opt/conda/lib/python${PYTHON_VERSION}/site-packages/rasterio/gdal_data/
 
 # This is to prevent the following error when starting the container.
