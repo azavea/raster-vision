@@ -6,7 +6,7 @@ from rastervision.pipeline import rv_config_ as rv_config
 from rastervision.pipeline.runner import Runner
 
 from sagemaker.processing import ScriptProcessor
-import sagemaker.pytorch
+from sagemaker.estimator import Estimator
 from sagemaker.workflow.pipeline import Pipeline
 from sagemaker.workflow.pipeline_context import PipelineSession
 from sagemaker.workflow.steps import ProcessingStep, TrainingStep
@@ -38,21 +38,9 @@ def make_step(
         # Formally this should probably not be used for prediction in
         # this way, but it is expedient (especially given default
         # service quotas, and other stuff).
-        random_py_file = tempfile.mktemp(suffix='.py', dir=tempdir)
-
-        code = f'''#!/usr/bin/env python3
-
-    import os
-
-    os.system(\"" ".join(cmd)\")
-'''
-
-        with open(random_py_file, 'w') as f:
-            f.write(code)
-
-        step_estimator = sagemaker.pytorch.PyTorch(
-            entry_point=random_py_file,
-            container_entry_point=['python3'],
+        step_estimator = Estimator(
+            container_entry_point=[python_executable],
+            container_arguments=cmd[1:],
             image_uri=image_uri,
             instance_count=1,
             instance_type=instance_type,
@@ -60,8 +48,6 @@ def make_step(
             role=role,
             sagemaker_session=sagemaker_session,
             use_spot=use_spot_instances,
-            # use_spot_instances=use_spot_instances,
-            # wait_time=60,
         )
         step_args = step_estimator.fit(wait=False)
         step = TrainingStep(step_name, step_args=step_args)
@@ -163,7 +149,7 @@ class SageMakerRunner(Runner):
                         cmd,
                         exec_role,
                         gpu_image if use_gpu else cpu_image,
-                        gpu_inst_type if use_gpu else cpu_inst_type,
+                        cpu_inst_type if use_gpu else cpu_inst_type,
                         use_spot_instances,
                         sagemaker_session,
                         tempdir,
