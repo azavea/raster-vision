@@ -134,7 +134,7 @@ class SageMakerRunner(Runner):
                         use_spot_instances,
                         sagemaker_session,
                     )
-                    # step.add_depends_on(steps)
+                    step.add_depends_on(steps)
                     _steps.append(step)
                 steps.extend(_steps)
             else:
@@ -144,7 +144,7 @@ class SageMakerRunner(Runner):
                     cmd,
                     exec_role,
                     gpu_image if use_gpu else cpu_image,
-                    cpu_inst_type if use_gpu else cpu_inst_type,
+                    gpu_inst_type if use_gpu else cpu_inst_type,
                     use_spot_instances,
                     sagemaker_session,
                 )
