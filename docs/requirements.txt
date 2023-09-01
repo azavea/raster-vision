@@ -6,7 +6,7 @@ nbsphinx==0.8.9
 sphinx-copybutton==0.5.*
 
 # update when this is resolved: https://github.com/spatialaudio/nbsphinx/issues/655
-sphinx-gallery>=0.10,<0.11
+sphinx-gallery>=0.10,<0.15
 
 # Needed to make syntax highlighting work correctly on readthedocs.
 # See https://github.com/spatialaudio/nbsphinx/issues/24.
