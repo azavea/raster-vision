@@ -227,7 +227,7 @@ class TestRasterioSource(unittest.TestCase):
         self.assertEqual(rs_crop.extent, Box(0, 0, 128, 128))
 
         # test validators
-        rs_cfg = RasterioSourceConfig(uris=[img_path], bbox=(0, 0, 1, 1))
+        rs_cfg = RasterioSourceConfig(uris=[img_path], bbox=Box(0, 0, 1, 1))
         self.assertIsInstance(rs_cfg.bbox, Box)
 
     def test_extent_overflow(self):

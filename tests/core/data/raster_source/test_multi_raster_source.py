@@ -129,11 +129,11 @@ class TestMultiRasterSource(unittest.TestCase):
         self.assertEqual(rs.extent, Box(0, 0, 256, 256))
 
         # test validators
-        cfg = make_cfg('small-rgb-tile.tif', bbox=(64, 64, 192, 192))
+        cfg = make_cfg('small-rgb-tile.tif', bbox=Box(64, 64, 192, 192))
         self.assertIsInstance(cfg.bbox, Box)
 
         # /w user specified extent
-        cfg_crop = make_cfg('small-rgb-tile.tif', bbox=(64, 64, 192, 192))
+        cfg_crop = make_cfg('small-rgb-tile.tif', bbox=Box(64, 64, 192, 192))
         rs_crop = cfg_crop.build(tmp_dir=self.tmp_dir)
 
         # test extent box
