@@ -249,7 +249,6 @@ class Box(BaseModel):
         return Box(yslice.start, xslice.start, yslice.stop, xslice.stop)
 
     def to_xywh(self) -> Tuple[int, int, int, int]:
-        print(self.xmin)
         return (self.xmin, self.ymin, self.width, self.height)
 
     def to_xyxy(self) -> Tuple[int, int, int, int]:
