@@ -38,11 +38,12 @@ class RasterSourceConfig(Config):
         description=
         'The sequence of channel indices to use when reading imagery.')
     transformers: List[RasterTransformerConfig] = []
-    bbox: Optional[Tuple[int, int, int, int]] = Field(
-        None,
-        description='User-specified bbox in pixel coords in the form '
-        '(ymin, xmin, ymax, xmax). Useful for cropping the raster source so '
-        'that only part of the raster is read from.')
+    # bbox: Optional[Tuple[int, int, int, int]] = Field(
+    #     None,
+    #     description='User-specified bbox in pixel coords in the form '
+    #     '(ymin, xmin, ymax, xmax). Useful for cropping the raster source so '
+    #     'that only part of the raster is read from.')
+    bbox: Optional['Box'] = None
 
     def build(self,
               tmp_dir: Optional[str] = None,
@@ -54,9 +55,3 @@ class RasterSourceConfig(Config):
                scene: Optional['SceneConfig'] = None) -> None:
         for t in self.transformers:
             t.update(pipeline, scene)
-
-    @validator('bbox')
-    def validate_bbox(cls, v):
-        if v is None:
-            return None
-        return Box(*v)

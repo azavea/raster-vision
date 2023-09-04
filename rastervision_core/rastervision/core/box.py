@@ -1,3 +1,4 @@
+from pydantic import BaseModel, Field
 from typing import (TYPE_CHECKING, Callable, Dict, List, Optional, Sequence,
                     Tuple, Union)
 from typing_extensions import Literal
@@ -21,27 +22,28 @@ class BoxSizeError(ValueError):
     pass
 
 
-class Box():
+class Box(BaseModel):
     """A multi-purpose box (ie. rectangle) representation ."""
 
-    def __init__(self, ymin, xmin, ymax, xmax):
-        """Construct a bounding box.
+    # yapf: disable
+    ymin: Union[float, int] = Field(..., description='minimum y value (y is row)')
+    xmin: Union[float, int] = Field(..., description='minimum x value (x is column)')
+    ymax: Union[float, int] = Field(..., description='maximum y value')
+    xmax: Union[float, int] = Field(..., description='maximum x value')
+    # yapf: enable
 
-        Unless otherwise stated, the convention is that these coordinates are
-        in pixel coordinates and represent boxes that lie within a
-        RasterSource.
+    def __init__(self,
+                 ymin: Optional[Union[int, float]] = None,
+                 xmin: Optional[Union[int, float]] = None,
+                 ymax: Optional[Union[int, float]] = None,
+                 xmax: Optional[Union[int, float]] = None,
+                 **data):
 
-        Args:
-            ymin: minimum y value (y is row)
-            xmin: minimum x value (x is column)
-            ymax: maximum y value
-            xmax: maximum x value
-
-        """
-        self.ymin = ymin
-        self.xmin = xmin
-        self.ymax = ymax
-        self.xmax = xmax
+        super().__init__(ymin=ymin, xmin=xmin, ymax=ymax, xmax=xmax, **data)
+        for field in ['ymin', 'xmin', 'ymax', 'xmax']:
+            value = getattr(self, field)
+            if isinstance(value, float) and value.is_integer():
+                setattr(self, field, int(value))
 
     def __eq__(self, other: 'Box') -> bool:
         """Return true if other has same coordinates."""
@@ -247,6 +249,7 @@ class Box():
         return Box(yslice.start, xslice.start, yslice.stop, xslice.stop)
 
     def to_xywh(self) -> Tuple[int, int, int, int]:
+        print(self.xmin)
         return (self.xmin, self.ymin, self.width, self.height)
 
     def to_xyxy(self) -> Tuple[int, int, int, int]:
