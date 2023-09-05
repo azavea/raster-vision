@@ -27,8 +27,6 @@ FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu${UBUNTU_VERSION} as fullb
 ARG PYTHON_VERSION=3.10
 ARG TARGETPLATFORM
 
-ENV PROJ_LIB /opt/conda/share/proj/
-
 # wget: needed below to install conda
 # build-essential: installs gcc which is needed to install some deps like rasterio
 # libGL1: needed to avoid following error when using cv2
@@ -63,6 +61,8 @@ RUN python -m pip install --upgrade pip
 # The Rasterio wheels contain GDAL in them, but they are only built for AMD64 now.
 RUN mamba update mamba -y && mamba install -y -c conda-forge gdal=3.6.3
 ENV GDAL_DATA=/opt/conda/lib/python${PYTHON_VERSION}/site-packages/rasterio/gdal_data/
+# Needed for GDAL 3.0
+ENV PROJ_LIB /opt/conda/share/proj/
 
 # This is to prevent the following error when starting the container.
 # bash: /opt/conda/lib/libtinfo.so.6: no version information available (required by bash)
