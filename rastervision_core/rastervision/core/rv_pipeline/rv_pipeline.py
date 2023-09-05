@@ -127,6 +127,9 @@ class RVPipeline(Pipeline):
 
             def chip_scene(scene, split):
                 windows = self.get_train_windows(scene)
+                if len(windows) == 0:
+                    log.warning(f'Scene {scene.id} produced no windows')
+                    return
                 with tqdm(
                         windows,
                         desc=f'Making {split} chips from scene {scene.id}',
@@ -229,9 +232,9 @@ class RVPipeline(Pipeline):
                 try:
                     evaluator.process(group_scenes, self.tmp_dir)
                 except FileNotFoundError:
-                    log.warn(f'Skipping scene group "{group_name}". '
-                             'Either labels or predictions are missing for '
-                             'some scene.')
+                    log.warning(f'Skipping scene group "{group_name}". '
+                                'Either labels or predictions are missing for '
+                                'some scene.')
 
     def bundle(self):
         """Save a model bundle with whatever is needed to make predictions.
