@@ -1,5 +1,6 @@
 from typing import List, Union
 
+from rastervision.core.box import Box
 from rastervision.core.data.raster_source import RasterSourceConfig, RasterioSource
 from rastervision.pipeline.config import ConfigError, Field, register_config
 
@@ -37,11 +38,11 @@ class RasterioSourceConfig(RasterSourceConfig):
     def build(self, tmp_dir, use_transformers=True):
         raster_transformers = ([rt.build() for rt in self.transformers]
                                if use_transformers else [])
-
+        bbox = Box(*self.bbox) if self.bbox is not None else None
         return RasterioSource(
             uris=self.uris,
             raster_transformers=raster_transformers,
             tmp_dir=tmp_dir,
             allow_streaming=self.allow_streaming,
             channel_order=self.channel_order,
-            bbox=self.bbox)
+            bbox=bbox)
