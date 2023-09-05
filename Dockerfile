@@ -49,13 +49,15 @@ RUN case ${TARGETPLATFORM} in \
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
     apt-get install -y nodejs
 
-# Install Python and conda
+# Install Python and conda/mamba (mamba installs conda as well)
 RUN wget -q -O ~/micromamba.sh https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge-pypy3-Linux-$(cat /root/linux_arch).sh && \
     chmod +x ~/micromamba.sh && \
     bash ~/micromamba.sh -b -p /opt/conda && \
     rm ~/micromamba.sh
 ENV PATH /opt/conda/bin:$PATH
 ENV LD_LIBRARY_PATH /opt/conda/lib/:$LD_LIBRARY_PATH
+# for some reason, mamba install python does not work here even though it works
+# fine outside docker
 RUN conda install -y python=${PYTHON_VERSION}
 RUN python -m pip install --upgrade pip
 
