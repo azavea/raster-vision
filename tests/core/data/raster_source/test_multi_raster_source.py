@@ -71,6 +71,11 @@ class TestMultiRasterSourceConfig(unittest.TestCase):
         cfg = make_cfg()
         self.assertNoError(lambda: cfg.build(tmp_dir=get_tmp_dir()))
 
+    def test_build_with_bbox(self):
+        cfg = make_cfg(bbox=(0, 0, 1, 1))
+        rs = cfg.build(tmp_dir=get_tmp_dir())
+        self.assertEqual(rs.bbox, Box(0, 0, 1, 1))
+
     def test_build_temporal(self):
         cfg = make_cfg(temporal=True)
         rs = cfg.build(tmp_dir=get_tmp_dir())
@@ -127,10 +132,6 @@ class TestMultiRasterSource(unittest.TestCase):
         rs = cfg.build(tmp_dir=self.tmp_dir)
         self.assertEqual(rs.bbox, Box(0, 0, 256, 256))
         self.assertEqual(rs.extent, Box(0, 0, 256, 256))
-
-        # test validators
-        cfg = make_cfg('small-rgb-tile.tif', bbox=(64, 64, 192, 192))
-        self.assertIsInstance(cfg.bbox, Box)
 
         # /w user specified extent
         cfg_crop = make_cfg('small-rgb-tile.tif', bbox=(64, 64, 192, 192))

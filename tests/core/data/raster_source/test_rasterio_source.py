@@ -1,3 +1,4 @@
+from typing import Callable
 import unittest
 from os.path import join
 from tempfile import NamedTemporaryFile
@@ -14,6 +15,25 @@ from rastervision.core.data.raster_source import (
 from rastervision.core.data.raster_transformer import StatsTransformerConfig
 
 from tests import data_file_path
+
+
+class TestRasterioSourceConfig(unittest.TestCase):
+    def assertNoError(self, fn: Callable, msg: str = ''):
+        try:
+            fn()
+        except Exception:
+            self.fail(msg)
+
+    def test_build(self):
+        img_path = data_file_path('small-rgb-tile.tif')
+        cfg = RasterioSourceConfig(uris=[img_path])
+        self.assertNoError(lambda: cfg.build(tmp_dir=get_tmp_dir()))
+
+    def test_build_with_bbox(self):
+        img_path = data_file_path('small-rgb-tile.tif')
+        cfg = RasterioSourceConfig(uris=[img_path], bbox=(0, 0, 1, 1))
+        rs = cfg.build(tmp_dir=get_tmp_dir())
+        self.assertEqual(rs.bbox, Box(0, 0, 1, 1))
 
 
 class TestRasterioSource(unittest.TestCase):
@@ -225,10 +245,6 @@ class TestRasterioSource(unittest.TestCase):
         # test bbox box
         self.assertEqual(rs_crop.bbox, Box(64, 64, 192, 192))
         self.assertEqual(rs_crop.extent, Box(0, 0, 128, 128))
-
-        # test validators
-        rs_cfg = RasterioSourceConfig(uris=[img_path], bbox=(0, 0, 1, 1))
-        self.assertIsInstance(rs_cfg.bbox, Box)
 
     def test_extent_overflow(self):
         arr = np.ones((100, 100), dtype=np.uint8)
