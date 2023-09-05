@@ -14,7 +14,7 @@ ARG PYTHON_VERSION=3.10
 # See https://stackoverflow.com/questions/55313610/importerror-libgl-so-1-cannot-open-shared-object-file-no-such-file-or-directo
 RUN --mount=type=cache,target=/var/cache/apt apt update && \
     apt install -y wget=1.21.2-2ubuntu1 build-essential=12.9ubuntu3 libgl1=1.4.0-1 curl=7.81.0-1ubuntu1.13 git=1:2.34.1-1ubuntu1.10 tree=2.0.2-1 gdal-bin=3.4.1+dfsg-1build4 libgdal-dev=3.4.1+dfsg-1build4 python${PYTHON_VERSION} python3-pip && \
-    curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
+    curl -fsSL https://deb.nodesource.com/node_16.x | bash - && \
     apt install -y nodejs=16.20.2-deb-1nodesource1 && \
     update-alternatives --install /usr/bin/python3 python3 /usr/bin/python${PYTHON_VERSION} 1 && \
     update-alternatives --install /usr/bin/python python /usr/bin/python${PYTHON_VERSION} 1 && \
@@ -26,10 +26,6 @@ FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu${UBUNTU_VERSION} as fullb
 
 ARG PYTHON_VERSION=3.10
 ARG TARGETPLATFORM
-
-ENV PATH /opt/conda/bin:$PATH
-ENV LD_LIBRARY_PATH /opt/conda/lib/:$LD_LIBRARY_PATH
-ENV PROJ_LIB /opt/conda/share/proj/
 
 # wget: needed below to install conda
 # build-essential: installs gcc which is needed to install some deps like rasterio
@@ -46,16 +42,18 @@ RUN case ${TARGETPLATFORM} in \
     esac && echo ${LINUX_ARCH} > /root/linux_arch
 
 # needed for jupyter lab extensions
-RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
+RUN curl -fsSL https://deb.nodesource.com/node_16.x | bash - && \
     apt-get install -y nodejs
 
-# Install Python and conda
+# Install Python and conda/mamba (mamba installs conda as well)
 RUN wget -q -O ~/micromamba.sh https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge-pypy3-Linux-$(cat /root/linux_arch).sh && \
     chmod +x ~/micromamba.sh && \
     bash ~/micromamba.sh -b -p /opt/conda && \
     rm ~/micromamba.sh
 ENV PATH /opt/conda/bin:$PATH
 ENV LD_LIBRARY_PATH /opt/conda/lib/:$LD_LIBRARY_PATH
+# for some reason, mamba install python does not work here even though it works
+# fine outside docker
 RUN conda install -y python=${PYTHON_VERSION}
 RUN python -m pip install --upgrade pip
 
@@ -63,6 +61,8 @@ RUN python -m pip install --upgrade pip
 # The Rasterio wheels contain GDAL in them, but they are only built for AMD64 now.
 RUN mamba update mamba -y && mamba install -y -c conda-forge gdal=3.6.3
 ENV GDAL_DATA=/opt/conda/lib/python${PYTHON_VERSION}/site-packages/rasterio/gdal_data/
+# Needed for GDAL 3.0
+ENV PROJ_LIB /opt/conda/share/proj/
 
 # This is to prevent the following error when starting the container.
 # bash: /opt/conda/lib/libtinfo.so.6: no version information available (required by bash)
