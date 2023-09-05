@@ -165,8 +165,9 @@ class Learner(ABC):
             raise ValueError('output_dir or LearnerConfig.output_uri must '
                              'be specified.')
         if output_dir is not None and cfg.output_uri is not None:
-            log.warn('Both output_dir and LearnerConfig.output_uri specified. '
-                     'LearnerConfig.output_uri will be ignored.')
+            log.warning(
+                'Both output_dir and LearnerConfig.output_uri specified. '
+                'LearnerConfig.output_uri will be ignored.')
         if output_dir is None:
             assert cfg.output_uri is not None
             self.output_dir = cfg.output_uri
@@ -851,7 +852,7 @@ class Learner(ABC):
 
         in_channels = cfg.data.img_channels
         if in_channels is None:
-            log.warn('DataConfig.img_channels is None. Defaulting to 3.')
+            log.warning('DataConfig.img_channels is None. Defaulting to 3.')
             in_channels = 3
 
         model = cfg.model.build(

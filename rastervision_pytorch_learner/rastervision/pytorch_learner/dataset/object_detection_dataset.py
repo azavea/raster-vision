@@ -266,9 +266,9 @@ class ObjectDetectionRandomWindowGeoDataset(RandomWindowGeoDataset):
             if h >= box_h and w >= box_w:
                 window = bbox.make_random_box_container(h, w)
                 return window
-        log.warn('ObjectDetectionRandomWindowGeoDataset: Failed to find '
-                 'suitable (h, w) for positive window. '
-                 f'Using (hmax, wmax) = ({hmax}, {wmax}) instead.')
+        log.warning('ObjectDetectionRandomWindowGeoDataset: Failed to find '
+                    'suitable (h, w) for positive window. '
+                    f'Using (hmax, wmax) = ({hmax}, {wmax}) instead.')
         window = bbox.make_random_box_container(hmax, wmax)
         return window
 
@@ -285,8 +285,8 @@ class ObjectDetectionRandomWindowGeoDataset(RandomWindowGeoDataset):
             if len(labels) == 0:
                 return window
 
-        log.warn('ObjectDetectionRandomWindowGeoDataset: Failed to find '
-                 'negative window. Returning last sampled window.')
+        log.warning('ObjectDetectionRandomWindowGeoDataset: Failed to find '
+                    'negative window. Returning last sampled window.')
         return window
 
     def _sample_window(self) -> Box:
