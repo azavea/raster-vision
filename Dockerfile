@@ -27,8 +27,6 @@ FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu${UBUNTU_VERSION} as fullb
 ARG PYTHON_VERSION=3.10
 ARG TARGETPLATFORM
 
-ENV PATH /opt/conda/bin:$PATH
-ENV LD_LIBRARY_PATH /opt/conda/lib/:$LD_LIBRARY_PATH
 ENV PROJ_LIB /opt/conda/share/proj/
 
 # wget: needed below to install conda
