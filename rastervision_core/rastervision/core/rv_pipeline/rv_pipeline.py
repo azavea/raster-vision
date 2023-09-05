@@ -127,6 +127,9 @@ class RVPipeline(Pipeline):
 
             def chip_scene(scene, split):
                 windows = self.get_train_windows(scene)
+                if len(windows) == 0:
+                    log.warn('Warning: scene produced no windows')
+                    return
                 with tqdm(
                         windows,
                         desc=f'Making {split} chips from scene {scene.id}',
