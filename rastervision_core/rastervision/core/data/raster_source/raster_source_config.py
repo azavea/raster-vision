@@ -1,8 +1,7 @@
 from typing import TYPE_CHECKING, List, Optional, Tuple
 
-from rastervision.core.box import Box
 from rastervision.pipeline.config import (Config, register_config, Field,
-                                          validator, ConfigError)
+                                          ConfigError)
 from rastervision.core.data.raster_transformer import RasterTransformerConfig
 
 if TYPE_CHECKING:
@@ -54,9 +53,3 @@ class RasterSourceConfig(Config):
                scene: Optional['SceneConfig'] = None) -> None:
         for t in self.transformers:
             t.update(pipeline, scene)
-
-    @validator('bbox')
-    def validate_bbox(cls, v):
-        if v is None:
-            return None
-        return Box(*v)
