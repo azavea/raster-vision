@@ -177,7 +177,7 @@ class ExternalModuleConfig(Config):
                 external source but instead from this dir. Defaults to None.
 
         Returns:
-            Any: The module loaded via torch.hub.
+            The module loaded via torch.hub.
         """
         if hubconf_dir is not None:
             log.info(f'Using existing module definition at: {hubconf_dir}')
@@ -267,7 +267,7 @@ class ModelConfig(Config):
             **kwargs: Extra args for :meth:`.build_default_model`.
 
         Returns:
-            nn.Module: a PyTorch nn.Module.
+            A PyTorch nn.Module.
         """
         if self.external_def is not None:
             return self.build_external_model(
@@ -284,7 +284,7 @@ class ModelConfig(Config):
                 will be fed into the model. Defaults to 3.
 
         Returns:
-            nn.Module: a PyTorch nn.Module.
+            A PyTorch nn.Module.
         """
         raise NotImplementedError()
 
@@ -299,7 +299,7 @@ class ModelConfig(Config):
                 Defaults to None.
 
         Returns:
-            nn.Module: a PyTorch nn.Module.
+            A PyTorch nn.Module.
         """
         return self.external_def.build(save_dir, hubconf_dir=hubconf_dir)
 
@@ -382,7 +382,7 @@ class SolverConfig(Config):
                 external_loss_def if specified. Defaults to None.
 
         Returns:
-            Callable: Loss function.
+            Loss function.
         """
         if self.external_loss_def is not None:
             return self.external_loss_def.build(
@@ -414,7 +414,7 @@ class SolverConfig(Config):
             **kwargs: Extra args for the optimizer constructor.
 
         Returns:
-            optim.Optimizer: An Adam optimzer instance.
+            An Adam optimzer instance.
         """
         return optim.Adam(model.parameters(), lr=self.lr, **kwargs)
 
@@ -435,8 +435,7 @@ class SolverConfig(Config):
             **kwargs: Extra args for the scheduler constructor.
 
         Returns:
-            Optional[_LRScheduler]: A step scheduler, if applicable. Otherwise,
-                None.
+            A step scheduler, if applicable. Otherwise, None.
         """
         scheduler = None
         if self.one_cycle and self.num_epochs > 1:
@@ -475,8 +474,7 @@ class SolverConfig(Config):
             **kwargs: Extra args for the scheduler constructor.
 
         Returns:
-            Optional[_LRScheduler]: An epoch scheduler, if applicable. Otherwise,
-                None.
+            An epoch scheduler, if applicable. Otherwise, None.
         """
         scheduler = None
         if self.multi_stage:
@@ -727,9 +725,19 @@ class DataConfig(Config):
     def get_data_transforms(self) -> Tuple[A.BasicTransform, A.BasicTransform]:
         """Get albumentations transform objects for data augmentation.
 
+        Returns a 2-tuple of a "base" transform and an augmentation transform.
+        The base transform comprises a resize transform based on img_sz
+        followed by the transform specified in base_transform. The augmentation
+        transform comprises the base transform followed by either the transform
+        in aug_transform (if specified) or the transforms in the augmentors
+        field.
+
+        The augmentation transform is intended to be used for training data,
+        and the base transform for all other data where data augmentation is
+        not desirable, such as validation or prediction.
+
         Returns:
-           1st tuple arg: a transform that doesn't do any data augmentation
-           2nd tuple arg: a transform with data augmentation
+            base transform and augmentation transform.
         """
         bbox_params = self.get_bbox_params()
         base_tfs = [A.Resize(self.img_sz, self.img_sz)]
@@ -876,8 +884,7 @@ class ImageDataConfig(DataConfig):
                 test dataset. Defaults to None.
 
         Returns:
-            Tuple[Dataset, Dataset, Dataset]: PyTorch-compatiable training,
-                validation, and test datasets.
+            PyTorch-compatiable training, validation, and test datasets.
         """
         train_ds_list = [self.dir_to_dataset(d, train_tf) for d in train_dirs]
         val_ds_list = [self.dir_to_dataset(d, val_tf) for d in val_dirs]
@@ -938,8 +945,7 @@ class ImageDataConfig(DataConfig):
                 images.
 
         Returns:
-            Tuple[Dataset, Dataset, Dataset]: Training, validation, and test
-                dataSets.
+            Training, validation, and test dataSets.
         """
         data_dirs = self.get_data_dirs(uri, unzip_dir=tmp_dir)
 
@@ -1013,7 +1019,7 @@ class ImageDataConfig(DataConfig):
         (optinally) "test" subdirectories.
 
         Args:
-            uri (Union[str, List[str]]): a URI or a list of URIs of one of the
+            uri (Union[str, List[str]]): A URI or a list of URIs of one of the
                 following:
 
                 (1) a URI of a directory containing "train", "valid", and
@@ -1021,9 +1027,12 @@ class ImageDataConfig(DataConfig):
                 (2) a URI of a zip file containing (1)
                 (3) a list of (2)
                 (4) a URI of a directory containing zip files containing (1)
+            unzip_dir (str): Directory where zip files will be extrated to, if
+                needed.
 
         Returns:
-            paths to directories that each contain contents of one zip file
+            List[str]: Paths to directories that each contain contents of one
+            zip file.
         """
 
         def is_data_dir(uri: str) -> bool:
@@ -1066,11 +1075,12 @@ class ImageDataConfig(DataConfig):
         """Unzip dataset zip files.
 
         Args:
-            zip_uris (List[str]): a list of URIs of zip files:
-            unzip_dir (str): directory where zip files will be extrated to.
+            zip_uris (List[str]): A list of URIs of zip files:
+            unzip_dir (str): Directory where zip files will be extrated to.
 
         Returns:
-            paths to directories that each contain contents of one zip file
+            List[str]: Paths to directories that each contain contents of one
+            zip file.
         """
         data_dirs = []
 
@@ -1275,7 +1285,7 @@ class GeoDataConfig(DataConfig):
 
         Returns:
             Tuple[Dataset, Dataset, Dataset]: PyTorch-compatiable training,
-                validation, and test datasets.
+            validation, and test datasets.
         """
         train_scenes, val_scenes, test_scenes = self.build_scenes(tmp_dir)
 
@@ -1413,7 +1423,7 @@ class LearnerConfig(Config):
               model_weights_path: Optional[str] = None,
               model_def_path: Optional[str] = None,
               loss_def_path: Optional[str] = None,
-              training=True) -> 'Learner':
+              training: bool = True) -> 'Learner':
         """Returns a Learner instantiated using this Config.
 
         Args:
