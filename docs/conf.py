@@ -154,7 +154,7 @@ nbsphinx_prolog = r"""
 
     .. note::
 
-        If running outside of the Docker image, you might need to set a couple of environment variables manually. You can do it like so:
+        If running outside of the Docker image, you may need to set some environment variables manually. You can do it like so:
 
         .. code-block:: python
 
