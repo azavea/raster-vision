@@ -70,9 +70,10 @@ class Predictor():
                 if scene_group is not None:
                     t.scene_group = scene_group
                 else:
-                    log.warn(f'Using stats for scene group "{t.scene_group}". '
-                             'To use a different scene group, specify '
-                             '--scene-group <scene-group-name>.')
+                    log.warning(
+                        f'Using stats for scene group "{t.scene_group}". '
+                        'To use a different scene group, specify '
+                        '--scene-group <scene-group-name>.')
             t.update_root(bundle_dir)
 
         if self.update_stats:

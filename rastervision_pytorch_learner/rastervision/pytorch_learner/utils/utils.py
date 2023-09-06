@@ -348,8 +348,8 @@ def channel_groups_to_imgs(
             img = torch.cat((img, third_channel), dim=-1)
         elif len(ch_inds) > 3:
             # only use the first 3 channels
-            log.warn(f'Only plotting first 3 channels of channel-group '
-                     f'{title}: {ch_inds}.')
+            log.warning(f'Only plotting first 3 channels of channel-group '
+                        f'{title}: {ch_inds}.')
             img = x[..., ch_inds[:3]]
         imgs.append(img)
     return imgs

@@ -156,7 +156,7 @@ class SemanticSegmentation(RVPipeline):
         if crop_sz == 'auto':
             overlap_sz = chip_sz - stride
             if overlap_sz % 2 == 1:
-                log.warn(
+                log.warning(
                     'Using crop_sz="auto" but overlap size (chip_sz minus '
                     'stride) is odd. This means that one pixel row/col will '
                     'still overlap after cropping.')
