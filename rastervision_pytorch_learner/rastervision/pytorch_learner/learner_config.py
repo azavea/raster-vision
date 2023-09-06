@@ -910,8 +910,8 @@ class ImageDataConfig(DataConfig):
                 test_mode=test_mode)
 
         if self.uri is not None:
-            log.warn('Both DataConfig.uri and DataConfig.group_uris '
-                     'specified. Only DataConfig.group_uris will be used.')
+            log.warning('Both DataConfig.uri and DataConfig.group_uris '
+                        'specified. Only DataConfig.group_uris will be used.')
 
         train_ds, valid_ds, test_ds = self.get_datasets_from_group_uris(
             self.group_uris,

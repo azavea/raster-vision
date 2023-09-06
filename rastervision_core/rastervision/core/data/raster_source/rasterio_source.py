@@ -80,9 +80,9 @@ class RasterioSource(RasterSource):
 
         block_shapes = set(self.image_dataset.block_shapes)
         if len(block_shapes) > 1:
-            log.warn('Raster bands have non-identical block shapes: '
-                     f'{block_shapes}. This can slow down reading. '
-                     'Consider re-tiling using GDAL.')
+            log.warning('Raster bands have non-identical block shapes: '
+                        f'{block_shapes}. This can slow down reading. '
+                        'Consider re-tiling using GDAL.')
 
         self._crs_transformer = RasterioCRSTransformer.from_dataset(
             self.image_dataset)
