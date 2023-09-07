@@ -21,7 +21,7 @@ jobs:
       DOCKER_BUILDKIT: 1
       IMAGE_TYPE: ${{ matrix.image_type }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - run: ./scripts/cibuild
 
