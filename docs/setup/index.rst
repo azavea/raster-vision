@@ -36,9 +36,9 @@ You can directly install the library using ``pip`` (or ``pip3`` if you also have
 
 This has been shown to work in the following environment. Variations on this environment may or may not work.
 
-* Ubuntu Linux 20.04
-* Python 3.9
-* CUDA 11.6 and NVIDIA Driver 510.47.03 (for GPU support)
+* Ubuntu Linux 22.04
+* Python 3.10
+* CUDA 12 and NVIDIA Driver 535 (for GPU support)
 
 Raster Vision also runs on macOS version 12.1, except that the ``num_workers`` for the :class:`.DataLoader` will need to be set to 0 due to an issue with mulitprocessing on Macs with Python >= 3.8. It will also be necessary to install GDAL (check `here <{{ repo }}/rastervision_gdal_vsi/requirements.txt>`__ for the exact version) prior to installing Raster Vision, which isn't necessary on Linux.
 

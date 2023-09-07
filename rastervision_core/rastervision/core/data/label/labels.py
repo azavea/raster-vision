@@ -47,7 +47,7 @@ class Labels(ABC):
 
         Returns:
             Labels: An object of the Label subclass on which this method is
-                called.
+            called.
         """
         pass
 
@@ -68,7 +68,7 @@ class Labels(ABC):
 
         Returns:
             Labels: An object of the Label subclass on which this method is
-                called.
+            called.
         """
         labels = cls.make_empty()
         # If predictions is tqdm-wrapped, it needs to be the first arg to zip()

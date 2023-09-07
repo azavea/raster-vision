@@ -343,11 +343,10 @@ class TorchVisionODAdapter(nn.Module):
                 None.
 
         Returns:
-            Union[dict, List[BoxList]]: In training mode,
-                returns a dict of losses. In eval mode, returns a list of
-                BoxLists containing predicted boxes, class_ids, and scores.
-                Further filtering based on score should be done before
-                considering the prediction "final".
+            In training mode, returns a dict of losses. In eval mode, returns a
+            list of BoxLists containing predicted boxes, class_ids, and scores.
+            Further filtering based on score should be done before considering
+            the prediction "final".
         """
         if targets is not None:
             # Convert each boxlist into the format expected by the torchvision

@@ -48,7 +48,7 @@ class ClassificationEvaluation(ABC):
 
         Returns:
             Union[dict, list]: Class-wise and (if available) scene-wise
-                evaluations.
+            evaluations.
         """
         out = [item.to_json() for item in self.class_to_eval_item.values()]
         if self.avg_item:

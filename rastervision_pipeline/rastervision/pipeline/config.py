@@ -176,8 +176,8 @@ def _upgrade_config(x: Union[dict, List[dict]], plugin_versions: Dict[str, int]
         plugin_versions: dict mapping from plugin module name to the latest version
 
     Returns:
-        the corresponding serialized Config(s) that have been upgraded to the
-            current version
+        The corresponding serialized Config(s) that have been upgraded to the
+        current version.
     """
     if isinstance(x, dict):
         new_x = {}
@@ -235,8 +235,8 @@ def upgrade_config(
             non-current version
 
     Returns:
-        the corresponding serialized PipelineConfig(s) that have been upgraded to the
-            current version
+        The corresponding serialized PipelineConfig(s) that have been upgraded
+        to the current version.
     """
     plugin_versions = config_dict.get('plugin_versions')
     plugin_versions = upgrade_plugin_versions(plugin_versions)
@@ -284,7 +284,7 @@ def register_config(type_hint: str,
 
     Returns:
         Callable: A function that returns a new class that is identical to the
-            input Config with an additional ``type_hint`` field.
+        input Config with an additional ``type_hint`` field.
     """
 
     def _register_config(cls: Type):
