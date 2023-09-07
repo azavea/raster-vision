@@ -5,6 +5,7 @@
 .. autoclass:: {{ objname }}
    :show-inheritance:
    :members:
+   :special-members: __getitem__, __setitem__, __contains__, __add__
    :undoc-members:
    :inherited-members:
 
