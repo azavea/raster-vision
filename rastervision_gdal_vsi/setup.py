@@ -10,7 +10,7 @@ with io.open(op.join(here, 'requirements.txt'), encoding='utf-8') as f:
 install_requires = [x.strip() for x in all_reqs if 'git+' not in x]
 
 name = 'rastervision_gdal_vsi'
-version = '0.21'
+version = '0.21.1'
 description = 'A rastervision plugin that adds a GDAL VSI file system'
 
 setup(
