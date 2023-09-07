@@ -107,7 +107,7 @@ class NpBoxList(object):
 
         Returns:
             Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]: a 4-tuple
-                of 1-d numpy arrays [y_min, x_min, y_max, x_max].
+            of 1-d numpy arrays [y_min, x_min, y_max, x_max].
         """
         boxes = self.get_field('boxes')
         return tuple(boxes.T)

@@ -75,9 +75,9 @@ def parse_stac(stac_uri: str, item_limit: Optional[int] = None) -> List[dict]:
 
     Returns:
         List[dict]: A lsit of dicts with keys: "label_uri", "image_uris",
-            "label_bbox", "image_bbox", "bboxes_intersect", and "aoi_geometry".
-            Each dict corresponds to one label item and its associated image
-            assets in the STAC catalog.
+        "label_bbox", "image_bbox", "bboxes_intersect", and "aoi_geometry".
+        Each dict corresponds to one label item and its associated image
+        assets in the STAC catalog.
     """
     setup_stac_io()
     cat = Catalog.from_file(stac_uri)
@@ -146,9 +146,9 @@ def read_stac(uri: str, extract_dir: Optional[str] = None,
 
     Returns:
         List[dict]: A lsit of dicts with keys: "label_uri", "image_uris",
-            "label_bbox", "image_bbox", "bboxes_intersect", and "aoi_geometry".
-            Each dict corresponds to one label item and its associated image
-            assets in the STAC catalog.
+        "label_bbox", "image_bbox", "bboxes_intersect", and "aoi_geometry".
+        Each dict corresponds to one label item and its associated image
+        assets in the STAC catalog.
     """
     from pathlib import Path
     from rastervision.pipeline.file_system.utils import (download_if_needed,

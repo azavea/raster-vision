@@ -565,8 +565,8 @@ class Learner(ABC):
             raw_out (bool): if True, return prediction probabilities
 
         Returns:
-            the predictions, in probability form if raw_out is True, in class_id form
-                otherwise
+            The predictions, in probability form if raw_out is True, in
+            class_id form otherwise.
         """
         x = self.to_batch(x).float()
         x = self.to_device(x, self.device)
@@ -622,10 +622,9 @@ class Learner(ABC):
             ValueError: If return_format is not one of the allowed values.
 
         Returns:
-            Union[Iterator[Any], Iterator[Tuple[Any, ...]]]: If return_format
-                is 'z', the returned value is an iterator of whatever type the
-                predictions are. Otherwise, the returned value is an iterator
-                of tuples.
+            If return_format is 'z', the returned value is an iterator of
+            whatever type the predictions are. Otherwise, the returned value is
+            an iterator of tuples.
         """
 
         if return_format not in {'xyz', 'yz', 'z'}:

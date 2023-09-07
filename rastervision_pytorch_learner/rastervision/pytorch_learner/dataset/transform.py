@@ -30,7 +30,7 @@ def apply_transform(transform: A.BasicTransform, **kwargs) -> dict:
 
     Returns:
         dict: Output of ``transform``. If ndim == 4, the transformed image in
-            the dict is also 4-dimensional.
+        the dict is also 4-dimensional.
     """
     img = kwargs['image']
     if img.ndim == 3:

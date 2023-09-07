@@ -22,7 +22,7 @@ class BoxSizeError(ValueError):
 
 
 class Box():
-    """A multi-purpose box (ie. rectangle) representation ."""
+    """A multi-purpose box (ie. rectangle) representation."""
 
     def __init__(self, ymin, xmin, ymax, xmax):
         """Construct a bounding box.
@@ -36,7 +36,6 @@ class Box():
             xmin: minimum x value (x is column)
             ymax: maximum y value
             xmax: maximum x value
-
         """
         self.ymin = ymin
         self.xmin = xmin
@@ -100,7 +99,6 @@ class Box():
 
         Returns:
             Numpy array of form [ymin, xmin, ymax, xmax] with float type
-
         """
         return np.array(
             [self.ymin, self.xmin, self.ymax, self.xmax], dtype=float)
@@ -140,7 +138,6 @@ class Box():
 
         Args:
             size: the width and height of the new Box
-
         """
         return self.make_random_box_container(size, size)
 
@@ -175,7 +172,6 @@ class Box():
 
         Args:
             size: the height and width of the new Box
-
         """
         if size >= self.width:
             raise BoxSizeError('size of random square cannot be >= width')
@@ -203,7 +199,6 @@ class Box():
 
         Returns:
              The intersection of this box and the other one.
-
         """
         if not self.intersects(other):
             return Box(0, 0, 0, 0)
@@ -232,24 +227,27 @@ class Box():
 
         Args:
             npbox: Numpy array of form [ymin, xmin, ymax, xmax] with float type
-
         """
         return Box(*npbox)
 
     @staticmethod
     def from_shapely(shape):
+        """Instantiate from the bounds of a shapely geometry."""
         xmin, ymin, xmax, ymax = shape.bounds
         return Box(ymin, xmin, ymax, xmax)
 
     @classmethod
     def from_rasterio(self, rio_window: RioWindow) -> 'Box':
+        """Instantiate from a rasterio window."""
         yslice, xslice = rio_window.toslices()
         return Box(yslice.start, xslice.start, yslice.stop, xslice.stop)
 
     def to_xywh(self) -> Tuple[int, int, int, int]:
+        """Convert to (xmin, ymin, width, height) tuple"""
         return (self.xmin, self.ymin, self.width, self.height)
 
     def to_xyxy(self) -> Tuple[int, int, int, int]:
+        """Convert to (xmin, ymin, xmax, ymax) tuple"""
         return (self.xmin, self.ymin, self.xmax, self.ymax)
 
     def to_points(self) -> np.ndarray:
@@ -300,9 +298,8 @@ class Box():
         """Reprojects this box based on a transform function.
 
         Args:
-          transform_fn - A function that takes in a tuple (x, y)
-                         and reprojects that point to the target
-                         coordinate reference system.
+            transform_fn: A function that takes in a tuple (x, y) and reprojects
+            that point to the target coordinate reference system.
         """
         (xmin, ymin) = transform_fn((self.xmin, self.ymin))
         (xmax, ymax) = transform_fn((self.xmax, self.ymax))
@@ -332,7 +329,6 @@ class Box():
         The resulting box is clipped so that the values of the corners are
         always greater than zero and less than the height and width of
         max_extent.
-
         """
         buffer_sz = max(0., buffer_sz)
         if buffer_sz < 1.:

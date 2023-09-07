@@ -37,7 +37,7 @@ def intersection(boxes1, boxes2):
 
     Returns:
         np.ndarray: A numpy array with shape [N*M] representing pairwise
-            intersection area.
+        intersection area.
     """
     [y_min1, x_min1, y_max1, x_max1] = np.split(boxes1, 4, axis=1)
     [y_min2, x_min2, y_max2, x_max2] = np.split(boxes2, 4, axis=1)
@@ -64,7 +64,7 @@ def iou(boxes1, boxes2):
 
     Returns:
         np.ndarray: A numpy array with shape [N, M] representing pairwise iou
-            scores.
+        scores.
     """
     intersect = intersection(boxes1, boxes2)
     area1 = area(boxes1)
@@ -88,7 +88,7 @@ def ioa(boxes1, boxes2):
 
     Returns:
         np.ndarray: A numpy array with shape [N, M] representing pairwise ioa
-            scores.
+        scores.
     """
     intersect = intersection(boxes1, boxes2)
     areas = np.expand_dims(area(boxes2), axis=0)
