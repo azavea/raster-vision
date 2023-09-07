@@ -55,7 +55,7 @@ def intersection(boxlist1: NpBoxList, boxlist2: NpBoxList) -> np.ndarray:
 
     Returns:
         np.ndarray: A numpy array with shape [N*M] representing pairwise
-            intersection area.
+        intersection area.
     """
     return np_box_ops.intersection(boxlist1.get(), boxlist2.get())
 
@@ -86,7 +86,7 @@ def ioa(boxlist1: NpBoxList, boxlist2: NpBoxList) -> np.ndarray:
 
     Returns:
         np.ndarray: A numpy array with shape [N, M] representing pairwise ioa
-            scores.
+        scores.
     """
     return np_box_ops.ioa(boxlist1.get(), boxlist2.get())
 
@@ -109,8 +109,8 @@ def gather(boxlist: NpBoxList,
             only gather the box coordinates. Defaults to None.
 
     Returns:
-        BoxList: a BoxList corresponding to the subset of the input BoxList
-            specified by indices
+        A BoxList corresponding to the subset of the input BoxList specified
+        by indices.
 
     Raises:
         ValueError: If specified field is not contained in boxlist or if the
@@ -423,8 +423,8 @@ def prune_outside_window(boxlist: NpBoxList,
 
     Returns:
         Tuple[BoxList, np.ndarray]: Pruned Boxlist of length <= M_in and
-            an array of shape [M_out] indexing the valid bounding boxes in the
-            input tensor.
+        an array of shape [M_out] indexing the valid bounding boxes in the
+        input tensor.
     """
 
     y_min, x_min, y_max, x_max = np.array_split(boxlist.get(), 4, axis=1)

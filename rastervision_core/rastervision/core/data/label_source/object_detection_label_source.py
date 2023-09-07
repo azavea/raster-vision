@@ -52,8 +52,8 @@ class ObjectDetectionLabelSource(LabelSource):
 
         Returns:
             ObjectDetectionLabels: Labels with sufficient overlap with the
-                window. The returned labels are in global coods
-                (i.e. coords wihtin the full extent of the source).
+            window. The returned labels are in global coods (i.e. coords wihtin
+            the full extent of the source).
         """
         if window is None:
             return self.labels
@@ -77,8 +77,8 @@ class ObjectDetectionLabelSource(LabelSource):
 
         Returns:
             Tuple[np.ndarray, np.ndarray, str]: 3-tuple of
-                (npboxes, class_ids, box_format). The returned npboxes are in
-                window coords (i.e. coords within the window).
+            (npboxes, class_ids, box_format). The returned npboxes are in
+            window coords (i.e. coords within the window).
         """
         if isinstance(key, Box):
             window = key

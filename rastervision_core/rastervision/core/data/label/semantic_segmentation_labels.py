@@ -32,7 +32,8 @@ class SemanticSegmentationLabels(Labels):
         self.dtype = dtype
 
     @abstractmethod
-    def __add__(self, other) -> 'SemanticSegmentationLabels':
+    def __add__(self, other: 'SemanticSegmentationLabels'
+                ) -> 'SemanticSegmentationLabels':
         """Merge self with other labels."""
         pass
 
@@ -58,7 +59,7 @@ class SemanticSegmentationLabels(Labels):
     @abstractmethod
     def get_label_arr(self, window: Box,
                       null_class_id: int = -1) -> np.ndarray:
-        """Get labels as array of class IDs.
+        """Get labels as a 2D array of class IDs.
 
         Note: The returned array is not guaranteed to be the same size as the
         input window.
@@ -85,6 +86,8 @@ class SemanticSegmentationLabels(Labels):
     def filter_by_aoi(self, aoi_polygons: List['Polygon'], null_class_id: int,
                       **kwargs) -> 'SemanticSegmentationLabels':
         """Keep only the values that lie inside the AOI.
+
+        This is an inplace operation.
 
         Args:
             aoi_polygons (List[Polygon]): AOI polygons to filter by, in pixel
@@ -155,9 +158,8 @@ class SemanticSegmentationLabels(Labels):
                 SemanticSegmentationDiscreteLabels object. Defaults to False.
 
         Returns:
-            SemanticSegmentationLabels: If smooth=True, returns a
-                SemanticSegmentationSmoothLabels. Otherwise, a
-                SemanticSegmentationDiscreteLabels.
+            If smooth=True, returns a SemanticSegmentationSmoothLabels.
+            Otherwise, a SemanticSegmentationDiscreteLabels.
 
         Raises:
             ValueError: if num_classes and extent are not specified, but
@@ -189,6 +191,9 @@ class SemanticSegmentationLabels(Labels):
             extent (Box): The extent of the region to which the labels belong,
                 in global coordinates.
             num_classes (int): Number of classes.
+            smooth (bool, optional): If True, creates a
+                SemanticSegmentationSmoothLabels object. If False, creates a
+                SemanticSegmentationDiscreteLabels object. Defaults to False.
             crop_sz (Optional[int]): Number of rows/columns of pixels from the
                 edge of prediction windows to discard. This is useful because
                 predictions near edges tend to be lower quality and can result
@@ -198,9 +203,8 @@ class SemanticSegmentationLabels(Labels):
                 windows. Defaults to None.
 
         Returns:
-            SemanticSegmentationLabels: If smooth=True, returns a
-                SemanticSegmentationSmoothLabels. Otherwise, a
-                SemanticSegmentationDiscreteLabels.
+            If smooth=True, returns a SemanticSegmentationSmoothLabels.
+            Otherwise, a SemanticSegmentationDiscreteLabels.
         """
         labels = cls.make_empty(extent, num_classes, smooth=smooth)
         labels.add_predictions(windows, predictions, crop_sz=crop_sz)

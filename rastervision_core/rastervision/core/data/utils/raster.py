@@ -47,7 +47,7 @@ def pad_to_window_size(chip: np.ndarray, window: Box, bbox: Box,
 
     Returns:
         np.ndarray: Chip of size equal to window size with edges padded with
-            fill_value where needed.
+        fill_value where needed.
     """
     if window in bbox:
         return chip
