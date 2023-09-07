@@ -1,6 +1,7 @@
 from pydantic import conint, conlist
 
 from rastervision.pipeline.config import (Field, register_config, validator)
+from rastervision.core.box import Box
 from rastervision.core.data.raster_source import (RasterSourceConfig,
                                                   MultiRasterSource)
 
@@ -66,6 +67,8 @@ class MultiRasterSourceConfig(RasterSourceConfig):
         built_raster_sources = [
             rs.build(tmp_dir, use_transformers) for rs in self.raster_sources
         ]
+        bbox = Box(*self.bbox) if self.bbox is not None else None
+
         if self.temporal:
             from rastervision.core.data.raster_source import (
                 TemporalMultiRasterSource)
@@ -74,7 +77,7 @@ class MultiRasterSourceConfig(RasterSourceConfig):
                 primary_source_idx=self.primary_source_idx,
                 force_same_dtype=self.force_same_dtype,
                 raster_transformers=raster_transformers,
-                bbox=self.bbox)
+                bbox=bbox)
         else:
             multi_raster_source = MultiRasterSource(
                 raster_sources=built_raster_sources,
@@ -82,7 +85,7 @@ class MultiRasterSourceConfig(RasterSourceConfig):
                 force_same_dtype=self.force_same_dtype,
                 channel_order=self.channel_order,
                 raster_transformers=raster_transformers,
-                bbox=self.bbox)
+                bbox=bbox)
         return multi_raster_source
 
     def update(self, pipeline=None, scene=None):
