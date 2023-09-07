@@ -1,6 +1,31 @@
 CHANGELOG
 =========
 
+Raster Vision 0.21.1
+--------------------
+
+* Bug fixes:
+
+  * Chipping: Try hard to return a window, but fail gracefully if not (`#1898 <https://github.com/azavea/raster-vision/pull/1898>`__)
+  * Fix inconsistent handling of RasterSourceConfig.bbox's type (`#1899 <https://github.com/azavea/raster-vision/pull/1899>`__)
+* Refactoring:
+
+  * log.warn -> log.warning (`#1901 <https://github.com/azavea/raster-vision/pull/1901>`__)
+* Dependencies:
+
+  * Bump pycocotools from 2.0.6 to 2.0.7 in /rastervision_pytorch_learner (`#1893 <https://github.com/azavea/raster-vision/pull/1893>`__)
+* Docs:
+
+  * Misc. fixes and improvements (`#1875 <https://github.com/azavea/raster-vision/pull/1875>`__, `#1902 <https://github.com/azavea/raster-vision/pull/1902>`__, `#1903 <https://github.com/azavea/raster-vision/pull/1903>`__, `#1904 <https://github.com/azavea/raster-vision/pull/1904>`__)
+* Docker:
+
+  * Update Docker build to improve caching and image size (`#1866 <https://github.com/azavea/raster-vision/pull/1866>`__, `#1897 <https://github.com/azavea/raster-vision/pull/1897>`__)
+  * Replace miniconda with micromamba in the Docker image (`#1870 <https://github.com/azavea/raster-vision/pull/1870>`__, `#1897 <https://github.com/azavea/raster-vision/pull/1897>`__)
+* CI:
+
+  * Split CI tests into smaller pieces ; prune docker (`#1873 <https://github.com/azavea/raster-vision/pull/1873>`__, `#1874 <https://github.com/azavea/raster-vision/pull/1874>`__)
+
+
 Raster Vision 0.21
 ------------------
 
