@@ -74,7 +74,7 @@ author = u'Azavea'
 # The short X.Y version.
 version = u'0.21'
 # The full version, including alpha/beta/rc tags
-release = u'0.21.1-dev'
+release = u'0.21.2-dev'
 
 # -- Extension configuration --------------------------------------------------
 
