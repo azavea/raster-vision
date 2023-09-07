@@ -298,8 +298,9 @@ class Box():
         """Reprojects this box based on a transform function.
 
         Args:
-            transform_fn: A function that takes in a tuple (x, y) and reprojects
-            that point to the target coordinate reference system.
+            transform_fn: A function that takes in a tuple (x, y) and
+                reprojects that point to the target coordinate reference
+                system.
         """
         (xmin, ymin) = transform_fn((self.xmin, self.ymin))
         (xmax, ymax) = transform_fn((self.xmax, self.ymax))
