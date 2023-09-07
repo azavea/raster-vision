@@ -94,7 +94,10 @@ def get_train_windows(scene: 'Scene',
             if len(windows) == 0:
                 windows = [a_window]
         elif len(windows) == 0:
-            return [unfiltered_windows[0]]
+            if len(unfiltered_windows) > 0:
+                return [unfiltered_windows[0]]
+            else:
+                return []
     elif co.window_method == SemanticSegmentationWindowMethod.random_sample:
         windows = []
         attempts = 0
