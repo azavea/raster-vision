@@ -65,7 +65,7 @@ class AlbumentationsDataset(Dataset):
         try:
             x, y = self.transform(val)
         except Exception as exc:
-            log.warn(
+            log.warning(
                 'Many albumentations transforms require uint8 input. Therefore, we '
                 'recommend passing a MinMaxTransformer or StatsTransformer to the '
                 'RasterSource so the input will be converted to uint8.')

@@ -172,5 +172,5 @@ def sanitize_geojson(geojson: dict,
     if to_map_coords:
         geojson = pixel_to_map_coords(geojson, crs_transformer)
     if not all_geoms_valid(geojson):
-        log.warn(f'Invalid geometries found in features in the GeoJSON.')
+        log.warning(f'Invalid geometries found in features in the GeoJSON.')
     return geojson

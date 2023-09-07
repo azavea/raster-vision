@@ -172,8 +172,8 @@ class SemanticSegmentationLabelStore(LabelStore):
             hits_uri_local = download_if_needed(self.hits_uri)
             hits_arr = np.load(hits_uri_local)
         except NotReadableError:
-            log.warn(f'Pixel hits array not found at {self.hits_uri}.'
-                     'Setting all pixels hits to 1.')
+            log.warning(f'Pixel hits array not found at {self.hits_uri}.'
+                        'Setting all pixels hits to 1.')
             hits_arr = np.ones(extent.size, dtype=np.uint8)
 
         score_arr = self.score_source.get_chip(extent)
