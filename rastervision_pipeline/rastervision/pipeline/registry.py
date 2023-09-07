@@ -61,8 +61,8 @@ class Registry():
         """Get the lineage for a type hint.
 
         Returns:
-            List of type hints of all Config classes in the subclass is-a "lineage" from
-            Config to the class with type hint type_hint.
+            List of type hints of all Config classes in the subclass is-a
+            "lineage" from Config to the class with type hint type_hint.
         """
         return self.type_hint_to_lineage[type_hint]
 

@@ -169,9 +169,8 @@ class AoiSampler():
                 vertices array. Each row represents one triangle.
 
         Returns:
-            Tuple[np.ndarray, Tuple[np.ndarray, np.ndarray]]: 3 arrays of shape
-                (N, 2), organized into tuples like so:
-                (point A, (vector AB, vector AC)).
+            3 arrays of shape (N, 2), organized into tuples like so:
+            (point A, (vector AB, vector AC)).
         """
         A = vertices[simplices[:, 0]]
         B = vertices[simplices[:, 1]]

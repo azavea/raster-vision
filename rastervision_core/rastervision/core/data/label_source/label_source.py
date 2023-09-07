@@ -25,8 +25,8 @@ class LabelSource(ABC):
             window: Box
 
         Returns:
-            Labels overlapping with window. If window is None,
-                returns all labels.
+            Labels overlapping with window. If window is None, returns all
+            labels.
         """
         pass
 
