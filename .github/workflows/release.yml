@@ -35,7 +35,7 @@ jobs:
 
       - run: ./scripts/test "coverage"
 
-      - uses: codecov/codecov-action@v2
+      - uses: codecov/codecov-action@v3
 
       - run: ./scripts/cipublish
         env:
