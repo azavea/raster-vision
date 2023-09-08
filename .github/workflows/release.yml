@@ -21,7 +21,7 @@ jobs:
       DOCKER_BUILDKIT: 1
       IMAGE_TYPE: ${{ matrix.image_type }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - run: ./scripts/cibuild
 
@@ -35,7 +35,7 @@ jobs:
 
       - run: ./scripts/test "coverage"
 
-      - uses: codecov/codecov-action@v2
+      - uses: codecov/codecov-action@v3
 
       - run: ./scripts/cipublish
         env:
