@@ -1,0 +1,27 @@
+#!/bin/bash
+
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
+SCRIPTS_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+SRC_DIR="$( cd -P "$( dirname "$SCRIPTS_DIR" )" && pwd )"
+
+plugins=("rastervision_pipeline" "rastervision_aws_batch" "rastervision_aws_s3" "rastervision_core" "rastervision_pytorch_learner" "rastervision_pytorch_backend" "rastervision_gdal_vsi")
+
+# Function to build a plugin
+build_plugin() {
+    cd "$SRC_DIR/$1"
+    echo "Building $1 ... "
+    python setup.py sdist bdist_wheel
+    echo "Done."
+    cd "$SRC_DIR"
+}
+
+# Build each plugin
+for plugin in "${plugins[@]}"; do
+    build_plugin "$plugin"
+done
+
+# Build the top-level package
+echo "rastervision ... "
+python setup.py sdist bdist_wheel
+echo "Done."

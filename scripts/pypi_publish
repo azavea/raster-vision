@@ -1,0 +1,43 @@
+#!/bin/bash
+
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
+SCRIPTS_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+SRC_DIR="$( cd -P "$( dirname "$SCRIPTS_DIR" )" && pwd )"
+
+plugins=("rastervision_pipeline" "rastervision_aws_batch" "rastervision_aws_s3" "rastervision_core" "rastervision_pytorch_learner" "rastervision_pytorch_backend" "rastervision_gdal_vsi")
+
+# Check if the --test flag is passed
+publish_to_test=false
+if [[ "$1" == "--test" ]]; then
+    publish_to_test=true
+    # Remove the --test flag from the arguments
+    shift
+fi
+
+# Function to publish a plugin
+publish_plugin() {
+    cd "$SRC_DIR/$1"
+    echo "Publishing $1 ... "
+    if [ "$publish_to_test" = true ]; then
+        twine upload --repository testpypi dist/*
+    else
+        twine upload dist/*
+    fi
+    echo "Done."
+    cd "$SRC_DIR"
+}
+
+# Publish each plugin
+for plugin in "${plugins[@]}"; do
+    publish_plugin "$plugin"
+done
+
+# Publish the top-level package
+echo "Publishing rastervision ... "
+if [ "$publish_to_test" = true ]; then
+    twine upload --repository testpypi dist/*
+else
+    twine upload dist/*
+fi
+echo "Done."
