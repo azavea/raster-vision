@@ -105,7 +105,48 @@ Below we describe some components of the pipeline that you might directly or ind
 
 A lot of these will be familiar from :doc:`../usage/basics`, but note that when configuring a pipeline, instead of dealing with the classes directly, you will instead be configuring their ``Config`` counterparts.
 
-The following table shows the corresponding ``Configs`` for various commonly used classes.
+Configs
+^^^^^^^
+
+A :class:`.Config` is a Raster Vision class based on the pydantic :class:`.BaseModel` class that allows various kinds of configurations to be stored in a systematic, typed, validatable, and serializable way. Most of these also implement a :meth:`build() <.Config.build>` method that allows the corresponding object to be created based on the configuration. For example, :meth:`.RasterioSourceConfig.build` builds a :class:`.RasterioSource` object.
+
+.. note::
+
+   **Configs and backward compatibility**
+
+   Another crucial role that ``Configs`` play is enabling backward compatibility. Suppose you trained a model and stored it in a :ref:`model-bundle <bundle command>` using an older version of Raster Vision, and now want to use that bundle with a newer version of Raster Vision installed. This can be a problem if the specification of any ``Configs`` has changed between the two versions (e.g. if a field was removed or renamed), which means the newer version will not be able to deserialize the older pipeline config stored in the bundle. 
+
+   Raster Vision solves this issue by associating each Raster Vision plugin with a version number (this is distinct from the Python package version) and providing a config-upgrader mechanism. You can define an upgrader function that takes as input the serialized config dict and a version number and modifies the dict in such a way that makes it compatible with the current version. This function is called multiple times for each config--once for each version number, from zero to the current version. An example upgrader function is shown below.
+
+   .. code-block:: python
+
+      def rs_config_upgrader(cfg_dict: dict, version: int) -> dict:
+         if version == 6:
+            # removed in version 7
+            if cfg_dict.get('extent_crop') is not None:
+                  raise ConfigError('RasterSourceConfig.extent_crop is deprecated.')
+            try:
+                  del cfg_dict['extent_crop']
+            except KeyError:
+                  pass
+         elif version == 9:
+            # renamed in version 10
+            cfg_dict['bbox'] = cfg_dict.get('extent')
+            try:
+                  del cfg_dict['extent']
+            except KeyError:
+                  pass
+         return cfg_dict
+
+   This upgrader function can then be registered against the corresponding Config by passing it to the ``upgrader=`` keyword argument in :func:`.register_config` as shown below.
+
+   .. code-block:: python
+
+      @register_config('raster_source', upgrader=rs_config_upgrader)
+      class RasterSourceConfig(Config):
+         ...
+
+The following table shows the corresponding ``Config`` counterparts for various commonly used classes.
 
 .. currentmodule:: rastervision.core
 
