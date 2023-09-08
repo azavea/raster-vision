@@ -1,5 +1,6 @@
 from typing import List, Type, Union, Optional, Callable, Dict, TYPE_CHECKING
 import inspect
+import logging
 
 from pydantic import (  # noqa
     BaseModel, create_model, Field, root_validator, validate_model,
@@ -13,6 +14,8 @@ from rastervision.pipeline.file_system import str_to_file
 
 if TYPE_CHECKING:
     from rastervision.pipeline.pipeline_config import PipelineConfig
+
+log = logging.getLogger(__name__)
 
 
 class ConfigError(ValueError):
@@ -212,14 +215,16 @@ def upgrade_plugin_versions(plugin_versions: Dict[str, int]) -> Dict[str, int]:
 
     """
     new_plugin_versions = {}
+    missing_plugins = []
     for alias, version in plugin_versions.items():
         plugin = registry.get_plugin_from_alias(alias)
         if plugin:
             new_plugin_versions[plugin] = version
         else:
-            raise ConfigError(
-                'The plugin_versions field contains an unrecognized '
-                f'plugin name: {alias}.')
+            missing_plugins.append(alias)
+    if len(missing_plugins) > 0:
+        log.warning('There are plugins listed in the pipeline config that are '
+                    f'not currently installed: {missing_plugins}')
     return new_plugin_versions
 
 
