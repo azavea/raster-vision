@@ -12,3 +12,4 @@ opencv-python-headless==4.6.0.66
 tqdm==4.65.0
 xarray==2023.2.0
 scikit-image==0.21.0
+boto3==1.28.8
