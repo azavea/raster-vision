@@ -9,7 +9,7 @@ from rasterio.enums import ColorInterp
 
 from rastervision.pipeline.file_system import get_tmp_dir
 from rastervision.core import (Box, RasterStats)
-from rastervision.core.utils.misc import save_img
+from rastervision.core.data.utils.misc import save_img
 from rastervision.core.data.raster_source import (
     ChannelOrderError, RasterioSource, RasterioSourceConfig)
 from rastervision.core.data.raster_transformer import StatsTransformerConfig

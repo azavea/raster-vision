@@ -3,6 +3,7 @@ import logging
 
 import numpy as np
 from PIL import ImageColor
+from skimage.io import imsave
 
 from rastervision.core.box import Box
 
@@ -240,3 +241,8 @@ def ensure_json_serializable(obj: Any) -> dict:
     if isinstance(obj, Box):
         return obj.to_dict()
     return obj
+
+
+def save_img(im_array: np.ndarray, output_path: str):
+    """Save numpy array as image file."""
+    imsave(output_path, im_array)
