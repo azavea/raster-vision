@@ -1,0 +1,92 @@
+#!/bin/bash
+
+# Determine the script's directory (even if it's a symbolic link)
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do SOURCE="$(readlink "$SOURCE")"; done
+SCRIPTS_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+SRC_DIR="$(cd -P "$(dirname "$SCRIPTS_DIR")" && pwd)"
+
+# List of plugins to publish
+plugins=("rastervision_pipeline" "rastervision_aws_batch" "rastervision_aws_s3" "rastervision_core" "rastervision_pytorch_learner" "rastervision_pytorch_backend" "rastervision_gdal_vsi")
+
+# Usage documentation
+function usage() {
+    echo "Usage: $(basename "$0") [--test]"
+    echo ""
+    echo "Publish Raster Vision plugins and top-level package to PyPI or TestPyPI."
+    echo ""
+    echo "Options:"
+    echo "  -y        Automatically answer 'yes' to prompts."
+    echo "  --test    Publish to TestPyPI instead of PyPI."
+}
+
+# Function to publish a package to the specified repository
+function publish_package() {
+    if [ "$publish_to_test" = true ]; then
+        echo "Publishing to TestPyPI ... "
+        twine upload --repository testpypi dist/*
+    else
+        echo "Publishing to PyPI ... "
+        twine upload dist/*
+    fi
+    echo "Done."
+}
+
+# publish a plugin
+function publish_plugin() {
+    local plugin_name="$1"
+    cd "$SRC_DIR/$plugin_name"
+    echo "Publishing $plugin_name ... "
+    publish_package
+    cd "$SRC_DIR"
+}
+
+# publish all plugins and the top-level package
+function publish_all() {
+    # Publish each plugin
+    for plugin in "${plugins[@]}"; do
+        publish_plugin "$plugin"
+    done
+
+    # Publish the top-level package
+    echo "Publishing rastervision ... "
+    publish_package
+}
+
+# Check for command-line arguments
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+    usage
+    exit
+fi
+
+# Check if the --test flag is passed
+publish_to_test=false
+if [[ "$1" == "--test" ]]; then
+    publish_to_test=true
+    # Remove the --test flag from the arguments
+    shift
+fi
+
+# If testing: publish and exit
+if [ "$publish_to_test" = true ]; then
+    publish_all
+    exit
+fi
+
+# If actually publishing: prompt for confirmation
+if [[ "$1" == "-y" ]]; then
+    response="y"
+else
+    read -r -p "Actually publish to PyPi? (y/N): " response
+fi
+
+case "$response" in
+    [yY][eE][sS]|[yY])
+        echo "Publishing to PyPi..."
+        publish_all
+        ;;
+    *)
+        echo "Aborting."
+        ;;
+esac
+
