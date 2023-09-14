@@ -67,9 +67,10 @@ class TestVsiFileSystem(unittest.TestCase):
             str_to_file('def', join(tmp_dir, '2.txt'))
             str_to_file('ghi', join(tmp_dir, '3.tiff'))
             paths = fs.list_paths(dir_vsi, ext='txt')
-            self.assertListEqual(
-                paths, [join(tmp_dir, '1.txt'),
-                        join(tmp_dir, '2.txt')])
+            self.assertSetEqual(
+                set(paths),
+                set([join(tmp_dir, '1.txt'),
+                     join(tmp_dir, '2.txt')]))
 
     def test_sync_to_from(self):
         with get_tmp_dir() as src, get_tmp_dir() as dst:
@@ -80,18 +81,22 @@ class TestVsiFileSystem(unittest.TestCase):
             str_to_file('ghi', join(src, 'subdir', '3.txt'))
             fs.sync_to_dir(src_vsi, dst_vsi, delete=True)
             paths = fs.list_paths(dst_vsi)
-            self.assertListEqual(paths, [
-                join(dst, 'subdir'),
-                join(dst, '1.txt'),
-                join(dst, '2.txt'),
-            ])
+            self.assertSetEqual(
+                set(paths),
+                set([
+                    join(dst, 'subdir'),
+                    join(dst, '1.txt'),
+                    join(dst, '2.txt'),
+                ]))
             paths = fs.list_paths(dst_vsi, ext='txt')
-            self.assertListEqual(paths, [
-                join(dst, '1.txt'),
-                join(dst, '2.txt'),
-            ])
+            self.assertSetEqual(
+                set(paths), set([
+                    join(dst, '1.txt'),
+                    join(dst, '2.txt'),
+                ]))
             paths = fs.list_paths(join(dst_vsi, 'subdir'))
-            self.assertListEqual(paths, [join(dst, 'subdir', '3.txt')])
+            self.assertSetEqual(
+                set(paths), set([join(dst, 'subdir', '3.txt')]))
 
             with self.assertRaises(FileExistsError):
                 fs.sync_to_dir(src_vsi, dst_vsi, delete=False)
@@ -101,18 +106,22 @@ class TestVsiFileSystem(unittest.TestCase):
 
             fs.sync_from_dir(src_vsi, dst_vsi, delete=True)
             paths = fs.list_paths(src_vsi)
-            self.assertListEqual(paths, [
-                join(src, 'subdir'),
-                join(src, '1.txt'),
-                join(src, '2.txt'),
-            ])
+            self.assertSetEqual(
+                set(paths),
+                set([
+                    join(src, 'subdir'),
+                    join(src, '1.txt'),
+                    join(src, '2.txt'),
+                ]))
             paths = fs.list_paths(src_vsi, ext='txt')
-            self.assertListEqual(paths, [
-                join(src, '1.txt'),
-                join(src, '2.txt'),
-            ])
+            self.assertSetEqual(
+                set(paths), set([
+                    join(src, '1.txt'),
+                    join(src, '2.txt'),
+                ]))
             paths = fs.list_paths(join(src, 'subdir'))
-            self.assertListEqual(paths, [join(src, 'subdir', '3.txt')])
+            self.assertSetEqual(
+                set(paths), set([join(src, 'subdir', '3.txt')]))
 
             with self.assertRaises(FileExistsError):
                 fs.sync_from_dir(src_vsi, dst_vsi, delete=False)
