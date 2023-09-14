@@ -1,14 +1,29 @@
 #!/bin/bash
 
+# Determine the script's directory (even if it's a symbolic link)
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
 SCRIPTS_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 SRC_DIR="$( cd -P "$( dirname "$SCRIPTS_DIR" )" && pwd )"
 
+# List of plugins to build
 plugins=("rastervision_pipeline" "rastervision_aws_batch" "rastervision_aws_s3" "rastervision_core" "rastervision_pytorch_learner" "rastervision_pytorch_backend" "rastervision_gdal_vsi")
 
+# Usage documentation
+function usage() {
+    echo "Usage: $(basename "$0") [--test]"
+    echo ""
+    echo "Build Raster Vision plugins and top-level package."
+}
+
+# Check for command-line arguments
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+    usage
+    exit
+fi
+
 # Function to build a plugin
-build_plugin() {
+function build_plugin() {
     cd "$SRC_DIR/$1"
     echo "Building $1 ... "
     python setup.py sdist bdist_wheel
