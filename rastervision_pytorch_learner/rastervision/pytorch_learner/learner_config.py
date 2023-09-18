@@ -1377,6 +1377,13 @@ class LearnerConfig(Config):
         False, description='run Tensorboard server during training')
     output_uri: Optional[str] = Field(
         None, description='URI of where to save output')
+    save_all_checkpoints: bool = Field(
+        False, 
+        description=
+        ('If True, all checkpoints would be saved. The latest checkpoint '
+         'would be saved as `last-model.pth`. The checkpoints prior to '
+         'last epoch are stored as `model-ckpt-epoch-{N}.pth` where `N` '
+         'is the epoch number.'))
 
     @validator('run_tensorboard')
     def validate_run_tensorboard(cls, v: bool, values: dict) -> bool:
