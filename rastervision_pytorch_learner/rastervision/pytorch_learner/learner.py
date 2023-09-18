@@ -88,7 +88,8 @@ class Learner(ABC):
                  model_weights_path: Optional[str] = None,
                  model_def_path: Optional[str] = None,
                  loss_def_path: Optional[str] = None,
-                 training: bool = True):
+                 training: bool = True,
+                 save_all_checkpoints: bool = False):
         """Constructor.
 
         Args:
@@ -134,6 +135,11 @@ class Learner(ABC):
                 model will be put into eval mode. If True, the training
                 apparatus will be set up and the model will be put into
                 training mode. Defaults to True.
+            save_all_checkpoints (bool, optional): If True, all checkpoints 
+                would be saved. The latest checkpoint would be saved as 
+                `last-model.pth`. The checkpoints prior to last epoch are stored
+                as `model-ckpt-epoch-{N}.pth` where `N` is the epoch number. Defaults
+                to False.
         """
         self.cfg = cfg
 
@@ -157,6 +163,7 @@ class Learner(ABC):
         self.opt = optimizer
         self.epoch_scheduler = epoch_scheduler
         self.step_scheduler = step_scheduler
+        self.save_all_checkpoints = save_all_checkpoints
 
         # ---------------------------
         # Set URIs
@@ -521,6 +528,11 @@ class Learner(ABC):
                 if isinstance(val, numbers.Number):
                     self.tb_writer.add_scalar(key, val, curr_epoch)
             self.tb_writer.flush()
+
+        if self.save_all_checkpoints and curr_epoch > 0:
+            checkpoint_name = f'model-ckpt-epoch-{curr_epoch - 1}.pth'
+            checkpoint_path = join(self.output_dir_local, checkpoint_name)
+            shutil.copy(self.last_model_weights_path, checkpoint_path)
 
         torch.save(self.model.state_dict(), self.last_model_weights_path)
 
