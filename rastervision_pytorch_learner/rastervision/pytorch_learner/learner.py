@@ -45,6 +45,7 @@ if TYPE_CHECKING:
 
 warnings.filterwarnings('ignore')
 
+CHECKPOINTS_DIRNAME = 'checkpoints'
 MODULES_DIRNAME = 'modules'
 TRANSFORMS_DIRNAME = 'custom_albumentations_transforms'
 BUNDLE_MODEL_WEIGHTS_FILENAME = 'model.pth'
@@ -175,7 +176,6 @@ class Learner(ABC):
         else:
             self.output_dir = output_dir
             self.model_bundle_uri = join(self.output_dir, 'model-bundle.zip')
-
         if is_local(self.output_dir):
             self.output_dir_local = self.output_dir
             make_dir(self.output_dir_local)
@@ -188,6 +188,10 @@ class Learner(ABC):
             log.info(f'Remote output dir: {self.output_dir}')
 
         self.modules_dir = join(self.output_dir, MODULES_DIRNAME)
+        self.checkpoints_dir_local = join(self.output_dir_local,
+                                          CHECKPOINTS_DIRNAME)
+        make_dir(self.checkpoints_dir_local)
+
         # ---------------------------
         self._onnx_mode = False
         self.setup_model(
@@ -521,6 +525,11 @@ class Learner(ABC):
                 if isinstance(val, numbers.Number):
                     self.tb_writer.add_scalar(key, val, curr_epoch)
             self.tb_writer.flush()
+
+        if self.cfg.save_all_checkpoints and curr_epoch > 0:
+            checkpoint_name = f'model-ckpt-epoch-{curr_epoch - 1}.pth'
+            checkpoint_path = join(self.checkpoints_dir_local, checkpoint_name)
+            shutil.move(self.last_model_weights_path, checkpoint_path)
 
         torch.save(self.model.state_dict(), self.last_model_weights_path)
 
