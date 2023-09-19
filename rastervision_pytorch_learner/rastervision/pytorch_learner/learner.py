@@ -188,9 +188,10 @@ class Learner(ABC):
             log.info(f'Remote output dir: {self.output_dir}')
 
         self.modules_dir = join(self.output_dir, MODULES_DIRNAME)
-        self.checkpoints_dir_local = join(self.output_dir_local, CHECKPOINTS_DIRNAME)
+        self.checkpoints_dir_local = join(self.output_dir_local,
+                                          CHECKPOINTS_DIRNAME)
         make_dir(self.checkpoints_dir_local)
-        
+
         # ---------------------------
         self._onnx_mode = False
         self.setup_model(

@@ -30,12 +30,12 @@ class PyTorchLearnerBackendConfig(BackendConfig):
          'get_learner_config(). For more info, see the docs for'
          'pytorch_learner.learner_config.LearnerConfig.test_mode.'))
     save_all_checkpoints: bool = Field(
-        False, 
-        description=
-        ('If True, all checkpoints would be saved. The latest checkpoint '
-         'would be saved as `last-model.pth`. The checkpoints prior to '
-         'last epoch are stored as `model-ckpt-epoch-{N}.pth` where `N` '
-         'is the epoch number.'))
+        False,
+        description=(
+            'If True, all checkpoints would be saved. The latest checkpoint '
+            'would be saved as `last-model.pth`. The checkpoints prior to '
+            'last epoch are stored as `model-ckpt-epoch-{N}.pth` where `N` '
+            'is the epoch number.'))
 
     def get_bundle_filenames(self):
         return ['model-bundle.zip']
