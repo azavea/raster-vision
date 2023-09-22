@@ -1,6 +1,6 @@
-rastervision_pipeline==0.21.1
-rastervision_aws_s3==0.21.1
-rastervision_aws_batch==0.21.1
-rastervision_core==0.21.1
-rastervision_pytorch_learner==0.21.1
-rastervision_pytorch_backend==0.21.1
+rastervision_pipeline==0.21.2
+rastervision_aws_s3==0.21.2
+rastervision_aws_batch==0.21.2
+rastervision_core==0.21.2
+rastervision_pytorch_learner==0.21.2
+rastervision_pytorch_backend==0.21.2
