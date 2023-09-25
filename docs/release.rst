@@ -66,69 +66,44 @@ Minor or Major Version Release
 
         pip install twine
 
-    To store settings for PyPI you can setup a ``~/.pypirc`` file containing:
+    To store settings for PyPI you can set up a ``~/.pypirc`` file containing:
 
     .. code-block:: console
 
         [pypi]
         username = azavea
 
-    Once packages are published they cannot be changed so be careful. (It's possible to practice using testpypi.) Navigate to the ``raster-vision`` repo on your local filesystem. With the version branch checked out, run something like the following to publish each plugin, and then the top-level package.
+        [testpypi]
+        username = azavea
+
+    Once packages are published they cannot be changed, so be careful. (It's possible to practice using TestPyPI.) Navigate to the repo's root directory on your local filesystem. With the version branch checked out, run the following scripts to build packages and publish to PyPI. 
+    
+    Build:
 
     .. code-block:: console
 
-        export RV="/Users/lfishgold/projects/raster-vision"
+        scripts/pypi_build
+
+    Publish to TestPyPI. (You will be prompted for the PyPI password multiple times--once for each package.)
 
     .. code-block:: console
 
-        cd $RV/rastervision_pipeline
-        python setup.py sdist bdist_wheel
-        twine upload dist/*
+        scripts/pypi_publish --test
+
+    You can then test it with ``pip`` like so:
 
     .. code-block:: console
 
-        cd $RV/rastervision_aws_batch
-        python setup.py sdist bdist_wheel
-        twine upload dist/*
+        pip install --index-url https://test.pypi.org/simple/ rastervision
+
+    Finally, if everything looks okay, publish to Pypi.  (You will be prompted for the PyPI password multiple times--once for each package.)
 
     .. code-block:: console
 
-        cd $RV/rastervision_aws_s3
-        python setup.py sdist bdist_wheel
-        twine upload dist/*
+        scripts/pypi_publish
 
-    .. code-block:: console
-
-        cd $RV/rastervision_core
-        python setup.py sdist bdist_wheel
-        twine upload dist/*
-
-    .. code-block:: console
-
-        cd $RV/rastervision_pytorch_learner
-        python setup.py sdist bdist_wheel
-        twine upload dist/*
-
-    .. code-block:: console
-
-        cd $RV/rastervision_pytorch_backend
-        python setup.py sdist bdist_wheel
-        twine upload dist/*
-
-    .. code-block:: console
-
-        cd $RV/rastervision_gdal_vsi
-        python setup.py sdist bdist_wheel
-        twine upload dist/*
-
-    .. code-block:: console
-
-        cd $RV
-        python setup.py sdist bdist_wheel
-        twine upload dist/*
-
-#.  Announce new release in our `forum <https://github.com/azavea/raster-vision/discussions>`_, and with blog post if it's a big release.
-#.  Make a PR to the master branch that updates the version number to the next development version. For example, if the last release was ``0.20.1``, update the version to ``0.20.2-dev``.
+#.  Announce the new release in our `forum <https://github.com/azavea/raster-vision/discussions>`_, and with a blog post if it's a big release.
+#.  Make a PR to the master branch that updates the version number to the next development version, ``X.Y.Z-dev``. For example, if the last release was ``0.20.1``, update the version to ``0.20.2-dev``.
 
 Bug Fix Release
 -----------------

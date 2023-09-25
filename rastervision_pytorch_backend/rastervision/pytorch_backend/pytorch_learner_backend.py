@@ -7,7 +7,7 @@ import numpy as np
 from rastervision.pipeline.file_system import (make_dir, upload_or_copy,
                                                zipdir)
 from rastervision.core.backend import Backend, SampleWriter
-from rastervision.core.utils.misc import save_img
+from rastervision.core.data.utils.misc import save_img
 from rastervision.pytorch_learner.learner import Learner
 
 if TYPE_CHECKING:

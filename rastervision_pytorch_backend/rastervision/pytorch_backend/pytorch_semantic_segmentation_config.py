@@ -53,7 +53,8 @@ class PyTorchSemanticSegmentationConfig(PyTorchLearnerBackendConfig):
             test_mode=self.test_mode,
             output_uri=pipeline.train_uri,
             log_tensorboard=self.log_tensorboard,
-            run_tensorboard=self.run_tensorboard)
+            run_tensorboard=self.run_tensorboard,
+            save_all_checkpoints=self.save_all_checkpoints)
         learner.update()
         learner.validate_config()
         return learner
