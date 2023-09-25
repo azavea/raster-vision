@@ -1,6 +1,26 @@
 CHANGELOG
 =========
 
+Raster Vision 0.21.2
+--------------------
+
+* Features:
+
+  * Save model weights for each epoch 1720 (`#1921 <https://github.com/azavea/raster-vision/pull/1921>`__)
+
+* Bug fixes:
+
+  * Do not require every plugin recorded in the model bundle to be installed when using it (`#1916 <https://github.com/azavea/raster-vision/pull/1916>`__)
+  * Fix ``rastervision.core`` dependencies  (`#1920 <https://github.com/azavea/raster-vision/pull/1920>`__)
+* Docs:
+
+  * Document config upgrader mechanism (`#1917 <https://github.com/azavea/raster-vision/pull/1917>`__)
+* Maintenance:
+
+  * Update GitHub actions' versions (`#1913 <https://github.com/azavea/raster-vision/pull/1913>`__, `#1926 <https://github.com/azavea/raster-vision/pull/1926>`__)
+  * Add scripts for building packages and publishing them to PyPi  (`#1915 <https://github.com/azavea/raster-vision/pull/1915>`__)
+  * Add unit tests for ``VsiFileSystem`` (`#1918 <https://github.com/azavea/raster-vision/pull/1918>`__)
+
 Raster Vision 0.21.1
 --------------------
 
