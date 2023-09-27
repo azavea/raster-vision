@@ -144,7 +144,7 @@ class Visualizer(ABC):
             plt.show()
         if output_path is not None:
             make_dir(output_path, use_dirname=True)
-            plt.savefig(output_path, bbox_inches='tight', pad_inches=0.2)
+            fig.savefig(output_path, bbox_inches='tight', pad_inches=0.2)
 
         plt.close(fig)
 
