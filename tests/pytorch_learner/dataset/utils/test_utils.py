@@ -4,9 +4,11 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import numpy as np
+import rasterio as rio
 from torchvision.datasets.folder import DatasetFolder
 
 from rastervision.pipeline.file_system import get_tmp_dir
+from rastervision.core.data.utils import write_window
 from rastervision.pytorch_learner.dataset import (discover_images, load_image,
                                                   make_image_folder_dataset)
 from rastervision.pytorch_backend.pytorch_learner_backend import write_chip
@@ -51,6 +53,14 @@ class TestUtils(unittest.TestCase):
                 0, 256, size=(100, 100, 8), dtype=np.uint8)
             path = join(tmp_dir, '3.npy')
             write_chip(chip, path)
+            np.testing.assert_array_equal(load_image(path), chip)
+
+            chip = np.random.randint(
+                0, 256, size=(100, 100, 8), dtype=np.uint8)
+            path = join(tmp_dir, '4.tif')
+            profile = dict(height=100, width=100, count=8, dtype=np.uint8)
+            with rio.open(path, 'w', **profile) as ds:
+                write_window(ds, chip)
             np.testing.assert_array_equal(load_image(path), chip)
 
     def test_make_image_folder_dataset(self):
