@@ -11,13 +11,13 @@ from rastervision.pipeline.file_system import (
     file_to_json, sync_from_dir, upload_or_copy, download_or_copy, file_exists,
     sync_to_dir, NotReadableError, download_if_needed)
 
-NEW_VERSION = '0.21'
+NEW_VERSION_FULL = '0.21.2'
 NEW_VERSION_MAJOR_MINOR = '0.21'
 
 EXAMPLES_MODULE_ROOT = 'rastervision.pytorch_backend.examples'
 EXAMPLES_PATH_ROOT = '/opt/src/rastervision_pytorch_backend/rastervision/pytorch_backend/examples'  # noqa
-REMOTE_PROCESSED_ROOT = f's3://raster-vision/examples/{NEW_VERSION}/processed-data'
-REMOTE_OUTPUT_ROOT = f's3://raster-vision/examples/{NEW_VERSION}/output'
+REMOTE_PROCESSED_ROOT = f's3://raster-vision/examples/{NEW_VERSION_FULL}/processed-data'
+REMOTE_OUTPUT_ROOT = f's3://raster-vision/examples/{NEW_VERSION_FULL}/output'
 LOCAL_RAW_ROOT = '/opt/data/raw-data'
 LOCAL_PROCESSED_ROOT = '/opt/data/examples/processed-data'
 LOCAL_OUTPUT_ROOT = '/opt/data/examples/output'
