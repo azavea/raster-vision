@@ -155,8 +155,11 @@ class ChipClassificationLabels(Labels):
         for cell in labels.get_cells():
             self.set_cell(cell, *labels[cell])
 
-    def save(self, uri: str, class_config: 'ClassConfig',
-             crs_transformer: 'CRSTransformer') -> None:
+    def save(self,
+             uri: str,
+             class_config: 'ClassConfig',
+             crs_transformer: 'CRSTransformer',
+             bbox: Optional[Box] = None) -> None:
         """Save labels as a GeoJSON file.
 
         Args:
@@ -164,11 +167,14 @@ class ChipClassificationLabels(Labels):
             class_config (ClassConfig): ClassConfig to map class IDs to names.
             crs_transformer (CRSTransformer): CRSTransformer to convert from
                 pixel-coords to map-coords before saving.
+            bbox (Optional[Box]): User-specified crop of the extent. Must be
+                provided if the corresponding RasterSource has bbox != extent.
         """
         from rastervision.core.data import ChipClassificationGeoJSONStore
 
         label_store = ChipClassificationGeoJSONStore(
             uri=uri,
             class_config=class_config,
-            crs_transformer=crs_transformer)
+            crs_transformer=crs_transformer,
+            bbox=bbox)
         label_store.save(self)

@@ -4,6 +4,7 @@ import logging
 
 import numpy as np
 import rasterio as rio
+import rasterio.windows as rio_windows
 from tqdm.auto import tqdm
 
 from rastervision.pipeline.file_system import (
@@ -58,7 +59,8 @@ class SemanticSegmentationLabelStore(LabelStore):
             class_config (ClassConfig): Class config.
             bbox (Optional[Box], optional): User-specified crop of the extent.
                 If provided, only labels falling inside it are returned by
-                :meth:`.SemanticSegmentationLabelStore.get_labels`.
+                :meth:`.SemanticSegmentationLabelStore.get_labels`. Must be
+                provided if the corresponding RasterSource has bbox != extent.
             tmp_dir (Optional[str], optional): Temporary directory to use. If
                 None, will be auto-generated. Defaults to None.
             vector_outputs (Optional[Sequence[VectorOutputConfig]], optional):
@@ -207,11 +209,17 @@ class SemanticSegmentationLabelStore(LabelStore):
         make_dir(local_root)
 
         height, width = labels.extent.size
+        if self.bbox is not None:
+            bbox_rio_window = self.bbox.rasterio_format()
+            transform = rio_windows.transform(bbox_rio_window,
+                                              self.crs_transformer.transform)
+        else:
+            transform = self.crs_transformer.transform
         out_profile = dict(
             driver='GTiff',
             height=height,
             width=width,
-            transform=self.crs_transformer.transform,
+            transform=transform,
             crs=self.crs_transformer.image_crs,
             blockxsize=min(self.rasterio_block_size, width),
             blockysize=min(self.rasterio_block_size, height))
@@ -257,6 +265,7 @@ class SemanticSegmentationLabelStore(LabelStore):
         out_profile.update(dict(count=num_bands, dtype=dtype))
 
         extent = labels.extent
+
         with rio.open(scores_path, 'w', **out_profile) as ds:
             windows = [Box.from_rasterio(w) for _, w in ds.block_windows(1)]
             with tqdm(windows, desc='Saving pixel scores') as bar:
@@ -310,7 +319,10 @@ class SemanticSegmentationLabelStore(LabelStore):
                 bar.set_postfix(vo.dict())
                 class_mask = (label_arr == vo.class_id).astype(np.uint8)
                 polys = vo.vectorize(class_mask)
-                polys = [self.crs_transformer.pixel_to_map(p) for p in polys]
+                polys = [
+                    self.crs_transformer.pixel_to_map(p, bbox=self.bbox)
+                    for p in polys
+                ]
                 geojson = geoms_to_geojson(polys)
                 out_uri = vo.get_uri(vector_output_dir, self.class_config)
                 json_to_file(geojson, out_uri)

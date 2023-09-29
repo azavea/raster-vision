@@ -294,8 +294,11 @@ class ObjectDetectionLabels(Labels):
             score_threshold=score_thresh)
         return ObjectDetectionLabels.from_boxlist(pruned_boxlist)
 
-    def save(self, uri: str, class_config: 'ClassConfig',
-             crs_transformer: 'CRSTransformer') -> None:
+    def save(self,
+             uri: str,
+             class_config: 'ClassConfig',
+             crs_transformer: 'CRSTransformer',
+             bbox: Optional[Box] = None) -> None:
         """Save labels as a GeoJSON file.
 
         Args:
@@ -303,11 +306,14 @@ class ObjectDetectionLabels(Labels):
             class_config (ClassConfig): ClassConfig to map class IDs to names.
             crs_transformer (CRSTransformer): CRSTransformer to convert from
                 pixel-coords to map-coords before saving.
+            bbox (Optional[Box]): User-specified crop of the extent. Must be
+                provided if the corresponding RasterSource has bbox != extent.
         """
         from rastervision.core.data import ObjectDetectionGeoJSONStore
 
         label_store = ObjectDetectionGeoJSONStore(
             uri=uri,
             class_config=class_config,
-            crs_transformer=crs_transformer)
+            crs_transformer=crs_transformer,
+            bbox=bbox)
         label_store.save(self)
