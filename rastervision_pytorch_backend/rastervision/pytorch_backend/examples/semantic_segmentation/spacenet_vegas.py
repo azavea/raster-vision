@@ -98,7 +98,9 @@ def build_scene(spacenet_cfg: SpacenetConfig,
     label_uri = spacenet_cfg.get_geojson_uri(id)
 
     raster_source = RasterioSourceConfig(
-        uris=[image_uri], channel_order=channel_order)
+        uris=[image_uri],
+        channel_order=channel_order,
+        transformers=[StatsTransformerConfig()])
 
     # Set a line buffer to convert line strings to polygons.
     vector_source = GeoJSONVectorSourceConfig(
