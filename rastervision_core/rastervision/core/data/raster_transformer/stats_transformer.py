@@ -166,4 +166,4 @@ class StatsTransformer(RasterTransformer):
 
     def __repr__(self) -> str:
         return repr_with_args(
-            self, means=self.means, std=self.stds, max_stds=self.max_stds)
+            self, means=self.means, stds=self.stds, max_stds=self.max_stds)
