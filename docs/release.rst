@@ -60,6 +60,13 @@ Minor or Major Version Release
         docker push quay.io/azavea/raster-vision:pytorch-<version>
 
 #.  Make a GitHub `tag <https://github.com/azavea/raster-vision/tags>`_ and `release <https://github.com/azavea/raster-vision/releases>`_ using the previous release as a template.
+#. Remove artifacts from previous builds. From the repo root:
+
+    .. code-block:: console
+
+        rm -rf build/ dist/ *.egg-info
+        rm -rf rastervision_*/build rastervision_*/dist rastervision_*/*.egg-info
+
 #.  Publish all packages to PyPI. This step requires `twine <https://twine.readthedocs.io/en/stable/>`__ which you can install with
 
     .. code-block:: console
@@ -105,12 +112,20 @@ Minor or Major Version Release
 #.  Announce the new release in our `forum <https://github.com/azavea/raster-vision/discussions>`_, and with a blog post if it's a big release.
 #.  Make a PR to the master branch that updates the version number to the next development version, ``X.Y.Z-dev``. For example, if the last release was ``0.20.1``, update the version to ``0.20.2-dev``.
 
-Bug Fix Release
+Patch Release
 -----------------
 
-This describes how to create a new bug fix release, using incrementing from 0.8.0 to 0.8.1 as an example. This assumes that there is already a branch for a minor release called ``0.8``.
+This describes how to create a new patch release (AKA a bug-fix release), using an increment from 0.8.0 to 0.8.1 as an example. This assumes that there is already a branch for a minor release called ``0.8``.
 
-#.  To create a bug fix release (version 0.8.1), we need to backport all the bug fix commits on the ``master`` branch that have been added since the last bug fix release onto the ``0.8`` branch. For each bug fix PR on ``master``, we need to create a PR against the ``0.8`` branch based on a branch of ``0.8`` that has cherry-picked the commits from the original PR. The title of the PR should start with [BACKPORT].
-#.  Make and merge a PR against ``0.8`` (but not ``master``) that increments the version in each ``setup.py`` file to ``0.8.1``. Then wait for the ``0.8`` branch to be built by GitHub Actions and the ``0.8`` Docker images to be published to Quay. If that is successful, we can proceed to the next steps of actually publishing a release.
-#.  Using the GitHub UI, make a new release. Use ``0.8.1`` as the tag, and the ``0.8`` branch as the target.
-#.  Publish the new version to PyPI. Follow the same instructions for PyPI that are listed above for minor/major version releases.
+#. Backport changes to the ``0.8`` branch. To create a patch release (version 0.8.1), we need to backport all the commits on the ``master`` branch that have been added since the last patch release onto the ``0.8`` branch. To do this:
+
+   #. Create a new branch from the ``0.8`` branch. Let's call it ``backport``.
+   #. Cherry-pick each commit that we want to include from the ``master`` branch onto the ``backport`` branch.
+   #. Make a PR against the ``0.8`` branch from the ``backport`` branch. The title of the PR should start with ``[BACKPORT]``.
+#. Update changelog and version on the ``0.8`` branch. Make and merge a PR against ``0.8`` (but not ``master``) that adds a changelog for the new release and increments the version to ``0.8.1`` throughout the repo. Wait for the ``0.8`` branch to be built by GitHub Actions and the ``0.8`` Docker images to be published to Quay. If that is successful, we can proceed to the next steps of actually publishing a release.
+#. Publish the new version to PyPI. Follow the same instructions for PyPI as listed above for minor/major version releases.
+#. Using the GitHub UI, make a new release. Use ``v0.8.1`` as the tag, and the ``0.8`` branch as the target.
+#. Update changelog and version on the ``master`` branch. Make and merge a PR against ``master`` that 
+
+   * includes the cherry-picked commit that updates the changelog for ``0.8.1`` and 
+   * increments the version to ``0.8.2-dev`` throughout the repo.
