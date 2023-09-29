@@ -357,6 +357,7 @@ class SemanticSegmentationDiscreteLabels(SemanticSegmentationLabels):
              uri: str,
              crs_transformer: 'CRSTransformer',
              class_config: 'ClassConfig',
+             bbox: Optional[Box] = None,
              tmp_dir: Optional[str] = None,
              save_as_rgb: bool = False,
              raster_output: bool = True,
@@ -373,6 +374,8 @@ class SemanticSegmentationDiscreteLabels(SemanticSegmentationLabels):
             crs_transformer (CRSTransformer): CRSTransformer to configure CRS
                 and affine transform of the output GeoTiff.
             class_config (ClassConfig): The ClassConfig.
+            bbox (Optional[Box]): User-specified crop of the extent. Must be
+                provided if the corresponding RasterSource has bbox != extent.
             tmp_dir (Optional[str], optional): Temporary directory to use. If
                 None, will be auto-generated. Defaults to None.
             save_as_rgb (bool, optional): If True, Saves labels as an RGB
@@ -397,6 +400,7 @@ class SemanticSegmentationDiscreteLabels(SemanticSegmentationLabels):
             uri=uri,
             crs_transformer=crs_transformer,
             class_config=class_config,
+            bbox=bbox,
             tmp_dir=tmp_dir,
             save_as_rgb=save_as_rgb,
             discrete_output=raster_output,
@@ -529,6 +533,7 @@ class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
              uri: str,
              crs_transformer: 'CRSTransformer',
              class_config: 'ClassConfig',
+             bbox: Optional[Box] = None,
              tmp_dir: Optional[str] = None,
              save_as_rgb: bool = False,
              discrete_output: bool = True,
@@ -547,6 +552,8 @@ class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
             crs_transformer (CRSTransformer): CRSTransformer to configure CRS
                 and affine transform of the output GeoTiff(s).
             class_config (ClassConfig): The ClassConfig.
+            bbox (Optional[Box]): User-specified crop of the extent. Must be
+                provided if the corresponding RasterSource has bbox != extent.
             tmp_dir (Optional[str], optional): Temporary directory to use. If
                 None, will be auto-generated. Defaults to None.
             save_as_rgb (bool, optional): If True, saves labels as an RGB
@@ -577,6 +584,7 @@ class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
             uri=uri,
             crs_transformer=crs_transformer,
             class_config=class_config,
+            bbox=bbox,
             tmp_dir=tmp_dir,
             save_as_rgb=save_as_rgb,
             discrete_output=discrete_output,
