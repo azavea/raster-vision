@@ -6,7 +6,7 @@ torch==2.0.1
 torchvision==0.15.2
 tensorboard==2.13.0
 albumentations==1.3.0
-cython==0.29.35
+cython==3.0.2
 pycocotools==2.0.7
 psutil==5.9.3
 triangle==20220202
