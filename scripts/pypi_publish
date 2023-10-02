@@ -77,12 +77,12 @@ fi
 if [[ "$1" == "-y" ]]; then
     response="y"
 else
-    read -r -p "Actually publish to PyPi? (y/N): " response
+    read -r -p "Actually publish to PyPI? (y/N): " response
 fi
 
 case "$response" in
     [yY][eE][sS]|[yY])
-        echo "Publishing to PyPi..."
+        echo "Publishing to PyPI..."
         publish_all
         ;;
     *)
