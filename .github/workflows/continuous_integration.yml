@@ -18,6 +18,10 @@ jobs:
 
       - run: df -hT
 
+      - run: rm -rf /opt/hostedtoolcache
+
+      - run: df -hT
+
       - run: ./scripts/cibuild
 
       - run: df -hT
