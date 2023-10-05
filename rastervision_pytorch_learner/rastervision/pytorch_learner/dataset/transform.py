@@ -227,7 +227,8 @@ def semantic_segmentation_transformer(
             y = np.array(y)
             out = apply_transform(transform, image=x, mask=y)
             x, y = out['image'], out['mask']
-            y = y.astype(int)
+    if y is not None:
+        y = y.astype(int)
     return x, y
 
 
