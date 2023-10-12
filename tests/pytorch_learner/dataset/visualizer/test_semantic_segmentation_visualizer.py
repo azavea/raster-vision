@@ -40,6 +40,8 @@ class TestClassificationVisualizer(unittest.TestCase):
         x = torch.randn(size=(2, 3, 4, 256, 256))
         y = (torch.randn(size=(2, 256, 256)) > 0).long()
         self.assertNoError(lambda: viz.plot_batch(x, y))
+        # w/o z, batch size = 1
+        self.assertNoError(lambda: viz.plot_batch(x[[0]], y[[0]]))
 
         # w/ z
         viz = SemanticSegmentationVisualizer(
@@ -50,3 +52,5 @@ class TestClassificationVisualizer(unittest.TestCase):
         y = (torch.randn(size=(2, 256, 256)) > 0).long()
         z = torch.randn(size=(2, num_classes, 256, 256)).softmax(dim=-3)
         self.assertNoError(lambda: viz.plot_batch(x, y, z=z))
+        # w/ z, batch size = 1
+        self.assertNoError(lambda: viz.plot_batch(x[[0]], y[[0]]))
