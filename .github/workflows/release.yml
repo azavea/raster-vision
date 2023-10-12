@@ -23,6 +23,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - run: rm -rf /opt/hostedtoolcache
+
       - run: ./scripts/cibuild
 
       - run: docker system prune -f
