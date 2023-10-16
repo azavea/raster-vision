@@ -1,1 +1,1 @@
-rastervision==0.21.2
+rastervision==0.21.3
