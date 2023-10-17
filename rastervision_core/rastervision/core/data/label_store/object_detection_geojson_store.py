@@ -32,7 +32,8 @@ class ObjectDetectionGeoJSONStore(LabelStore):
                 in GeoJSON file to pixel coords.
             bbox (Optional[Box], optional): User-specified crop of the extent.
                 If provided, only labels falling inside it are returned by
-                :meth:`.ObjectDetectionGeoJSONStore.get_labels`.
+                :meth:`.ObjectDetectionGeoJSONStore.get_labels`. Must be
+                provided if the corresponding RasterSource has bbox != extent.
         """
         self.uri = uri
         self.class_config = class_config

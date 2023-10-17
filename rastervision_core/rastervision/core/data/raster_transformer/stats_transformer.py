@@ -97,7 +97,8 @@ class StatsTransformer(RasterTransformer):
     def from_raster_sources(cls,
                             raster_sources: List['RasterSource'],
                             sample_prob: Optional[float] = 0.1,
-                            max_stds: float = 3.) -> 'StatsTransformer':
+                            max_stds: float = 3.,
+                            chip_sz: int = 300) -> 'StatsTransformer':
         """Build with stats from the given raster sources.
 
         Args:
@@ -113,7 +114,10 @@ class StatsTransformer(RasterTransformer):
             StatsTransformer: A StatsTransformer.
         """
         stats = RasterStats()
-        stats.compute(raster_sources=raster_sources, sample_prob=sample_prob)
+        stats.compute(
+            raster_sources=raster_sources,
+            sample_prob=sample_prob,
+            chip_sz=chip_sz)
         stats_transformer = StatsTransformer.from_raster_stats(
             stats, max_stds=max_stds)
         return stats_transformer
@@ -162,4 +166,4 @@ class StatsTransformer(RasterTransformer):
 
     def __repr__(self) -> str:
         return repr_with_args(
-            self, means=self.means, std=self.stds, max_stds=self.max_stds)
+            self, means=self.means, stds=self.stds, max_stds=self.max_stds)

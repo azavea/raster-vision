@@ -119,7 +119,8 @@ class Visualizer(ABC):
             batch_sz, T, *_ = x.shape
             params['fig_args']['figsize'][1] *= T
             fig = plt.figure(**params['fig_args'])
-            subfigs = fig.subfigures(nrows=batch_sz, ncols=1, hspace=0.0)
+            subfigs = fig.subfigures(
+                nrows=batch_sz, ncols=1, hspace=0.0, squeeze=False)
             subfig_axs = [
                 subfig.subplots(
                     nrows=T, ncols=params['subplot_args']['ncols'])
