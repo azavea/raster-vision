@@ -1,6 +1,29 @@
 CHANGELOG
 =========
 
+Raster Vision 0.21.3
+--------------------
+
+* Features:
+
+  * Allow reading pre-chipped datasets with non-RGB TIFF chips (`#1932 <https://github.com/azavea/raster-vision/pull/1932>`__)
+
+* Fixes:
+
+  * Normalize pixel values in the Spacenet Vegas examples  (`#1930 <https://github.com/azavea/raster-vision/pull/1930>`__)
+  * Account for ``bbox`` when saving predictions  (`#1931 <https://github.com/azavea/raster-vision/pull/1931>`__)
+  * Ensure SS datasets always return label array with correct ``dtype`` (`#1954 <https://github.com/azavea/raster-vision/pull/1954>`__)
+  * Fix bug in ``Visualizer`` when plotting temporal data w/ batch size 1 (`#1958 <https://github.com/azavea/raster-vision/pull/1958>`__)
+  * Allow specifying ``chip_sz`` in ``StatsTransform.from_raster_sources()``  (`#1933 <https://github.com/azavea/raster-vision/pull/1933>`__)
+  * Misc. minor fixes  (`#1933 <https://github.com/azavea/raster-vision/pull/1933>`__)
+* Docs:
+
+  * Update release instructions to simplify patch release process (`#1934 <https://github.com/azavea/raster-vision/pull/1934>`__)
+* Maintenance:
+
+  * Bump pillow to address CVE-2023-4863 (`#1952 <https://github.com/azavea/raster-vision/pull/1952>`__)
+  * Update CI and release workflows to free up disk space before building docker image (`#1953 <https://github.com/azavea/raster-vision/pull/1953>`__, `#1959 <https://github.com/azavea/raster-vision/pull/1959>`__)
+
 Raster Vision 0.21.2
 --------------------
 
