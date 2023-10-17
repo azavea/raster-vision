@@ -10,7 +10,7 @@ with io.open(op.join(here, 'requirements.txt'), encoding='utf-8') as f:
 install_requires = [x.strip() for x in all_reqs if 'git+' not in x]
 
 name = 'rastervision_aws_s3'
-version = '0.21.2'
+version = '0.21.3'
 description = 'A rastervision plugin that adds an AWS S3 file system'
 
 setup(
