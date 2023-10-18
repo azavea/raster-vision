@@ -14,7 +14,7 @@ class LabelStore(ABC):
         """Save.
 
         Args:
-           labels - Labels to be saved, the type of which will be dependant on the type
+           labels - Labels to be saved, the type of which will be dependent on the type
                     of pipeline.
         """
         pass

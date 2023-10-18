@@ -74,7 +74,7 @@ def parse_stac(stac_uri: str, item_limit: Optional[int] = None) -> List[dict]:
         stac_uri (str): Path to the STAC catalog JSON file.
 
     Returns:
-        List[dict]: A lsit of dicts with keys: "label_uri", "image_uris",
+        List[dict]: A list of dicts with keys: "label_uri", "image_uris",
         "label_bbox", "image_bbox", "bboxes_intersect", and "aoi_geometry".
         Each dict corresponds to one label item and its associated image
         assets in the STAC catalog.
@@ -145,7 +145,7 @@ def read_stac(uri: str, extract_dir: Optional[str] = None,
         Exception: If multiple catalog.json's are found inside the zip file.
 
     Returns:
-        List[dict]: A lsit of dicts with keys: "label_uri", "image_uris",
+        List[dict]: A list of dicts with keys: "label_uri", "image_uris",
         "label_bbox", "image_bbox", "bboxes_intersect", and "aoi_geometry".
         Each dict corresponds to one label item and its associated image
         assets in the STAC catalog.

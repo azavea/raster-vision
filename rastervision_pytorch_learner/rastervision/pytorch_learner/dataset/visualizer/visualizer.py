@@ -197,7 +197,7 @@ class Visualizer(ABC):
         This is a convenience method for generating a batch of data to plot.
 
         Args:
-            dataset (Dataset): A Pytorch Datset.
+            dataset (Dataset): A Pytorch Dataset.
             batch_sz (int): Batch size. Defaults to 4.
             **kwargs: Extra args for :class:`~torch.utils.data.DataLoader`.
 

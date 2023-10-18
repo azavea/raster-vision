@@ -369,7 +369,7 @@ class Box():
         padding.
 
         Each of size, stride, and padding can be either a positive int or
-        a tuple `(vertical-componet, horizontal-component)` of positive ints.
+        a tuple `(vertical-component, horizontal-component)` of positive ints.
 
         Padding currently only applies to the right and bottom edges.
 
@@ -379,14 +379,14 @@ class Box():
             stride (Union[PosInt, Tuple[PosInt, PosInt]]): Step size between
                 windows. Can be 2-tuple (h_step, w_step) or positive int.
             padding (Optional[Union[PosInt, Tuple[PosInt, PosInt]]], optional):
-                Optional padding to accomodate windows that overflow the
+                Optional padding to accommodate windows that overflow the
                 extent. Can be 2-tuple (h_pad, w_pad) or non-negative int.
                 If None, will be set to (size[0]//2, size[1]//2).
                 Defaults to None.
             pad_direction (Literal['both', 'start', 'end']): If 'end', only pad
                 ymax and xmax (bottom and right). If 'start', only pad ymin and
                 xmin (top and left). If 'both', pad all sides. Has no effect if
-                paddiong is zero. Defaults to 'end'.
+                padding is zero. Defaults to 'end'.
 
         Returns:
             List[Box]: List of Box objects.

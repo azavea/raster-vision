@@ -147,7 +147,7 @@ def test():
 @click.option('--remote', is_flag=True, default=False)
 @click.option(
     '--commands',
-    help='Space-separated string with RV commansd to run.',
+    help='Space-separated string with RV command to run.',
     default=None)
 @click.option(
     '--overrides',

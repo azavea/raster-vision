@@ -51,7 +51,7 @@ or use the ``--gpu`` option with the ``docker/run`` script.
 Running on AWS EC2
 ------------------
 
-The simplest way to run Raster Vision on an AWS GPU is by starting a GPU-enabled EC2 instance such as a p3.2xlarge using the `Deep Learning AMI <https://aws.amazon.com/machine-learning/amis/>`_. We have tested this using the "Deep Learning AMI GPU PyTorch 1.11.0 (Ubuntu 20.04)" with id ``ami-0c968d7ef8a4b0c34``. After SSH'ing into the instance, Raster Vision can be installed with ``pip``, and code can be transfered to this instance with a tool such as ``rsync``.
+The simplest way to run Raster Vision on an AWS GPU is by starting a GPU-enabled EC2 instance such as a p3.2xlarge using the `Deep Learning AMI <https://aws.amazon.com/machine-learning/amis/>`_. We have tested this using the "Deep Learning AMI GPU PyTorch 1.11.0 (Ubuntu 20.04)" with id ``ami-0c968d7ef8a4b0c34``. After SSH'ing into the instance, Raster Vision can be installed with ``pip``, and code can be transferred to this instance with a tool such as ``rsync``.
 
 .. _aws batch setup:
 
