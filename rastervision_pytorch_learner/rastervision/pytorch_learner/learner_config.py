@@ -809,7 +809,7 @@ class ImageDataConfig(DataConfig):
         None,
         description='One of the following:\n'
         '(1) a URI of a directory containing "train", "valid", and '
-        '(optically) "test" subdirectories;\n'
+        '(optionally) "test" subdirectories;\n'
         '(2) a URI of a zip file containing (1);\n'
         '(3) a list of (2);\n'
         '(4) a URI of a directory containing zip files containing (1).')
