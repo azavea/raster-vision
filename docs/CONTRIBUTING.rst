@@ -13,6 +13,7 @@ Everyone who contributes code to Raster Vision will be asked to sign the Azavea 
 2. Print out the CLAs and sign them, or use PDF software that allows placement of a signature image.
 
 3. Send the CLAs to Azavea by one of:
+
    - Scanning and emailing the document to cla@azavea.com
    - Faxing a copy to +1-215-925-2600.
    - Mailing a hardcopy to: :code:`Azavea, 990 Spring Garden Street, 5th Floor, Philadelphia, PA 19107 USA`
