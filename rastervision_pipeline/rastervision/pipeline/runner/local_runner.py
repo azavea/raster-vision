@@ -43,24 +43,24 @@ class LocalRunner(Runner):
             curr_command_inds = []
             if command in pipeline.split_commands and num_splits > 1:
                 for split_ind in range(num_splits):
-                    makefile += '{}: '.format(curr_command_ind)
+                    makefile += f'{curr_command_ind}: '
                     makefile += ' '.join([str(ci) for ci in prev_command_inds])
                     makefile += '\n'
                     invocation = (
                         'python -m rastervision.pipeline.cli run_command '
-                        '{} {} --split-ind {} --num-splits {}').format(
-                            cfg_json_uri, command, split_ind, num_splits)
-                    makefile += '\t{}\n\n'.format(invocation)
+                        f'{cfg_json_uri} {command} --split-ind {split_ind} '
+                        f'--num-splits {num_splits}')
+                    makefile += f'\t{invocation}\n\n'
                     curr_command_inds.append(curr_command_ind)
                     curr_command_ind += 1
             else:
-                makefile += '{}: '.format(curr_command_ind)
+                makefile += f'{curr_command_ind}: '
                 makefile += ' '.join([str(ci) for ci in prev_command_inds])
                 makefile += '\n'
                 invocation = (
                     'python -m rastervision.pipeline.cli run_command '
-                    '{} {}'.format(cfg_json_uri, command))
-                makefile += '\t{}\n\n'.format(invocation)
+                    f'{cfg_json_uri} {command}')
+                makefile += f'\t{invocation}\n\n'
                 curr_command_inds.append(curr_command_ind)
                 curr_command_ind += 1
 
