@@ -9,7 +9,7 @@ from rastervision.pytorch_learner import *
 
 
 def get_config(runner) -> SemanticSegmentationConfig:
-    output_root_uri = '/opt/data/output/'
+    output_root_uri = '/opt/data/output/tiny_spacenet'
     class_config = ClassConfig(
         names=['building', 'background'], colors=['red', 'black'])
 
