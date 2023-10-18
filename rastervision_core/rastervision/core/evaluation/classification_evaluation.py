@@ -86,7 +86,7 @@ class ClassificationEvaluation(ABC):
         Args:
             other (ClassificationEvaluation): Evaluation to merge into this one
             scene_id (Optional[str], optional): ID of scene. If specified,
-                (a copy of) ``other`` will be saved and be availabel in
+                (a copy of) ``other`` will be saved and be available in
                 ``to_json()``'s output. Defaults to None.
         """
         if self.conf_mat is None:

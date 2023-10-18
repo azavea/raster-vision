@@ -177,7 +177,7 @@ class RVPipeline(Pipeline):
 
         This uses a sliding window.
         """
-        # Cache backend so subsquent calls will be faster. This is useful for
+        # Cache backend so subsequent calls will be faster. This is useful for
         # the predictor.
         if self.backend is None:
             self.backend = self.config.backend.build(self.config, self.tmp_dir)

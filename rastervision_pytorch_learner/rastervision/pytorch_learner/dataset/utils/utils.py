@@ -58,7 +58,7 @@ def make_image_folder_dataset(data_dir: str,
     """Initializes and returns an ImageFolder.
 
     If classes is specified, ImageFolder's default class-to-index mapping
-    behavior is overriden to use the indices of classes instead.
+    behavior is overridden to use the indices of classes instead.
     """
     if classes is None:
         return DatasetFolder(

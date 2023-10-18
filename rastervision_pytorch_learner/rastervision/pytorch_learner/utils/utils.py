@@ -368,7 +368,7 @@ def log_metrics_to_csv(csv_path: str, metrics: Dict[str, Any]):
 def aggregate_metrics(
         outputs: List[Dict[str, Union[float, torch.Tensor]]],
         exclude_keys: Container[str] = set('conf_mat')) -> Dict[str, float]:
-    """Aggregate the ouput of validate_step at the end of the epoch.
+    """Aggregate the output of validate_step at the end of the epoch.
 
     Args:
         outputs: A list of outputs of Learner.validate_step().

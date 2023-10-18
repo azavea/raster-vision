@@ -16,7 +16,7 @@ def compute_metrics(
         pred_labels: 'ObjectDetectionLabels',
         num_classes: int,
         iou_thresh: float = 0.5) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Compute per-class true positves, false positives, and false negatives.
+    """Compute per-class true positives, false positives, and false negatives.
 
     Does the following:
 

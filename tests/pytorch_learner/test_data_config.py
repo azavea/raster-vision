@@ -308,7 +308,7 @@ class TestGeoDataConfig(unittest.TestCase):
             self.fail(msg)
 
     def test_window_config(self):
-        # update() corrrectly initializes size_lims
+        # update() correctly initializes size_lims
         args = dict(method=GeoDataWindowMethod.random, size=10)
         self.assertNoError(lambda: GeoDataWindowConfig(**args))
         self.assertEqual(GeoDataWindowConfig(**args).size_lims, (10, 11))

@@ -134,7 +134,7 @@ class RasterioSource(RasterSource):
         return self._crs_transformer
 
     def _set_info_from_chip(self):
-        """Read 1x1 chip to get info not statically inferrable."""
+        """Read 1x1 chip to get info not statically inferable."""
         test_chip = self.get_chip(Box(0, 0, 1, 1))
         self._dtype = test_chip.dtype
         self._num_channels = test_chip.shape[-1]
@@ -183,7 +183,7 @@ class RasterioSource(RasterSource):
                 channel_order (if specified). So if this is an RGB image and
                 channel_order=[2, 1, 0], then using bands=[0] will return the
                 B-channel. Defaults to None.
-            out_shape (Optional[Tuple[int, ...]], optional): (hieght, width) of
+            out_shape (Optional[Tuple[int, ...]], optional): (height, width) of
                 the output chip. If None, no resizing is done.
                 Defaults to None.
 

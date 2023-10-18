@@ -118,9 +118,9 @@ def geoms_to_geojson(geoms: Iterable['BaseGeometry'],
 
 def geom_to_feature(geom: 'BaseGeometry',
                     properties: Optional[dict] = None) -> dict:
-    """Serialize a single shapely geomety to a GeoJSON Feature."""
-    geomety = mapping(geom)
-    feature = geometry_to_feature(geomety, properties=properties)
+    """Serialize a single shapely geometry to a GeoJSON Feature."""
+    geometry = mapping(geom)
+    feature = geometry_to_feature(geometry, properties=properties)
     return feature
 
 
@@ -251,7 +251,7 @@ def pixel_to_map_coords(geojson: dict,
 def simplify_polygons(geojson: dict) -> dict:
     """Simplify polygon geometries by applying ``.buffer(0)``.
 
-    For Polygon geomtries, ``.buffer(0)`` can do the following:
+    For Polygon geometries, ``.buffer(0)`` can do the following:
 
     1.  *Sometimes* break up a polygon with "bowties" into multiple polygons.
         (See https://github.com/shapely/shapely/issues/599.)

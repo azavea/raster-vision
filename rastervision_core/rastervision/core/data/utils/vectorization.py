@@ -23,7 +23,7 @@ def mask_to_polygons(mask: np.ndarray, transform: Optional[rio.Affine] = None
     Args:
         mask (np.ndarray): The mask containing buildings to polygonize.
         transform (Optional[rio.Affine]): Affine transform to use during
-            polygonization. Deafults to None (i.e. identity transform).
+            polygonization. Defaults to None (i.e. identity transform).
 
     Returns:
         Iterator[BaseGeometry]: Generator of shapely polygons.
@@ -61,7 +61,7 @@ def mask_to_building_polygons(
     Args:
         mask (np.ndarray): The mask containing buildings to polygonize.
         transform (Optional[rio.Affine]): Affine transform to use during
-            polygonization. Deafults to None (i.e. identity transform).
+            polygonization. Defaults to None (i.e. identity transform).
         min_area (float): Minimum area (in pixels^2) of anything that can be
             considered to be a building or cluster of buildings. The goal is to
             distinguish between buildings and artifacts. Components with area

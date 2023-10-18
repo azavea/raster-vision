@@ -4,7 +4,7 @@ The `test.py` script provides some useful commands for running the examples and 
 It supports the following commands:
 - `run` - run an example either remotely or locally
 - `compare` - compare the outputs of the `eval` stage of two runs of the same example
-- `collect` - dowload the output of one or more commands (like `train`, `eval`, `bundle`, etc.) produced by a run of an example
+- `collect` - download the output of one or more commands (like `train`, `eval`, `bundle`, etc.) produced by a run of an example
 - `predict` - download the model bundle produced by a run of an example and use it to make predictions on a sample image
 - `upload` - upload model bundle, eval, sample image, sample predictions, and training logs to the model zoo
 

@@ -65,7 +65,7 @@ def make_cc_geodataset(cls,
         label_vector_default_class_id (Optional[int], optional): If using
             label_vector_uri and all polygons in that file belong to the same
             class and they do not contain a `class_id` property, then use this
-            argument to map all of the polgons to the appropriate class ID.
+            argument to map all of the polygons to the appropriate class ID.
             See docs for ClassInferenceTransformer for more details.
             Defaults to None.
         image_raster_source_kw (dict, optional): Additional arguments to pass

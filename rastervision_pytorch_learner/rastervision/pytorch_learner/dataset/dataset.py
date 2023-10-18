@@ -83,8 +83,8 @@ class AlbumentationsDataset(Dataset):
                 y = torch.from_numpy(y)
 
         if y is None:
-            # Ideally, y should be None to semantically convery the absence of
-            # any label, but PyTorch's defauult collate function doesn't handle
+            # Ideally, y should be None to semantically convert the absence of
+            # any label, but PyTorch's default collate function doesn't handle
             # None values.
             y = torch.tensor(np.nan)
 

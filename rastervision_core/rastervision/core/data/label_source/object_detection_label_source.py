@@ -27,7 +27,7 @@ class ObjectDetectionLabelSource(LabelSource):
             bbox (Optional[Box], optional): User-specified crop of the extent.
                 If None, the full extent available in the source file is used.
             ioa_thresh (Optional[float], optional): IOA threshold to apply when
-                retieving labels for a window. Defaults to None.
+                retrieving labels for a window. Defaults to None.
             clip (bool, optional): Clip bounding boxes to window limits when
                 retrieving labels for a window. Defaults to False.
         """
@@ -52,7 +52,7 @@ class ObjectDetectionLabelSource(LabelSource):
 
         Returns:
             ObjectDetectionLabels: Labels with sufficient overlap with the
-            window. The returned labels are in global coods (i.e. coords wihtin
+            window. The returned labels are in global coods (i.e. coords within
             the full extent of the source).
         """
         if window is None:

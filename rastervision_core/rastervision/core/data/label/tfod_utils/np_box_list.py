@@ -113,7 +113,7 @@ class NpBoxList(object):
         return tuple(boxes.T)
 
     def _is_valid_boxes(self, data: np.ndarray) -> bool:
-        """Check whether data fullfills the format of N*[ymin, xmin, ymax, xmin].
+        """Check whether data fulfills the format of N*[ymin, xmin, ymax, xmin].
 
         Args:
             data (np.ndarray): Box coords as a [N, 4] numpy array.

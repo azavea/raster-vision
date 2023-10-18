@@ -448,7 +448,7 @@ class Learner(ABC):
 
     def train_end(self, outputs: List[Dict[str, Union[float, Tensor]]]
                   ) -> MetricDict:
-        """Aggregate the ouput of train_step at the end of the epoch.
+        """Aggregate the output of train_step at the end of the epoch.
 
         Args:
             outputs: a list of outputs of train_step
@@ -506,7 +506,7 @@ class Learner(ABC):
 
     def validate_end(self, outputs: List[Dict[str, Union[float, Tensor]]]
                      ) -> MetricDict:
-        """Aggregate the ouput of validate_step at the end of the epoch.
+        """Aggregate the output of validate_step at the end of the epoch.
 
         Args:
             outputs: a list of outputs of validate_step

@@ -228,7 +228,7 @@ class ModelConfig(Config):
     init_weights: Optional[str] = Field(
         None,
         description=('URI of PyTorch model weights used to initialize model. '
-                     'If set, this supercedes the pretrained option.'))
+                     'If set, this supersedes the pretrained option.'))
     load_strict: bool = Field(
         True,
         description=(
@@ -414,7 +414,7 @@ class SolverConfig(Config):
             **kwargs: Extra args for the optimizer constructor.
 
         Returns:
-            An Adam optimzer instance.
+            An Adam optimizer instance.
         """
         return optim.Adam(model.parameters(), lr=self.lr, **kwargs)
 
@@ -464,7 +464,7 @@ class SolverConfig(Config):
                               optimizer: optim.Optimizer,
                               last_epoch: int = -1,
                               **kwargs) -> Optional[_LRScheduler]:
-        """Returns an LR scheduler tha changes the LR each epoch.
+        """Returns an LR scheduler that changes the LR each epoch.
 
         This is used to divide the learning rate by 10 at certain epochs.
 
@@ -705,7 +705,7 @@ class DataConfig(Config):
         a 'lambda_transforms_path' field contained in this
         config or in any of its members no matter how deeply neseted.
 
-        The pupose is to make it easier to adjust their paths all at once while
+        The purpose is to make it easier to adjust their paths all at once while
         saving to or loading from a bundle.
         """
         transforms_all = [
@@ -809,7 +809,7 @@ class ImageDataConfig(DataConfig):
         None,
         description='One of the following:\n'
         '(1) a URI of a directory containing "train", "valid", and '
-        '(optinally) "test" subdirectories;\n'
+        '(optically) "test" subdirectories;\n'
         '(2) a URI of a zip file containing (1);\n'
         '(3) a list of (2);\n'
         '(4) a URI of a directory containing zip files containing (1).')
@@ -1016,18 +1016,18 @@ class ImageDataConfig(DataConfig):
         """Extract data dirs from uri.
 
         Data dirs are directories containing  "train", "valid", and
-        (optinally) "test" subdirectories.
+        (optionally) "test" subdirectories.
 
         Args:
             uri (Union[str, List[str]]): A URI or a list of URIs of one of the
                 following:
 
                 (1) a URI of a directory containing "train", "valid", and
-                    (optinally) "test" subdirectories
+                    (optionally) "test" subdirectories
                 (2) a URI of a zip file containing (1)
                 (3) a list of (2)
                 (4) a URI of a directory containing zip files containing (1)
-            unzip_dir (str): Directory where zip files will be extrated to, if
+            unzip_dir (str): Directory where zip files will be extracted to, if
                 needed.
 
         Returns:
@@ -1076,7 +1076,7 @@ class ImageDataConfig(DataConfig):
 
         Args:
             zip_uris (List[str]): A list of URIs of zip files:
-            unzip_dir (str): Directory where zip files will be extrated to.
+            unzip_dir (str): Directory where zip files will be extracted to.
 
         Returns:
             List[str]: Paths to directories that each contain contents of one

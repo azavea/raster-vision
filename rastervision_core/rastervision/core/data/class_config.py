@@ -92,7 +92,7 @@ class ClassConfig(Config):
         null_class_name = DEFAULT_NULL_CLASS_NAME
         null_class_color = DEFAULT_NULL_CLASS_COLOR
 
-        # This might seeem redundant given the null class validator above, but
+        # This might seem redundant given the null class validator above, but
         # is actually important. Sometimes there can be multiple ClassConfig
         # instances that reference the same list objects for names and colors
         # (not clear why this happens). This means that

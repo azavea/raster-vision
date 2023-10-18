@@ -47,7 +47,7 @@ def write_bbox(path: str, arr: np.ndarray, bbox: Box, crs_wkt: str, **kwargs):
     Args:
         path (str): GeoTiff path.
         arr (np.ndarray): (H, W[, C]) Array to write.
-        bbox (Box): Bouding box in map coords to georeference the GeoTiff to.
+        bbox (Box): Bounding box in map coords to georeference the GeoTiff to.
         crs_wkt (str): CRS in WKT format.
     """
     if arr.ndim == 2:
@@ -182,7 +182,7 @@ def read_window(
             Defaults to None.
         is_masked (bool): If True, read a masked array from rasterio.
             Defaults to False.
-        out_shape (Optional[Tuple[int, int]]): (hieght, width) of the output
+        out_shape (Optional[Tuple[int, int]]): (height, width) of the output
             chip. If None, no resizing is done. Defaults to None.
 
     Returns:

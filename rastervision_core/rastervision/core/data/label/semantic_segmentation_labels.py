@@ -129,7 +129,7 @@ class SemanticSegmentationLabels(Labels):
                 window_aoi = transform(transform_shape, window_aoi)
                 window_aois.append(window_aoi)
 
-        # If window does't overlap with any AOI, then it won't be in
+        # If window doesn't overlap with any AOI, then it won't be in
         # new_labels.
         if window_aois:
             # If window intersects with AOI, set pixels outside the

@@ -283,7 +283,7 @@ exclude_patterns = [
 
 # The name of the Pygments (syntax highlighting) style to use.
 #
-# To see all availabel values:
+# To see all available values:
 # >>> from pygments.styles import get_all_styles
 # >>> styles = list(get_all_styles())
 #
