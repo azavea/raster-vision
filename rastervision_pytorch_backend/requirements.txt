@@ -1,4 +1,4 @@
-rastervision_pipeline==0.21.3-dev
-rastervision_core==0.21.3-dev
-rastervision_pytorch_learner==0.21.3-dev
-rastervision_aws_s3==0.21.3-dev
+rastervision_pipeline==0.21.4-dev
+rastervision_core==0.21.4-dev
+rastervision_pytorch_learner==0.21.4-dev
+rastervision_aws_s3==0.21.4-dev
