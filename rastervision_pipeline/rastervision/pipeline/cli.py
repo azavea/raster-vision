@@ -238,7 +238,7 @@ def run_command(cfg_json_uri: str, command: str, split_ind: Optional[int],
         runner=runner)
 
 
-def _main():
+def _main():  # pragma: no cover
     for pc in registry.get_plugin_commands():
         main.add_command(pc)
     main()
