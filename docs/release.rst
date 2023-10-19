@@ -29,14 +29,6 @@ Minor or Major Version Release
    #.  Update the docs if needed. See the `docs README <{{ repo }}/docs/README.md>`__ for instructions.
    #.  Update `tiny_spacenet.py <{{ repo_examples }}/tiny_spacenet.py>`__ if needed and ensure the line numbers in every ``literalinclude`` of that file are correct. Tip: you can find all instances by searching the repo using the regex: ``\.\. literalinclude:: .+tiny_spacenet\.py$``.
    #.  Test :ref:`setup` and :ref:`quickstart` instructions and make sure they work.
-   #.  Test examples from :ref:`pipelines plugins`.
-
-        .. code-block:: console
-
-            rastervision run inprocess rastervision.pipeline_example_plugin1.config1 -a root_uri /opt/data/pipeline-example/1/ --splits 2
-            rastervision run inprocess rastervision.pipeline_example_plugin1.config2 -a root_uri /opt/data/pipeline-example/2/ --splits 2
-            rastervision run inprocess rastervision.pipeline_example_plugin2.config3 -a root_uri /opt/data/pipeline-example/3/ --splits 2
-
    #.  Test examples from :ref:`bootstrap`.
 
        .. code-block:: console

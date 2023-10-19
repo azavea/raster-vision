@@ -69,18 +69,16 @@ def get_configs(cfg_module_path: str, runner: str,
     if _get_config is None:
         _get_configs = getattr(cfg_module, 'get_configs', None)
     if _get_configs is None:
-        raise Exception(
-            'There must be a get_config or get_configs function in {}.'.format(
-                cfg_module_path))
+        raise Exception('There must be a get_config or get_configs function '
+                        f'in {cfg_module_path}.')
     cfgs = _get_configs(runner, **args)
     if not isinstance(cfgs, list):
         cfgs = [cfgs]
 
     for cfg in cfgs:
         if not issubclass(type(cfg), PipelineConfig):
-            raise Exception(
-                ('All objects returned by get_configs in {} must be '
-                 'PipelineConfigs.').format(cfg_module_path))
+            raise Exception('All objects returned by get_configs in '
+                            f'{cfg_module_path} must be PipelineConfigs.')
     return cfgs
 
 
@@ -208,12 +206,11 @@ def _run_command(cfg_json_uri: str,
     command_fn = getattr(pipeline, command)
 
     if num_splits is not None and num_splits > 1:
-        msg = 'Running {} command split {}/{}...'.format(
-            command, split_ind + 1, num_splits)
+        msg = f'Running {command} command split {split_ind + 1}/{num_splits}...'
         click.secho(msg, fg='green', bold=True)
         command_fn(split_ind=split_ind, num_splits=num_splits)
     else:
-        msg = 'Running {} command...'.format(command)
+        msg = f'Running {command} command...'
         click.secho(msg, fg='green', bold=True)
         command_fn()
 
@@ -241,7 +238,7 @@ def run_command(cfg_json_uri: str, command: str, split_ind: Optional[int],
         runner=runner)
 
 
-def _main():
+def _main():  # pragma: no cover
     for pc in registry.get_plugin_commands():
         main.add_command(pc)
     main()

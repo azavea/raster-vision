@@ -67,7 +67,7 @@ We can now run the pipeline by invoking the following command inside the contain
 Seeing Results
 ---------------
 
-If you go to ``${RV_QUICKSTART_OUT_DIR}`` you should see a directory structure like this.
+If you go to ``${RV_QUICKSTART_OUT_DIR}/tiny_spacenet`` you should see a directory structure like this.
 
 .. note:: This uses the ``tree`` command which you may need to install first.
 
