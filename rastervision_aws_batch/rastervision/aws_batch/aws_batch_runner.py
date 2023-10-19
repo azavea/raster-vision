@@ -94,14 +94,14 @@ class AWSBatchRunner(Runner):
 
     Requires Everett configuration of form:
 
-    ```
-    [AWS_BATCH]
-    cpu_job_queue=
-    cpu_job_def=
-    gpu_job_queue=
-    gpu_job_def=
-    attempts=
-    ```
+    .. code-block:: ini
+
+        [AWS_BATCH]
+        cpu_job_queue=
+        cpu_job_def=
+        gpu_job_queue=
+        gpu_job_def=
+        attempts=
     """
 
     def run(self,
