@@ -1,12 +1,17 @@
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 import logging
 import os
 import uuid
-from typing import List, Optional
+from pprint import pformat
 
 from rastervision.pipeline import rv_config_ as rv_config
 from rastervision.pipeline.runner import Runner
 
+if TYPE_CHECKING:
+    from rastervision.pipeline.pipeline import Pipeline
+
 log = logging.getLogger(__name__)
+
 AWS_BATCH = 'batch'
 
 
@@ -23,20 +28,23 @@ def submit_job(cmd: List[str],
     """Submit a job to run on AWS Batch.
 
     Args:
-        cmd: a command to run in the Docker container for the remote job
-        debug: if True, run the command using a ptvsd wrapper which sets up a remote
-            VS Code Python debugger server
-        profile: if True, run the command using kernprof, a line profiler
-        attempts: the number of times to try running the command which is useful
-            in case of failure.
-        parent_job_ids: optional list of parent Batch job ids. The job created by this
-            will only run after the parent jobs complete successfully.
-        num_array_jobs: if set, make this a Batch array job with size equal to
-            num_array_jobs
-        use_gpu: if True, run the job in a GPU-enabled queue
-        job_queue: if set, use this job queue
-        job_def: if set, use this job definition
+        cmd: Command to run in the Docker container for the remote job as list
+            of strings.
+        debug: If True, run the command using a ptvsd wrapper which sets up a
+            remote VS Code Python debugger server.
+        profile: If True, run the command using kernprof, a line profiler.
+        attempts: The number of times to try running the command which is
+            useful in case of failure.
+        parent_job_ids: Optional list of parent Batch job ids. The job created
+            by this will only run after the parent jobs complete successfully.
+        num_array_jobs: If set, make this a Batch array job with size equal to
+            num_array_jobs.
+        use_gpu: If True, run the job in a GPU-enabled queue.
+        job_queue: If set, use this job queue.
+        job_def: If set, use this job definition.
     """
+    import boto3
+
     batch_config = rv_config.get_namespace_config(AWS_BATCH)
 
     if job_queue is None:
@@ -51,25 +59,21 @@ def submit_job(cmd: List[str],
         else:
             job_def = batch_config('cpu_job_def')
 
-    import boto3
-    client = boto3.client('batch')
-
-    cmd_list = cmd.split(' ')
     if debug:
-        cmd_list = [
+        cmd = [
             'python', '-m', 'ptvsd', '--host', '0.0.0.0', '--port', '6006',
             '--wait', '-m'
-        ] + cmd_list
+        ] + cmd
 
     if profile:
-        cmd_list = ['kernprof', '-v', '-l'] + cmd_list
+        cmd = ['kernprof', '-v', '-l'] + cmd
 
     kwargs = {
         'jobName': job_name,
         'jobQueue': job_queue,
         'jobDefinition': job_def,
         'containerOverrides': {
-            'command': cmd_list
+            'command': cmd
         },
         'retryStrategy': {
             'attempts': attempts
@@ -80,12 +84,8 @@ def submit_job(cmd: List[str],
     if num_array_jobs:
         kwargs['arrayProperties'] = {'size': num_array_jobs}
 
+    client = boto3.client('batch')
     job_id = client.submit_job(**kwargs)['jobId']
-    msg = 'submitted job with jobName={} and jobId={} w/ parent(s)={}'.format(
-        job_name, job_id, parent_job_ids)
-    log.info(msg)
-    log.info(cmd_list)
-
     return job_id
 
 
@@ -105,36 +105,47 @@ class AWSBatchRunner(Runner):
     """
 
     def run(self,
+            cfg_json_uri: str,
+            pipeline: 'Pipeline',
+            commands: List[str],
+            num_splits: int = 1,
+            pipeline_run_name: str = 'raster-vision'):
+        cmd, args = self.build_cmd(
             cfg_json_uri,
             pipeline,
             commands,
-            num_splits=1,
-            pipeline_run_name: str = 'raster-vision'):
+            num_splits,
+            pipeline_run_name=pipeline_run_name)
+        job_id = submit_job(cmd=cmd, **args)
+
+        job_info = dict(
+            name=args['job_name'],
+            id=job_id,
+            parents=args['parent_job_ids'],
+            cmd=cmd,
+        )
+        job_info_str = pformat(job_info, sort_dicts=False)
+        msg = (f'Job submitted:\n{job_info_str}')
+        log.info(msg)
+
+    def build_cmd(self,
+                  cfg_json_uri: str,
+                  pipeline: 'Pipeline',
+                  commands: List[str],
+                  num_splits: int = 1,
+                  pipeline_run_name: str = 'raster-vision'
+                  ) -> Tuple[List[str], Dict[str, Any]]:
         parent_job_ids = []
 
-        # pipeline-specific job queue
-        if hasattr(pipeline, 'job_queue'):
-            pipeline_job_queue = pipeline.job_queue
-        else:
-            pipeline_job_queue = None
-
-        # pipeline-specific job definition
-        if hasattr(pipeline, 'job_def'):
-            pipeline_job_def = pipeline.job_def
-        else:
-            pipeline_job_def = None
+        # pipeline-specific job queue and job definition
+        pipeline_job_queue = getattr(pipeline, 'job_queue', None)
+        pipeline_job_def = getattr(pipeline, 'job_def', None)
 
         for command in commands:
-
             # command-specific job queue, job definition
-            job_def = pipeline_job_def
-            job_queue = pipeline_job_queue
-            if hasattr(pipeline, command):
-                fn = getattr(pipeline, command)
-                if hasattr(fn, 'job_def'):
-                    job_def = fn.job_def
-                if hasattr(fn, 'job_queue'):
-                    job_queue = fn.job_queue
+            cmd_obj = getattr(pipeline, command, None)
+            job_def = getattr(cmd_obj, 'job_def', pipeline_job_def)
+            job_queue = getattr(cmd_obj, 'job_queue', pipeline_job_queue)
 
             num_array_jobs = None
             use_gpu = command in pipeline.gpu_commands
@@ -142,26 +153,30 @@ class AWSBatchRunner(Runner):
             job_name = f'{pipeline_run_name}-{command}-{uuid.uuid4()}'
 
             cmd = ['python', '-m', 'rastervision.pipeline.cli']
+
             if rv_config.get_verbosity() > 1:
-                cmd.append('-' + 'v' * (rv_config.get_verbosity() - 1))
-            cmd.extend(
-                ['run_command', cfg_json_uri, command, '--runner', AWS_BATCH])
+                num_vs = rv_config.get_verbosity() - 1
+                # produces a string like "-vvv..."
+                verbosity_opt_str = f'-{"v" * num_vs}'
+                cmd += [verbosity_opt_str]
+
+            cmd += [
+                'run_command', cfg_json_uri, command, '--runner', AWS_BATCH
+            ]
 
             if command in pipeline.split_commands and num_splits > 1:
                 num_array_jobs = num_splits
                 cmd += ['--num-splits', str(num_splits)]
-            job_id = submit_job(
-                cmd=' '.join(cmd),
+
+            args = dict(
                 job_name=job_name,
                 parent_job_ids=parent_job_ids,
                 num_array_jobs=num_array_jobs,
                 use_gpu=use_gpu,
                 job_queue=job_queue,
                 job_def=job_def)
-            parent_job_ids = [job_id]
 
-            job_queue = None
-            job_def = None
+            return cmd, args
 
     def get_split_ind(self):
         return int(os.environ.get('AWS_BATCH_JOB_ARRAY_INDEX', 0))
