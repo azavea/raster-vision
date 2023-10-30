@@ -74,14 +74,15 @@ class SageMakerRunner(Runner):
 
     Requires Everett configuration of form:
 
-    ```
-    [SAGEMAKER]
-    exec_role=
-    cpu_image=
-    cpu_inst_type=
-    gpu_image=
-    gpu_inst_type=
-    ```
+    .. code-block:: ini
+
+        [SAGEMAKER]
+        exec_role=
+        cpu_image=
+        cpu_inst_type=
+        gpu_image=
+        gpu_inst_type=
+        use_spot_instances=
     """
 
     def run(self,
