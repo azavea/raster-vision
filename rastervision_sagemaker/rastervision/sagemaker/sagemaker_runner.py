@@ -105,7 +105,7 @@ class SageMakerRunner(Runner):
         for command in commands:
 
             use_gpu = command in pipeline.gpu_commands
-            job_name = command
+            job_name = f'{pipeline_run_name}-{command}'
             cmd = [
                 'python',
                 '/opt/src/rastervision_pipeline/rastervision/pipeline/cli.py',  # XXX
