@@ -12,6 +12,7 @@ def register_plugin(registry):
         'cpu_inst_type',
         'gpu_image',
         'gpu_inst_type',
+        'use_spot_instances',
     ])
 
 
