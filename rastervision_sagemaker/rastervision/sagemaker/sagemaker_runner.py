@@ -70,7 +70,7 @@ def make_step(
 
 
 class SageMakerRunner(Runner):
-    """Runs pipelines remotely using AWS Batch.
+    """Runs pipelines remotely using AWS SageMaker.
 
     Requires Everett configuration of form:
 
