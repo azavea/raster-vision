@@ -109,7 +109,7 @@ class SageMakerRunner(Runner):
             job_name = f'{pipeline_run_name}-{command}'
             cmd = [
                 'python',
-                '/opt/src/rastervision_pipeline/rastervision/pipeline/cli.py',  # XXX
+                '/opt/src/rastervision_pipeline/rastervision/pipeline/cli.py',
             ]
             if rv_config.get_verbosity() > 1:
                 cmd.append('-' + 'v' * (rv_config.get_verbosity() - 1))
