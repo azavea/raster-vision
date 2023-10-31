@@ -1,5 +1,5 @@
+from typing import TYPE_CHECKING, List, Optional
 import logging
-from typing import List
 
 import boto3
 from rastervision.pipeline import rv_config_ as rv_config
@@ -7,37 +7,28 @@ from rastervision.pipeline.runner import Runner
 
 from sagemaker.processing import ScriptProcessor
 from sagemaker.estimator import Estimator
-from sagemaker.workflow.pipeline import Pipeline
+from sagemaker.workflow.pipeline import Pipeline as SageMakerPipeline
 from sagemaker.workflow.pipeline_context import PipelineSession
 from sagemaker.workflow.steps import ProcessingStep, TrainingStep
+
+if TYPE_CHECKING:
+    from rastervision.pipeline.pipeline import Pipeline
+    from sagemaker.workflow.pipeline_context import _JobStepArguments
 
 log = logging.getLogger(__name__)
 SAGEMAKER = 'sagemaker'
 
 
-def make_step(
-        step_name: str,
-        cmd: List[str],
-        role: str,
-        image_uri: str,
-        instance_type: str,
-        use_spot_instances: bool,
-        sagemaker_session: PipelineSession,
-):
-
-    python_executable = cmd[0]
-    script_name = cmd[1]
-    script_arguments = cmd[2:]
-    assert python_executable == 'python' or python_executable == 'python3'
-
-    if True and ('train' in cmd or 'predict' in cmd):
-        # For (possibly) GPU-enabled steps, create an "Estimator".
+def make_step(step_name: str, cmd: List[str], role: str, image_uri: str,
+              instance_type: str, use_spot_instances: bool,
+              sagemaker_session: PipelineSession, use_gpu: bool):
+    if use_gpu:
+        # For GPU-enabled steps, create an "Estimator".
         # Formally this should probably not be used for prediction in
         # this way, but it is expedient (especially given default
         # service quotas, and other stuff).
         step_estimator = Estimator(
-            container_entry_point=[python_executable],
-            container_arguments=cmd[1:],
+            container_entry_point=cmd,
             image_uri=image_uri,
             instance_count=1,
             instance_type=instance_type,
@@ -46,7 +37,8 @@ def make_step(
             sagemaker_session=sagemaker_session,
             use_spot=use_spot_instances,
         )
-        step_args = step_estimator.fit(wait=False)
+        step_args: Optional['_JobStepArguments'] = step_estimator.fit(
+            wait=False)
         step = TrainingStep(step_name, step_args=step_args)
     else:
         # For non-GPU-enabled steps, create a ScriptProcessor.
@@ -56,14 +48,10 @@ def make_step(
             instance_count=1,
             instance_type=instance_type,
             sagemaker_session=sagemaker_session,
-            command=[python_executable],
+            command=cmd[:3],
         )
-        step_args = step_processor.run(
-            inputs=[],
-            outputs=[],
-            code=script_name,
-            arguments=script_arguments,
-        )
+        step_args: Optional['_JobStepArguments'] = step_processor.run(
+            code=cmd[4], arguments=cmd[4:], wait=False)
         step = ProcessingStep(step_name, step_args=step_args)
 
     return step
@@ -86,10 +74,10 @@ class SageMakerRunner(Runner):
     """
 
     def run(self,
-            cfg_json_uri,
-            pipeline,
-            commands,
-            num_splits=1,
+            cfg_json_uri: str,
+            pipeline: 'Pipeline',
+            commands: List[str],
+            num_splits: int = 1,
             pipeline_run_name: str = 'raster-vision'):
 
         config = rv_config.get_namespace_config(SAGEMAKER)
@@ -104,13 +92,9 @@ class SageMakerRunner(Runner):
         steps = []
 
         for command in commands:
-
             use_gpu = command in pipeline.gpu_commands
             job_name = f'{pipeline_run_name}-{command}'
-            cmd = [
-                'python',
-                '/opt/src/rastervision_pipeline/rastervision/pipeline/cli.py',
-            ]
+            cmd = ['python', '-m', 'rastervision.pipeline.cli']
             if rv_config.get_verbosity() > 1:
                 cmd.append('-' + 'v' * (rv_config.get_verbosity() - 1))
             cmd.extend(['run_command', cfg_json_uri, command])
@@ -127,13 +111,15 @@ class SageMakerRunner(Runner):
                         str(num_splits)
                     ]
                     step = make_step(
-                        f'{job_name}_{i+1}of{num_splits}',
-                        cmd,
-                        exec_role,
-                        gpu_image if use_gpu else cpu_image,
-                        gpu_inst_type if use_gpu else cpu_inst_type,
-                        use_spot_instances,
-                        sagemaker_session,
+                        step_name=f'{job_name}_{i+1}of{num_splits}',
+                        cmd=cmd,
+                        role=exec_role,
+                        image_uri=gpu_image if use_gpu else cpu_image,
+                        instance_type=(gpu_inst_type
+                                       if use_gpu else cpu_inst_type),
+                        use_spot_instances=use_spot_instances,
+                        sagemaker_session=sagemaker_session,
+                        use_gpu=use_gpu,
                     )
                     step.add_depends_on(steps)
                     _steps.append(step)
@@ -141,13 +127,15 @@ class SageMakerRunner(Runner):
             else:
                 # If the step can not be split, then submit it as-is.
                 step = make_step(
-                    job_name,
-                    cmd,
-                    exec_role,
-                    gpu_image if use_gpu else cpu_image,
-                    gpu_inst_type if use_gpu else cpu_inst_type,
-                    use_spot_instances,
-                    sagemaker_session,
+                    step_name=job_name,
+                    cmd=cmd,
+                    role=exec_role,
+                    image_uri=gpu_image if use_gpu else cpu_image,
+                    instance_type=(gpu_inst_type
+                                   if use_gpu else cpu_inst_type),
+                    use_spot_instances=use_spot_instances,
+                    sagemaker_session=sagemaker_session,
+                    use_gpu=use_gpu,
                 )
                 step.add_depends_on(steps)
                 steps.append(step)
@@ -155,7 +143,7 @@ class SageMakerRunner(Runner):
         # Submit the pipeline to SageMaker
         iam_client = boto3.client('iam')
         role_arn = iam_client.get_role(RoleName=exec_role)['Role']['Arn']
-        pipeline = Pipeline(
+        pipeline = SageMakerPipeline(
             name=pipeline_run_name,
             steps=steps,
             sagemaker_session=sagemaker_session,
