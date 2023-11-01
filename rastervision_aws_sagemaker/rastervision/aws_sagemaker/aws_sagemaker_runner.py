@@ -45,7 +45,7 @@ class AWSSageMakerRunner(Runner):
             cmd_prefix: List[str] = [
                 'python', '-m', 'rastervision.pipeline.cli'
             ],
-            pipeline_run_name: str = 'raster-vision'):
+            pipeline_run_name: str = 'rv'):
         config = rv_config.get_namespace_config(AWS_SAGEMAKER)
         exec_role = config('exec_role')
 
@@ -65,16 +65,15 @@ class AWSSageMakerRunner(Runner):
 
         pprint(execution.describe())
 
-    def build_pipeline(
-            self,
-            cfg_json_uri: str,
-            pipeline: 'Pipeline',
-            commands: List[str],
-            num_splits: int = 1,
-            cmd_prefix: List[str] = [
-                'python', '-m', 'rastervision.pipeline.cli'
-            ],
-            pipeline_run_name: str = 'raster-vision') -> SageMakerPipeline:
+    def build_pipeline(self,
+                       cfg_json_uri: str,
+                       pipeline: 'Pipeline',
+                       commands: List[str],
+                       num_splits: int = 1,
+                       cmd_prefix: List[str] = [
+                           'python', '-m', 'rastervision.pipeline.cli'
+                       ],
+                       pipeline_run_name: str = 'rv') -> SageMakerPipeline:
         """Build a SageMaker Pipeline with each command as a step within it."""
 
         config = rv_config.get_namespace_config(AWS_SAGEMAKER)
