@@ -120,7 +120,7 @@ COPY ./rastervision_aws_s3/requirements.txt /opt/src/s3-requirements.txt
 COPY ./rastervision_core/requirements.txt /opt/src/core-requirements.txt
 COPY ./rastervision_gdal_vsi/requirements.txt /opt/src/gdal-requirements.txt
 COPY ./rastervision_pipeline/requirements.txt /opt/src/pipeline-requirements.txt
-COPY ./rastervision_sagemaker/requirements.txt /opt/src/sagemaker-requirements.txt
+COPY ./rastervision_aws_sagemaker/requirements.txt /opt/src/sagemaker-requirements.txt
 COPY ./requirements-dev.txt /opt/src/requirements-dev.txt
 RUN --mount=type=cache,target=/root/.cache/pip cat batch-requirements.txt s3-requirements.txt core-requirements.txt gdal-requirements.txt pipeline-requirements.txt sagemaker-requirements.txt requirements-dev.txt | sort | uniq > all-requirements.txt && \
     pip install $(grep -ivE "^\s*$|^#|rastervision_*" all-requirements.txt) && \
@@ -146,7 +146,7 @@ ENV PYTHONPATH=/opt/src/rastervision_aws_s3/:$PYTHONPATH
 ENV PYTHONPATH=/opt/src/rastervision_core/:$PYTHONPATH
 ENV PYTHONPATH=/opt/src/rastervision_gdal_vsi/:$PYTHONPATH
 ENV PYTHONPATH=/opt/src/rastervision_pipeline/:$PYTHONPATH
-ENV PYTHONPATH=/opt/src/rastervision_sagemaker/:$PYTHONPATH
+ENV PYTHONPATH=/opt/src/rastervision_aws_sagemaker/:$PYTHONPATH
 ENV PYTHONPATH=/opt/src/rastervision_pytorch_backend/:$PYTHONPATH
 ENV PYTHONPATH=/opt/src/rastervision_pytorch_learner/:$PYTHONPATH
 
@@ -162,7 +162,7 @@ COPY ./rastervision_aws_s3/ /opt/src/rastervision_aws_s3/
 COPY ./rastervision_core/ /opt/src/rastervision_core/
 COPY ./rastervision_gdal_vsi/ /opt/src/rastervision_gdal_vsi/
 COPY ./rastervision_pipeline/ /opt/src/rastervision_pipeline/
-COPY ./rastervision_sagemaker/ /opt/src/rastervision_sagemaker/
+COPY ./rastervision_aws_sagemaker/ /opt/src/rastervision_aws_sagemaker/
 COPY ./rastervision_pytorch_backend/ /opt/src/rastervision_pytorch_backend/
 COPY ./rastervision_pytorch_learner/ /opt/src/rastervision_pytorch_learner/
 

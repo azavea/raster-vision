@@ -9,9 +9,9 @@ with io.open(op.join(here, 'requirements.txt'), encoding='utf-8') as f:
     all_reqs = f.read().split('\n')
 install_requires = [x.strip() for x in all_reqs if 'git+' not in x]
 
-name = 'rastervision_sagemaker'
+name = 'rastervision_aws_sagemaker'
 version = '0.21'
-description = 'A rastervision plugin that adds a SageMaker pipeline runner'
+description = 'A rastervision plugin that adds an AWS SageMaker pipeline runner'
 
 setup(
     name=name,

@@ -16,7 +16,8 @@ if TYPE_CHECKING:
     from sagemaker.workflow.pipeline_context import _JobStepArguments
 
 log = logging.getLogger(__name__)
-SAGEMAKER = 'sagemaker'
+
+AWS_SAGEMAKER = 'sagemaker'
 
 
 def make_step(step_name: str, cmd: List[str], role: str, image_uri: str,
@@ -57,7 +58,7 @@ def make_step(step_name: str, cmd: List[str], role: str, image_uri: str,
     return step
 
 
-class SageMakerRunner(Runner):
+class AWSSageMakerRunner(Runner):
     """Runs pipelines remotely using AWS SageMaker.
 
     Requires Everett configuration of form:
@@ -80,7 +81,7 @@ class SageMakerRunner(Runner):
             num_splits: int = 1,
             pipeline_run_name: str = 'raster-vision'):
 
-        config = rv_config.get_namespace_config(SAGEMAKER)
+        config = rv_config.get_namespace_config(AWS_SAGEMAKER)
         exec_role = config('exec_role')
         cpu_image = config('cpu_image')
         cpu_inst_type = config('cpu_inst_type')
