@@ -6,7 +6,7 @@ import boto3
 from rastervision.pipeline import rv_config_ as rv_config
 from rastervision.pipeline.runner import Runner
 
-from sagemaker.processing import ScriptProcessor
+from sagemaker.processing import Processor
 from sagemaker.estimator import Estimator
 from sagemaker.workflow.pipeline import Pipeline as SageMakerPipeline
 from sagemaker.workflow.pipeline_context import PipelineSession
@@ -176,16 +176,16 @@ class AWSSageMakerRunner(Runner):
             step = TrainingStep(step_name, step_args=step_args)
         else:
             # For non-GPU-enabled steps, create a ScriptProcessor.
-            step_processor = ScriptProcessor(
+            step_processor = Processor(
                 role=role,
                 image_uri=image_uri,
                 instance_count=1,
                 instance_type=instance_type,
                 sagemaker_session=sagemaker_session,
-                command=cmd[:3],
+                entrypoint=cmd,
             )
             step_args: Optional['_JobStepArguments'] = step_processor.run(
-                code=cmd[4], arguments=cmd[4:], wait=False)
+                wait=False)
             step = ProcessingStep(step_name, step_args=step_args)
 
         return step
