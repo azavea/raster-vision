@@ -20,9 +20,9 @@ class TestAWSSageMakerRunner(unittest.TestCase):
             config_overrides=dict(
                 SAGEMAKER_exec_role='AmazonSageMakerExecutionRole',
                 SAGEMAKER_cpu_image='123.dkr.ecr.us-east-1.amazonaws.com/rv',
-                SAGEMAKER_cpu_inst_type='ml.p3.2xlarge',
+                SAGEMAKER_cpu_instance_type='ml.p3.2xlarge',
                 SAGEMAKER_gpu_image='123.dkr.ecr.us-east-1.amazonaws.com/rv',
-                SAGEMAKER_gpu_inst_type='ml.p3.2xlarge',
+                SAGEMAKER_gpu_instance_type='ml.p3.2xlarge',
                 SAGEMAKER_use_spot_instances='yes',
             ))
         os.environ['AWS_DEFAULT_REGION'] = 'us-east-1'

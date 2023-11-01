@@ -89,16 +89,16 @@ Running on AWS SageMaker
     [SAGEMAKER]
     exec_role=AmazonSageMakerExecutionRole
     cpu_image=123.dkr.ecr.us-east-1.amazonaws.com/raster-vision
-    cpu_inst_type=ml.p3.2xlarge
+    cpu_instance_type=ml.p3.2xlarge
     gpu_image=123.dkr.ecr.us-east-1.amazonaws.com/raster-vision
-    gpu_inst_type=ml.p3.2xlarge
+    gpu_instance_type=ml.p3.2xlarge
     use_spot_instances=yes
 
 * ``exec_role`` - Execution role.
 * ``cpu_image`` - Docker image URI for CPU jobs.
-* ``cpu_inst_type`` - Instance type for CPU jobs.
+* ``cpu_instance_type`` - Instance type for CPU jobs.
 * ``gpu_image`` - Docker image URI for GPU jobs.
-* ``gpu_inst_type`` - Instance type for GPU jobs.
+* ``gpu_instance_type`` - Instance type for GPU jobs.
 * ``use_spot_instances`` - Whether to use spot instances.
 
 .. seealso::

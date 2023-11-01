@@ -31,9 +31,9 @@ class AWSSageMakerRunner(Runner):
         [SAGEMAKER]
         exec_role=
         cpu_image=
-        cpu_inst_type=
+        cpu_instance_type=
         gpu_image=
-        gpu_inst_type=
+        gpu_instance_type=
         use_spot_instances=
     """
 
@@ -79,9 +79,9 @@ class AWSSageMakerRunner(Runner):
         config = rv_config.get_namespace_config(AWS_SAGEMAKER)
         exec_role = config('exec_role')
         cpu_image = config('cpu_image')
-        cpu_inst_type = config('cpu_inst_type')
+        cpu_instance_type = config('cpu_instance_type')
         gpu_image = config('gpu_image')
-        gpu_inst_type = config('gpu_inst_type')
+        gpu_instance_type = config('gpu_instance_type')
         use_spot_instances = config('use_spot_instances').lower() == 'yes'
         sagemaker_session = PipelineSession()
 
@@ -117,8 +117,8 @@ class AWSSageMakerRunner(Runner):
                         cmd=cmd,
                         role=exec_role,
                         image_uri=gpu_image if use_gpu else cpu_image,
-                        instance_type=(gpu_inst_type
-                                       if use_gpu else cpu_inst_type),
+                        instance_type=(gpu_instance_type
+                                       if use_gpu else cpu_instance_type),
                         use_spot_instances=use_spot_instances,
                         sagemaker_session=sagemaker_session,
                         use_gpu=use_gpu)
@@ -132,8 +132,8 @@ class AWSSageMakerRunner(Runner):
                     cmd=cmd,
                     role=exec_role,
                     image_uri=gpu_image if use_gpu else cpu_image,
-                    instance_type=(gpu_inst_type
-                                   if use_gpu else cpu_inst_type),
+                    instance_type=(gpu_instance_type
+                                   if use_gpu else cpu_instance_type),
                     use_spot_instances=use_spot_instances,
                     sagemaker_session=sagemaker_session,
                     use_gpu=use_gpu)

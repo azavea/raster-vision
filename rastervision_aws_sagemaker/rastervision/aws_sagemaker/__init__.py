@@ -9,9 +9,9 @@ def register_plugin(registry):
     registry.add_rv_config_schema(AWS_SAGEMAKER, [
         'exec_role',
         'cpu_image',
-        'cpu_inst_type',
+        'cpu_instance_type',
         'gpu_image',
-        'gpu_inst_type',
+        'gpu_instance_type',
         'use_spot_instances',
     ])
 
