@@ -68,7 +68,21 @@ is equivalent to running the following sequence of commands:
     > pip install rastervision_pytorch_learner=={{ version }}
     > pip install rastervision_pytorch_backend=={{ version }}
 
-Another optional plugin that is available, but not installed by default,  is :mod:`rastervision.gdal_vsi`.
+Extra plugins
+^^^^^^^^^^^^^
+
+:mod:`rastervision.aws_sagemaker`
+"""""""""""""""""""""""""""""""""
+This plugin adds the :class:`.AWSSageMakerRunner`, allowing you to run Raster Vision jobs on AWS SageMaker via ``rastervision run sagemaker ...``. To install:
+
+.. code-block:: console
+
+    > pip install rastervision_aws_sagemaker=={{ version }}
+
+:mod:`rastervision.gdal_vsi`
+""""""""""""""""""""""""""""
+
+This plugin adds a new :class:`.FileSystem`, the :class:`.VsiFileSystem`, which allows the use of GDAL for IO. To install:
 
 .. code-block:: console
 
@@ -87,7 +101,7 @@ Docker Images
 
 Using the Docker images published for Raster Vision makes it easy to use a fully set up environment. We have tested this with Docker 20, although you may be able to use a lower version.
 
-The images we publish include plugins and dependencies for using Raster Vision with PyTorch, AWS S3, and Batch. These are published to `quay.io/azavea/raster-vision <https://quay.io/repository/azavea/raster-vision>`_.  To run the container for the latest release, run:
+The images we publish include all plugins and dependencies for using Raster Vision with PyTorch and AWS. These are published to `quay.io/azavea/raster-vision <https://quay.io/repository/azavea/raster-vision>`_.  To run the container for the latest release, run:
 
 .. code-block:: console
 

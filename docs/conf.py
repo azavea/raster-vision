@@ -204,6 +204,10 @@ intersphinx_mapping = {
         'https://onnx.ai/onnx/',
         'https://onnx.ai/onnx/objects.inv',
     ),
+    'sagemaker': (
+        'https://sagemaker.readthedocs.io/en/stable/',
+        'https://sagemaker.readthedocs.io/en/stable/objects.inv',
+    ),
 }
 
 #########################
