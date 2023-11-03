@@ -2,7 +2,6 @@ from typing import (TYPE_CHECKING, Any, Callable, Dict, Iterator, List,
                     Optional, Tuple, Union, Type)
 from typing_extensions import Literal
 from abc import ABC, abstractmethod
-import os
 from os.path import join, isfile, basename, isdir
 import warnings
 import time
@@ -22,6 +21,7 @@ import torch.nn as nn
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader
 
+from rastervision.pipeline import rv_config_ as rv_config
 from rastervision.pipeline.file_system import (
     sync_to_dir, json_to_file, file_to_json, make_dir, zipdir,
     download_if_needed, download_or_copy, sync_from_dir, get_local_path, unzip,
@@ -50,7 +50,6 @@ MODULES_DIRNAME = 'modules'
 TRANSFORMS_DIRNAME = 'custom_albumentations_transforms'
 BUNDLE_MODEL_WEIGHTS_FILENAME = 'model.pth'
 BUNDLE_MODEL_ONNX_FILENAME = 'model.onnx'
-USE_ONNX = os.getenv('RASTERVISION_USE_ONNX', 'false').lower() in ('true', '1')
 
 log = logging.getLogger(__name__)
 
@@ -216,7 +215,7 @@ class Learner(ABC):
                           tmp_dir: Optional[str] = None,
                           cfg: Optional['LearnerConfig'] = None,
                           training: bool = False,
-                          use_onnx_model: bool = USE_ONNX,
+                          use_onnx_model: Optional[bool] = None,
                           **kwargs) -> 'Learner':
         """Create a Learner from a model bundle.
 
@@ -238,7 +237,7 @@ class Learner(ABC):
                 model will be put into eval mode. If True, the training
                 apparatus will be set up and the model will be put into
                 training mode. Defaults to True.
-            use_onnx_model (bool, optional): If True and training=False and a
+            use_onnx_model (Optional[bool]): If True and training=False and a
                 model.onnx file is available in the bundle, use that for
                 inference rather than the PyTorch weights. Defaults to the
                 boolean environment variable RASTERVISION_USE_ONNX if set,
@@ -302,6 +301,9 @@ class Learner(ABC):
             # config has been altered, so re-validate
             cfg = build_config(cfg.dict())
 
+        if use_onnx_model is None:
+            use_onnx_model = rv_config.get_namespace_option(
+                'rastervision', 'USE_ONNX', as_bool=True)
         onnx_mode = False
         if not training and use_onnx_model:
             onnx_path = join(model_bundle_dir, 'model.onnx')
