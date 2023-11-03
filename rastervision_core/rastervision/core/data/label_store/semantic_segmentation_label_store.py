@@ -250,7 +250,7 @@ class SemanticSegmentationLabelStore(LabelStore):
             self.write_smooth_raster_output(out_profile, scores_path,
                                             hits_path, labels)
 
-        if self.vector_outputs is not None:
+        if self.vector_outputs:
             vector_output_dir = get_local_path(self.vector_output_uri,
                                                self.tmp_dir)
             self.write_vector_outputs(labels, vector_output_dir)
