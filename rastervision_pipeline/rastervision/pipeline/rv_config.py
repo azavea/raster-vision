@@ -1,9 +1,9 @@
+from typing import Any, Dict, List, Optional
 import os
 from tempfile import TemporaryDirectory
 from pathlib import Path
 import logging
 import json
-from typing import Optional, List, Dict
 
 from everett.manager import (ConfigManager, ConfigDictEnv, ConfigOSEnv,
                              ConfigurationMissingError)
@@ -202,6 +202,23 @@ class RVConfig:
     def get_namespace_config(self, namespace: str) -> ConfigManager:
         """Get the key-val pairs associated with a namespace."""
         return self.config.with_namespace(namespace)
+
+    def get_namespace_option(self,
+                             namespace: str,
+                             key: str,
+                             default: Optional[Any] = None,
+                             as_bool: bool = False) -> str:
+        """Get the value of an option from a namespace."""
+        namespace_options = self.config.with_namespace(namespace)
+        try:
+            val: str = namespace_options(key)
+            if as_bool:
+                val = val.lower() in ('1', 'true', 'y', 'yes')
+            return val
+        except ConfigurationMissingError:
+            if as_bool:
+                return False
+            return default
 
     def get_config_dict(
             self, rv_config_schema: Dict[str, List[str]]) -> Dict[str, str]:
