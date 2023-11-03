@@ -641,10 +641,19 @@ class Learner(ABC):
         if return_format not in {'xyz', 'yz', 'z'}:
             raise ValueError('return_format must be one of "xyz", "yz", "z".')
 
+        cfg = self.cfg
+
+        num_workers = rv_config.get_namespace_option(
+            'rastervision',
+            'PREDICT_NUM_WORKERS',
+            default=cfg.data.num_workers)
+        batch_size = rv_config.get_namespace_option(
+            'rastervision', 'PREDICT_BATCH_SIZE', default=cfg.solver.batch_sz)
+
         dl_kw = dict(
             collate_fn=self.get_collate_fn(),
-            batch_size=self.cfg.solver.batch_sz,
-            num_workers=self.cfg.data.num_workers,
+            batch_size=int(batch_size),
+            num_workers=int(num_workers),
             shuffle=False,
             pin_memory=True)
         dl_kw.update(dataloader_kw)
