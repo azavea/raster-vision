@@ -199,7 +199,7 @@ class RVConfig:
                 'Switch to the version being run and search for Raster Vision '
                 'Configuration.'))
 
-    def get_namespace_config(self, namespace: str) -> Dict[str, str]:
+    def get_namespace_config(self, namespace: str) -> ConfigManager:
         """Get the key-val pairs associated with a namespace."""
         return self.config.with_namespace(namespace)
 
