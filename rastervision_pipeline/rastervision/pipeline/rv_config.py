@@ -238,8 +238,9 @@ class RVConfig:
         for namespace, keys in rv_config_schema.items():
             for key in keys:
                 try:
-                    config_dict[namespace + '_' + key] = \
-                        self.get_namespace_config(namespace)(key)
+                    namespace_options = self.get_namespace_config(namespace)
+                    full_key = f'{namespace}_{key}'
+                    config_dict[full_key] = namespace_options(key)
                 except ConfigurationMissingError:
                     pass
 
