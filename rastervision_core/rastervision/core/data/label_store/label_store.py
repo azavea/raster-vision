@@ -17,20 +17,18 @@ class LabelStore(ABC):
            labels - Labels to be saved, the type of which will be dependent on the type
                     of pipeline.
         """
-        pass
 
     @abstractmethod
     def get_labels(self):
         """Loads Labels from this label store."""
-        pass
 
     @abstractproperty
     def bbox(self) -> Optional['Box']:
-        pass
+        """Bounding box applied to the source."""
 
     @abstractproperty
     def crs_transformer(self) -> 'CRSTransformer':
-        pass
+        """Associated :class:`.CRSTransformer`."""
 
     @abstractmethod
     def set_bbox(self, extent: 'Box') -> None:
@@ -41,4 +39,3 @@ class LabelStore(ABC):
         Args:
             extent (Box): User-specified extent in pixel coordinates.
         """
-        pass

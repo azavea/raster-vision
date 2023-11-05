@@ -10,7 +10,6 @@ if TYPE_CHECKING:
 
 class RegistryError(Exception):
     """Exception raised for invalid use of registry."""
-    pass
 
 
 class Registry():

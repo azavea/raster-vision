@@ -442,11 +442,9 @@ class Learner(ABC):
         Returns:
             dict with 'train_loss' as key and possibly other losses
         """
-        pass
 
     def on_train_start(self):
         """Hook that is called at start of train routine."""
-        pass
 
     def train_end(self, outputs: List[Dict[str, Union[float, Tensor]]]
                   ) -> MetricDict:
@@ -504,7 +502,6 @@ class Learner(ABC):
         Returns:
             dict with metric names mapped to metric values
         """
-        pass
 
     def validate_end(self, outputs: List[Dict[str, Union[float, Tensor]]]
                      ) -> MetricDict:
@@ -562,7 +559,6 @@ class Learner(ABC):
 
     def on_overfit_start(self):
         """Hook that is called at start of overfit routine."""
-        pass
 
     ########################
     # Prediction/inference
@@ -1001,7 +997,6 @@ class Learner(ABC):
     @abstractmethod
     def get_visualizer_class(self) -> Type[Visualizer]:
         """Returns a Visualizer class object for plotting data samples."""
-        pass
 
     def plot_predictions(self,
                          split: str,

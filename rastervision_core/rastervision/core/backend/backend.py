@@ -17,7 +17,6 @@ class SampleWriter(AbstractContextManager):
     @abstractmethod
     def write_sample(self, sample: 'DataSample'):
         """Writes a single sample."""
-        pass
 
 
 class Backend(ABC):
@@ -30,7 +29,6 @@ class Backend(ABC):
     @abstractmethod
     def get_sample_writer(self):
         """Returns a SampleWriter for this Backend."""
-        pass
 
     @abstractmethod
     def train(self):
@@ -39,7 +37,6 @@ class Backend(ABC):
         This should download chips created by the SampleWriter, train the model, and
         then saving it to disk.
         """
-        pass
 
     @abstractmethod
     def load_model(self, uri: Optional[str] = None):
@@ -48,7 +45,6 @@ class Backend(ABC):
         Args:
             uri: Optional URI to load the model from.
         """
-        pass
 
     @abstractmethod
     def predict_scene(self, scene: 'Scene', chip_sz: int,
@@ -61,4 +57,3 @@ class Backend(ABC):
         Return:
             Labels object containing predictions
         """
-        pass

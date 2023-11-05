@@ -20,7 +20,6 @@ log = logging.getLogger(__name__)
 
 class ConfigError(ValueError):
     """Exception raised for invalid configuration."""
-    pass
 
 
 class Config(BaseModel):
@@ -50,7 +49,6 @@ class Config(BaseModel):
         example, setting default values as a function of the values of other
         fields. The arguments to this method will vary depending on the type of Config.
         """
-        pass
 
     def build(self):
         """Build an instance of the corresponding type of object using this config.
@@ -58,7 +56,6 @@ class Config(BaseModel):
         For example, BackendConfig will build a Backend object. The arguments to this
         method will vary depending on the type of Config.
         """
-        pass
 
     def validate_config(self):
         """Validate fields that should be checked after update is called.
@@ -66,7 +63,6 @@ class Config(BaseModel):
         This is to complement the builtin validation that Pydantic performs at the time
         of object construction.
         """
-        pass
 
     def revalidate(self):
         """Re-validate an instantiated Config.

@@ -13,4 +13,3 @@ class Analyzer(ABC):
     @abstractmethod
     def process(self, scenes: List[Scene], tmp_dir: str):
         """Process scenes and save result."""
-        pass

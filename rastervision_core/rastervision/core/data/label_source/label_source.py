@@ -28,7 +28,6 @@ class LabelSource(ABC):
             Labels overlapping with window. If window is None, returns all
             labels.
         """
-        pass
 
     @property
     def extent(self) -> 'Box':
@@ -38,11 +37,10 @@ class LabelSource(ABC):
     @abstractproperty
     def bbox(self) -> 'Box':
         """Bounding box applied to the source."""
-        pass
 
     @abstractproperty
     def crs_transformer(self) -> 'CRSTransformer':
-        pass
+        """Associated :class:`.CRSTransformer`."""
 
     @abstractmethod
     def set_bbox(self, extent: 'Box') -> None:
@@ -53,7 +51,6 @@ class LabelSource(ABC):
         Args:
             extent (Box): User-specified extent in pixel coordinates.
         """
-        pass
 
     def __getitem__(self, key: Any) -> Any:
         if isinstance(key, Box):

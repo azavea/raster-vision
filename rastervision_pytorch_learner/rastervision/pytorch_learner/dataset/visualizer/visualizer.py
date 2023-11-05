@@ -81,7 +81,6 @@ class Visualizer(ABC):
             y: ground truth labels
             z: optional predicted labels
         """
-        pass
 
     def plot_batch(self,
                    x: Tensor,

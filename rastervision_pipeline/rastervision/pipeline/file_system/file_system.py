@@ -7,12 +7,10 @@ from rastervision.pipeline import registry_ as registry
 
 class NotReadableError(Exception):
     """Exception raised when files are not readable."""
-    pass
 
 
 class NotWritableError(Exception):
     """Exception raised when files are not writable."""
-    pass
 
 
 class FileSystem(ABC):
@@ -40,7 +38,6 @@ class FileSystem(ABC):
             uri: URI of file
             mode: mode to open file in, 'r' or 'w'
         """
-        pass
 
     @staticmethod
     @abstractmethod
@@ -53,31 +50,26 @@ class FileSystem(ABC):
             supports directory reads. Otherwise only return true if a single
             file exists at the URI.
         """
-        pass
 
     @staticmethod
     @abstractmethod
     def read_str(uri: str) -> str:
         """Read contents of URI to a string."""
-        pass
 
     @staticmethod
     @abstractmethod
     def read_bytes(uri: str) -> bytes:
         """Read contents of URI to bytes."""
-        pass
 
     @staticmethod
     @abstractmethod
     def write_str(uri: str, data: str):
         """Write string in data to URI."""
-        pass
 
     @staticmethod
     @abstractmethod
     def write_bytes(uri: str, data: bytes):
         """Write bytes in data to URI."""
-        pass
 
     @staticmethod
     @abstractmethod
@@ -92,7 +84,6 @@ class FileSystem(ABC):
                 FileSystem
             delete: True if the destination should be deleted first.
         """
-        pass
 
     @staticmethod
     @abstractmethod
@@ -106,7 +97,6 @@ class FileSystem(ABC):
             dst_dir: A local destination directory
             delete: True if the destination should be deleted first.
         """
-        pass
 
     @staticmethod
     @abstractmethod
@@ -119,7 +109,6 @@ class FileSystem(ABC):
             src_path: local path to source file
             dst_uri: uri of destination that can be copied to by this FileSystem
         """
-        pass
 
     @staticmethod
     @abstractmethod
@@ -132,7 +121,6 @@ class FileSystem(ABC):
             src_uri: uri of source that can be copied from by this FileSystem
             dst_path: local path to destination file
         """
-        pass
 
     @staticmethod
     @abstractmethod
@@ -144,7 +132,6 @@ class FileSystem(ABC):
             download_dir: path of the local directory in which files should
                 be copied
         """
-        pass
 
     @staticmethod
     @abstractmethod
@@ -158,7 +145,6 @@ class FileSystem(ABC):
             the last modified date in UTC of a file or None if this FileSystem
             does not support this operation.
         """
-        pass
 
     @staticmethod
     @abstractmethod
@@ -171,4 +157,3 @@ class FileSystem(ABC):
             uri: the URI of a directory
             ext: the optional file extension to filter by
         """
-        pass

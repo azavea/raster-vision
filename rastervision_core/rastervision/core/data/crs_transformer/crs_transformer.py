@@ -167,7 +167,6 @@ class CRSTransformer(ABC):
         Returns:
             Tuple[int, int]: (x, y) tuple in pixel coordinates.
         """
-        pass
 
     @abstractmethod
     def _pixel_to_map(self, point: Tuple[float, float]) -> Tuple[float, float]:
@@ -180,4 +179,3 @@ class CRSTransformer(ABC):
         Returns:
             Tuple[float, float]: (x, y) tuple in map coordinates (eg. lon/lat).
         """
-        pass

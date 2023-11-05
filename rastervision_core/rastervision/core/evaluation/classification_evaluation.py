@@ -151,4 +151,3 @@ class ClassificationEvaluation(ABC):
             ground_truth_labels: Ground Truth labels to evaluate against.
             prediction_labels: The predicted labels to evaluate.
         """
-        pass
