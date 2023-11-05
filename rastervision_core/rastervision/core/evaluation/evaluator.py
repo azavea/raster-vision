@@ -15,7 +15,6 @@ class Evaluator(ABC):
         Args:
             scenes (Iterable[Scene]): Scenes to evaluate.
         """
-        pass
 
     @abstractmethod
     def evaluate_scene(self, scene: 'Scene') -> Any:
@@ -30,7 +29,6 @@ class Evaluator(ABC):
         Returns:
             ClassificationEvaluation: The evaluation.
         """
-        pass
 
     @abstractmethod
     def evaluate_predictions(self, ground_truth: 'Labels',
@@ -44,4 +42,3 @@ class Evaluator(ABC):
         Returns:
             Any: The evaluation.
         """
-        pass

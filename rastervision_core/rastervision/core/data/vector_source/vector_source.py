@@ -104,7 +104,6 @@ class VectorSource(ABC):
     @abstractmethod
     def _get_geojson(self) -> dict:
         """Return raw GeoJSON."""
-        pass
 
     def get_dataframe(self,
                       window: Optional[Box] = None,

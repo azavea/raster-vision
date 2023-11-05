@@ -35,7 +35,6 @@ class SemanticSegmentationLabels(Labels):
     def __add__(self, other: 'SemanticSegmentationLabels'
                 ) -> 'SemanticSegmentationLabels':
         """Merge self with other labels."""
-        pass
 
     def __setitem__(self, window: Box, values: np.ndarray) -> None:
         """Set labels for the given window."""
@@ -44,17 +43,14 @@ class SemanticSegmentationLabels(Labels):
     @abstractmethod
     def __delitem__(self, window: Box) -> None:
         """Delete labels for the given window."""
-        pass
 
     @abstractmethod
     def __getitem__(self, window: Box) -> np.ndarray:
         """Get labels for the given window."""
-        pass
 
     @abstractmethod
     def add_window(self, window: Box, values: np.ndarray) -> List[Box]:
         """Set labels for the given window."""
-        pass
 
     @abstractmethod
     def get_label_arr(self, window: Box,
@@ -64,7 +60,6 @@ class SemanticSegmentationLabels(Labels):
         Note: The returned array is not guaranteed to be the same size as the
         input window.
         """
-        pass
 
     def get_windows(self, **kwargs) -> List[Box]:
         """Generate sliding windows over the local extent.
@@ -109,7 +104,6 @@ class SemanticSegmentationLabels(Labels):
         """Given a window and a binary mask, set all the pixels in the window
         for which the mask is ON to the fill_value.
         """
-        pass
 
     def _filter_window_by_aoi(self, window: Box, aoi_polygons: List['Polygon'],
                               null_class_id: int) -> None:

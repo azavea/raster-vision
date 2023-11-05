@@ -26,7 +26,6 @@ class Runner():
             commands: names of commands to run
             num_splits: number of splits to use for splittable commands
         """
-        pass
 
     @abstractmethod
     def run_command(self, cmd: List[str]):

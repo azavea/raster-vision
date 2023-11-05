@@ -21,7 +21,6 @@ class Labels(ABC):
 
         Returns a concatenation of this and the other labels.
         """
-        pass
 
     @abstractmethod
     def filter_by_aoi(self, aoi_polygons: List['Polygon']) -> 'Labels':
@@ -31,7 +30,6 @@ class Labels(ABC):
           aoi_polygons: List of AOI polygons to filter by, in pixel
             coordinates.
         """
-        pass
 
     @abstractmethod
     def __eq__(self, other: 'Labels'):
@@ -49,7 +47,6 @@ class Labels(ABC):
             Labels: An object of the Label subclass on which this method is
             called.
         """
-        pass
 
     @classmethod
     def from_predictions(cls, windows: Iterable['Box'],
@@ -80,4 +77,3 @@ class Labels(ABC):
     @abstractmethod
     def save(self, uri: str) -> None:
         """Save to file."""
-        pass

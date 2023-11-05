@@ -68,7 +68,6 @@ class RasterSource(ABC):
     @abstractproperty
     def dtype(self) -> 'np.dtype':
         """``numpy.dtype`` of the chips read from this source."""
-        pass
 
     @property
     def bbox(self) -> 'Box':
@@ -83,7 +82,6 @@ class RasterSource(ABC):
     @abstractproperty
     def crs_transformer(self) -> 'CRSTransformer':
         """Associated :class:`.CRSTransformer`."""
-        pass
 
     def set_bbox(self, bbox: 'Box') -> None:
         """Set self.bbox to the given value.
@@ -109,7 +107,6 @@ class RasterSource(ABC):
         Returns:
             [height, width, channels] numpy array
         """
-        pass
 
     def __getitem__(self, key: Any) -> 'np.ndarray':
         if isinstance(key, Box):

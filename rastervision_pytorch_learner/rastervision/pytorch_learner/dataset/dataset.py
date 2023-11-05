@@ -96,7 +96,6 @@ class AlbumentationsDataset(Dataset):
 
 class ImageDataset(AlbumentationsDataset):
     """ Dataset that reads from image files. """
-    pass
 
 
 class GeoDataset(AlbumentationsDataset):

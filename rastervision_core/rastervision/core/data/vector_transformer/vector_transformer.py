@@ -38,4 +38,3 @@ class VectorTransformer(ABC):
         Returns:
             dict: Transformed GeoJSON.
         """
-        pass

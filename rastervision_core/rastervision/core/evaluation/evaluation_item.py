@@ -10,7 +10,6 @@ class EvaluationItem(ABC):
         This is used to average metrics over scenes. Merges by taking a
         weighted average (by gt_count) of the metrics.
         """
-        pass
 
     @abstractmethod
     def to_json(self) -> dict:

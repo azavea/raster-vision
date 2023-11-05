@@ -23,4 +23,3 @@ class RasterTransformer(ABC):
         Returns:
             (np.ndarray): Array of shape (..., H, W, C)
         """
-        pass
