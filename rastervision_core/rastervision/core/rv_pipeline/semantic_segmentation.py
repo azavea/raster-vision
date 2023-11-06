@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, List, Sequence
 import logging
 
 import numpy as np
+from numpy.random import random_sample
 
 from rastervision.core.box import Box
 from rastervision.core.rv_pipeline.rv_pipeline import RVPipeline
@@ -80,7 +81,7 @@ def get_train_windows(scene: 'Scene',
                     window, co.target_count_threshold, co.target_class_ids)
             if is_positive:
                 return True
-            keep_negative = np.random.sample() < co.negative_survival_prob
+            keep_negative = random_sample() < co.negative_survival_prob
             return keep_negative
 
     if co.window_method == SemanticSegmentationWindowMethod.sliding:
