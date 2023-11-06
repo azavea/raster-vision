@@ -1,3 +1,6 @@
 {
-    "python.dataScience.jupyterServerURI": "http://localhost:8888/?token=8a748bee8b02072f3212cf087d8497af6bb0d1598de505ca"
+    "python.dataScience.jupyterServerURI": "http://localhost:8888/?token=8a748bee8b02072f3212cf087d8497af6bb0d1598de505ca",
+    "[python]": {
+        "editor.defaultFormatter": "eeyore.yapf"
+    }
 }
