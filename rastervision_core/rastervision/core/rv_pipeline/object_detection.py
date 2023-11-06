@@ -9,7 +9,6 @@ from rastervision.core.box import Box
 from rastervision.core.data.label import ObjectDetectionLabels
 
 if TYPE_CHECKING:
-    from rastervision.core.backend.backend import Backend
     from rastervision.core.data import (Labels, Scene, RasterSource,
                                         ObjectDetectionLabelSource)
     from rastervision.core.rv_pipeline.object_detection_config import (
@@ -176,13 +175,19 @@ class ObjectDetection(RVPipeline):
             ioa_thresh=self.config.chip_options.ioa_thresh,
             clip=True)
 
-    def predict_scene(self, scene: 'Scene', backend: 'Backend') -> 'Labels':
+    def predict_scene(self, scene: 'Scene') -> 'Labels':
+        if self.backend is None:
+            self.build_backend()
+
         # Use strided windowing to ensure that each object is fully visible (ie. not
         # cut off) within some window. This means prediction takes 4x longer for object
         # detection :(
         chip_sz = self.config.predict_chip_sz
         stride = chip_sz // 2
-        return backend.predict_scene(scene, chip_sz=chip_sz, stride=stride)
+        labels = self.backend.predict_scene(
+            scene, chip_sz=chip_sz, stride=stride)
+        labels = self.post_process_predictions(labels, scene)
+        return labels
 
     def post_process_predictions(self, labels: ObjectDetectionLabels,
                                  scene: 'Scene') -> ObjectDetectionLabels:

@@ -10,7 +10,6 @@ from rastervision.core.rv_pipeline.semantic_segmentation_config import (
     SemanticSegmentationWindowMethod)
 
 if TYPE_CHECKING:
-    from rastervision.core.backend.backend import Backend
     from rastervision.core.data import (
         ClassConfig,
         Labels,
@@ -144,7 +143,10 @@ class SemanticSegmentation(RVPipeline):
 
         return labels
 
-    def predict_scene(self, scene: 'Scene', backend: 'Backend') -> 'Labels':
+    def predict_scene(self, scene: 'Scene') -> 'Labels':
+        if self.backend is None:
+            self.build_backend()
+
         cfg: 'SemanticSegmentationConfig' = self.config
         chip_sz = cfg.predict_chip_sz
         stride = cfg.predict_options.stride
@@ -162,5 +164,7 @@ class SemanticSegmentation(RVPipeline):
                     'still overlap after cropping.')
             crop_sz = overlap_sz // 2
 
-        return backend.predict_scene(
+        labels = self.backend.predict_scene(
             scene, chip_sz=chip_sz, stride=stride, crop_sz=crop_sz)
+        labels = self.post_process_predictions(labels, scene)
+        return labels

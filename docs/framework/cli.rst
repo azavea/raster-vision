@@ -13,7 +13,7 @@ It has a main command, with some top level options, and several subcommands.
 
    > rastervision --help
 
-    Usage: rastervision [OPTIONS] COMMAND [ARGS]...
+    Usage: python -m rastervision.pipeline.cli [OPTIONS] COMMAND [ARGS]...
 
     The main click command.
 
@@ -26,17 +26,18 @@ It has a main command, with some top level options, and several subcommands.
     --help              Show this message and exit.
 
     Commands:
-    predict      Use a model bundle to predict on new images.
-    run          Run sequence of commands within pipeline(s).
-    run_command  Run an individual command within a pipeline.
+    predict        Use a model bundle to predict on new images.
+    predict_scene  Use a model bundle to predict on a new scene.
+    run            Run sequence of commands within pipeline(s).
+    run_command    Run an individual command within a pipeline.
 
 Subcommands
 ------------
 
 .. _run cli command:
 
-run
-^^^
+``run``
+^^^^^^^
 
 Run is the main interface into running pipelines.
 
@@ -69,15 +70,15 @@ Some specific parameters to call out:
 
 .. _split cli option:
 
--\\-splits
-~~~~~~~~~~
+``--splits``
+~~~~~~~~~~~~
 
 Use ``-s N`` or ``--splits N``, where ``N`` is the number of splits to create, to parallelize commands that can be split into parallelizable chunks. See :ref:`parallelizing commands` for more information.
 
 .. _run_command cli command:
 
-run_command
-^^^^^^^^^^^
+``run_command``
+^^^^^^^^^^^^^^^
 
 The ``run_command`` is used to run a specific command from a serialized ``PipelineConfig`` JSON file.
 This is likely only interesting to people writing :ref:`custom runners <runners>`.
@@ -86,7 +87,8 @@ This is likely only interesting to people writing :ref:`custom runners <runners>
 
     > rastervision run_command --help
 
-    Usage: rastervision run_command [OPTIONS] CFG_JSON_URI COMMAND
+    Usage: python -m rastervision.pipeline.cli run_command [OPTIONS] CFG_JSON_URI
+                                                        COMMAND
 
     Run a single COMMAND using a serialized PipelineConfig in CFG_JSON_URI.
 
@@ -99,8 +101,8 @@ This is likely only interesting to people writing :ref:`custom runners <runners>
 
 .. _predict cli command:
 
-predict
-^^^^^^^
+``predict``
+^^^^^^^^^^^
 
 Use ``predict`` to make predictions on new imagery given a :ref:`model bundle <model bundle>`.
 
@@ -108,15 +110,44 @@ Use ``predict`` to make predictions on new imagery given a :ref:`model bundle <m
 
     > rastervision predict --help
 
-    Usage: rastervision predict [OPTIONS] MODEL_BUNDLE IMAGE_URI LABEL_URI
+    Usage: python -m rastervision.pipeline.cli predict [OPTIONS] MODEL_BUNDLE
+                                                    IMAGE_URI LABEL_URI
 
-    Make predictions on the images at IMAGE_URI using MODEL_BUNDLE and store
-    the prediction output at LABEL_URI.
+    Make predictions on the images at IMAGE_URI using MODEL_BUNDLE and store the
+    prediction output at LABEL_URI.
 
     Options:
-    -a, --update-stats       Run an analysis on this individual image, as
-                            opposed to using any analysis like statistics that
-                            exist in the prediction package
-    --channel-order TEXT     List of indices comprising channel_order. Example:
-                            2 1 0
-    --help                   Show this message and exit.
+    -a, --update-stats    Run an analysis on this individual image, as opposed
+                            to using any analysis like statistics that exist in
+                            the prediction package
+    --channel-order LIST  List of indices comprising channel_order. Example: 2 1
+                            0
+    --scene-group TEXT    Name of the scene group whose stats will be used by
+                            the StatsTransformer. Requires the stats for this
+                            scene group to be present inside the bundle.
+    --help                Show this message and exit.
+
+
+``predict_scene``
+^^^^^^^^^^^^^^^^^
+
+Similar to ``predict`` but allows greater control by allowing the user to specify a full :class:`.SceneConfig` and :class:`.PredictOptions`.
+
+.. code-block:: console
+
+    > rastervision predict_scene --help
+
+    Usage: python -m rastervision.pipeline.cli predict_scene [OPTIONS]
+                                                            MODEL_BUNDLE_URI
+                                                            SCENE_CONFIG_URI
+
+    Use a model-bundle to make predictions on a scene.
+
+    MODEL_BUNDLE_URI    URI to a serialized Raster Vision model-bundle.
+    SCENE_CONFIG_URI    URI to a serialized Raster Vision SceneConfig.
+
+    Options:
+    --predict_options_uri TEXT  Optional URI to serialized Raster Vision
+                                PredictOptions config.
+    --help                      Show this message and exit.
+
