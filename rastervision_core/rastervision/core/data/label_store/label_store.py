@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING, Optional
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
 
 if TYPE_CHECKING:
     from rastervision.core.box import Box
@@ -22,11 +22,13 @@ class LabelStore(ABC):
     def get_labels(self):
         """Loads Labels from this label store."""
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def bbox(self) -> Optional['Box']:
         """Bounding box applied to the source."""
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def crs_transformer(self) -> 'CRSTransformer':
         """Associated :class:`.CRSTransformer`."""
 

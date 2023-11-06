@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING, Any, List, Optional, Tuple
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
 
 import numpy as np
 from skimage.transform import resize
@@ -65,7 +65,8 @@ class RasterSource(ABC):
         H, W = self.bbox.size
         return H, W, self.num_channels
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def dtype(self) -> 'np.dtype':
         """``numpy.dtype`` of the chips read from this source."""
 
@@ -79,7 +80,8 @@ class RasterSource(ABC):
         """Extent of the ``RasterSource``."""
         return self.bbox.extent
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def crs_transformer(self) -> 'CRSTransformer':
         """Associated :class:`.CRSTransformer`."""
 
