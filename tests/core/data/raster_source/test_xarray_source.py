@@ -5,8 +5,50 @@ from xarray import DataArray
 
 from rastervision.core.box import Box
 from rastervision.core.data.crs_transformer import IdentityCRSTransformer
-from rastervision.core.data.raster_source import (ChannelOrderError,
-                                                  XarraySource)
+from rastervision.core.data.raster_source import (
+    ChannelOrderError, XarraySource, XarraySourceConfig, STACItemConfig,
+    STACItemCollectionConfig)
+
+from tests import data_file_path
+
+
+class TestXarraySourceConfig(unittest.TestCase):
+    def test_build_with_item(self):
+        bbox = Box(
+            ymin=48.8155755, xmin=2.224122, ymax=48.902156, xmax=2.4697602)
+        item_uri = data_file_path('stac/item.json')
+        cfg = XarraySourceConfig(
+            stac=STACItemConfig(uri=item_uri, assets=['red']),
+            bbox_map_coords=tuple(bbox),
+            allow_streaming=True,
+            temporal=False,
+        )
+        rs = cfg.build()
+        self.assertIsInstance(rs, XarraySource)
+        self.assertFalse(rs.temporal)
+
+    def test_build_with_item_collection(self):
+        bbox = Box(
+            ymin=48.8155755, xmin=2.224122, ymax=48.902156, xmax=2.4697602)
+        item_coll_uri = data_file_path('stac/item_collection.json')
+        cfg = XarraySourceConfig(
+            stac=STACItemCollectionConfig(uri=item_coll_uri, assets=['red']),
+            bbox_map_coords=tuple(bbox),
+            allow_streaming=True,
+            temporal=False,
+        )
+        with self.assertRaises(ValueError):
+            rs = cfg.build()
+
+        cfg = XarraySourceConfig(
+            stac=STACItemCollectionConfig(uri=item_coll_uri, assets=['red']),
+            bbox_map_coords=tuple(bbox),
+            allow_streaming=True,
+            temporal=True,
+        )
+        rs = cfg.build()
+        self.assertIsInstance(rs, XarraySource)
+        self.assertTrue(rs.temporal)
 
 
 class TestXarraySource(unittest.TestCase):

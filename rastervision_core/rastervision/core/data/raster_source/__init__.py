@@ -8,6 +8,7 @@ from rastervision.core.data.raster_source.rasterized_source_config import *
 from rastervision.core.data.raster_source.multi_raster_source import *
 from rastervision.core.data.raster_source.multi_raster_source_config import *
 from rastervision.core.data.raster_source.xarray_source import *
+from rastervision.core.data.raster_source.xarray_source_config import *
 from rastervision.core.data.raster_source.temporal_multi_raster_source import *
 from rastervision.core.data.raster_source.stac_config import *
 
@@ -22,6 +23,7 @@ __all__ = [
     MultiRasterSource.__name__,
     MultiRasterSourceConfig.__name__,
     XarraySource.__name__,
+    XarraySourceConfig.__name__,
     TemporalMultiRasterSource.__name__,
     STACItemConfig.__name__,
     STACItemCollectionConfig.__name__,
