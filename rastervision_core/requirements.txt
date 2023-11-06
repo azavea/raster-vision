@@ -5,7 +5,7 @@ numpy==1.25.0
 pillow==10.0.1
 pyproj==3.4.0
 rasterio==1.3.7
-pystac==1.6.1
+pystac==1.9.0
 scikit-learn==1.2.2
 scipy==1.10.1
 opencv-python-headless==4.6.0.66
@@ -13,3 +13,5 @@ tqdm==4.65.0
 xarray==2023.2.0
 scikit-image==0.21.0
 boto3==1.28.8
+stackstac==0.5.0
+humanize==4.8.0
