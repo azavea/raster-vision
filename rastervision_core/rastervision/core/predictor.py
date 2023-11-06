@@ -46,10 +46,10 @@ class Predictor():
         self.model_loaded = False
 
         bundle_path = download_if_needed(model_bundle_uri)
-        bundle_dir = join(tmp_dir, 'bundle')
-        unzip(bundle_path, bundle_dir)
+        self.bundle_dir = join(tmp_dir, 'bundle')
+        unzip(bundle_path, self.bundle_dir)
 
-        config_path = join(bundle_dir, 'pipeline-config.json')
+        config_path = join(self.bundle_dir, 'pipeline-config.json')
         config_dict = file_to_json(config_path)
         rv_config.set_everett_config(
             config_overrides=config_dict.get('rv_config'))
@@ -74,11 +74,11 @@ class Predictor():
                         f'Using stats for scene group "{t.scene_group}". '
                         'To use a different scene group, specify '
                         '--scene-group <scene-group-name>.')
-            t.update_root(bundle_dir)
+            t.update_root(self.bundle_dir)
 
         if self.update_stats:
             stats_analyzer = StatsAnalyzerConfig(
-                output_uri=join(bundle_dir, 'stats.json'))
+                output_uri=join(self.bundle_dir, 'stats.json'))
             self.config.analyzers = [stats_analyzer]
 
         self.scene.label_source = None
@@ -87,7 +87,7 @@ class Predictor():
         self.config.dataset.train_scenes = [self.scene]
         self.config.dataset.validation_scenes = [self.scene]
         self.config.dataset.test_scenes = []
-        self.config.train_uri = bundle_dir
+        self.config.train_uri = self.bundle_dir
 
         if channel_order is not None:
             self.scene.raster_source.channel_order = channel_order
@@ -109,6 +109,8 @@ class Predictor():
             if not hasattr(self.pipeline, 'predict'):
                 raise Exception(
                     'pipeline in model bundle must have predict method')
+            self.pipeline.build_backend(
+                join(self.bundle_dir, 'model-bundle.zip'))
 
         self.scene.raster_source.uris = image_uris
         self.scene.label_store.uri = label_uri

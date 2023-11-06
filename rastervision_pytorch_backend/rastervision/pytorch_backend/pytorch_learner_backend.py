@@ -119,13 +119,14 @@ class PyTorchLearnerBackend(Backend):
             learner = self.learner_cfg.build(self.tmp_dir, training=True)
         learner.main()
 
-    def load_model(self):
-        self.learner = self._build_learner_from_bundle(training=False)
+    def load_model(self, uri: Optional[str] = None):
+        self.learner = self._build_learner_from_bundle(
+            bundle_uri=uri, training=False)
 
     def _build_learner_from_bundle(self,
-                                   bundle_uri=None,
-                                   cfg=None,
-                                   training=False):
+                                   bundle_uri: Optional[str] = None,
+                                   cfg: Optional['LearnerConfig'] = None,
+                                   training: bool = False):
         if bundle_uri is None:
             bundle_uri = self.learner_cfg.get_model_bundle_uri()
         return Learner.from_model_bundle(

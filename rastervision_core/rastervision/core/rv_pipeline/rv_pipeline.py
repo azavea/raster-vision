@@ -177,25 +177,26 @@ class RVPipeline(Pipeline):
 
         This uses a sliding window.
         """
-        # Cache backend so subsequent calls will be faster. This is useful for
-        # the predictor.
         if self.backend is None:
-            self.backend = self.config.backend.build(self.config, self.tmp_dir)
-            self.backend.load_model()
+            self.build_backend()
 
         class_config = self.config.dataset.class_config
         dataset = self.config.dataset.get_split_config(split_ind, num_splits)
 
         for scene_config in (dataset.validation_scenes + dataset.test_scenes):
             scene = scene_config.build(class_config, self.tmp_dir)
-            labels = self.predict_scene(scene, self.backend)
-            labels = self.post_process_predictions(labels, scene)
+            labels = self.predict_scene(scene)
             scene.label_store.save(labels)
 
-    def predict_scene(self, scene: Scene, backend: Backend) -> Labels:
+    def predict_scene(self, scene: Scene) -> Labels:
+        if self.backend is None:
+            self.build_backend()
         chip_sz = self.config.predict_chip_sz
         stride = chip_sz
-        return backend.predict_scene(scene, chip_sz=chip_sz, stride=stride)
+        labels = self.backend.predict_scene(
+            scene, chip_sz=chip_sz, stride=stride)
+        labels = self.post_process_predictions(labels, scene)
+        return labels
 
     def eval(self):
         """Evaluate predictions against ground truth."""
@@ -262,3 +263,7 @@ class RVPipeline(Pipeline):
             model_bundle_path = get_local_path(model_bundle_uri, self.tmp_dir)
             zipdir(bundle_dir, model_bundle_path)
             upload_or_copy(model_bundle_path, model_bundle_uri)
+
+    def build_backend(self, uri: Optional[str] = None) -> None:
+        self.backend = self.config.backend.build(self.config, self.tmp_dir)
+        self.backend.load_model(uri)
