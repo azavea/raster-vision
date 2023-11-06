@@ -28,6 +28,15 @@ class Runner():
         """
         pass
 
+    @abstractmethod
+    def run_command(self, cmd: List[str]):
+        """Run a single command.
+
+        Args:
+            cmd: Command to run in the Docker container for the remote job as list
+                of strings.
+        """
+
     def get_split_ind(self) -> Optional[int]:
         """Get the split_ind for the process.
 
