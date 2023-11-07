@@ -28,6 +28,14 @@ class Runner():
         """
         pass
 
+    @abstractmethod
+    def run_command(self, cmd: List[str]):
+        """Run a single command.
+
+        Args:
+            cmd: The command to run.
+        """
+
     def get_split_ind(self) -> Optional[int]:
         """Get the split_ind for the process.
 

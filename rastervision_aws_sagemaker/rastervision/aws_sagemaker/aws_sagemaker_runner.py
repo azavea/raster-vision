@@ -6,6 +6,7 @@ import boto3
 from rastervision.pipeline import rv_config_ as rv_config
 from rastervision.pipeline.runner import Runner
 
+from sagemaker import Session
 from sagemaker.processing import Processor
 from sagemaker.estimator import Estimator
 from sagemaker.workflow.pipeline import Pipeline as SageMakerPipeline
@@ -188,3 +189,32 @@ class AWSSageMakerRunner(Runner):
             step = ProcessingStep(step_name, step_args=step_args)
 
         return step
+
+    def run_command(self,
+                    cmd: List[str],
+                    use_gpu: bool = False,
+                    image_uri: Optional[str] = None,
+                    instance_type: Optional[str] = None,
+                    job_name: Optional[str] = None,
+                    sagemaker_session: Optional[Session] = None) -> None:
+        config = rv_config.get_namespace_config(AWS_SAGEMAKER)
+        role = config('exec_role')
+        device = 'gpu' if use_gpu else 'cpu'
+
+        if image_uri is None:
+            image_uri = config(f'{device}_image')
+        if instance_type is None:
+            instance_type = config(f'{device}_instance_type')
+        if sagemaker_session is None:
+            sagemaker_session = Session()
+
+        processor = Processor(
+            role=role,
+            image_uri=image_uri,
+            instance_count=1,
+            instance_type=instance_type,
+            sagemaker_session=sagemaker_session,
+            entrypoint=cmd,
+            base_job_name=job_name,
+        )
+        processor.run()

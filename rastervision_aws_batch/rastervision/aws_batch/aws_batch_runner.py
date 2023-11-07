@@ -15,80 +15,6 @@ log = logging.getLogger(__name__)
 AWS_BATCH = 'batch'
 
 
-def submit_job(cmd: List[str],
-               job_name: str,
-               debug: bool = False,
-               profile: str = False,
-               attempts: int = 5,
-               parent_job_ids: List[str] = None,
-               num_array_jobs: Optional[int] = None,
-               use_gpu: bool = False,
-               job_queue: Optional[str] = None,
-               job_def: Optional[str] = None) -> str:
-    """Submit a job to run on AWS Batch.
-
-    Args:
-        cmd: Command to run in the Docker container for the remote job as list
-            of strings.
-        debug: If True, run the command using a ptvsd wrapper which sets up a
-            remote VS Code Python debugger server.
-        profile: If True, run the command using kernprof, a line profiler.
-        attempts: The number of times to try running the command which is
-            useful in case of failure.
-        parent_job_ids: Optional list of parent Batch job ids. The job created
-            by this will only run after the parent jobs complete successfully.
-        num_array_jobs: If set, make this a Batch array job with size equal to
-            num_array_jobs.
-        use_gpu: If True, run the job in a GPU-enabled queue.
-        job_queue: If set, use this job queue.
-        job_def: If set, use this job definition.
-    """
-    import boto3
-
-    batch_config = rv_config.get_namespace_config(AWS_BATCH)
-
-    if job_queue is None:
-        if use_gpu:
-            job_queue = batch_config('gpu_job_queue')
-        else:
-            job_queue = batch_config('cpu_job_queue')
-
-    if job_def is None:
-        if use_gpu:
-            job_def = batch_config('gpu_job_def')
-        else:
-            job_def = batch_config('cpu_job_def')
-
-    if debug:
-        cmd = [
-            'python', '-m', 'ptvsd', '--host', '0.0.0.0', '--port', '6006',
-            '--wait', '-m'
-        ] + cmd
-
-    if profile:
-        cmd = ['kernprof', '-v', '-l'] + cmd
-
-    kwargs = {
-        'jobName': job_name,
-        'jobQueue': job_queue,
-        'jobDefinition': job_def,
-        'containerOverrides': {
-            'command': cmd
-        },
-        'retryStrategy': {
-            'attempts': attempts
-        },
-    }
-    if parent_job_ids:
-        kwargs['dependsOn'] = [{'jobId': id} for id in parent_job_ids]
-    if num_array_jobs:
-        kwargs['arrayProperties'] = {'size': num_array_jobs}
-
-    client = boto3.client('batch')
-    job_id = client.submit_job(**kwargs)['jobId']
-    return job_id
-
-
 class AWSBatchRunner(Runner):
     """Runs pipelines remotely using AWS Batch.
 
@@ -116,7 +42,7 @@ class AWSBatchRunner(Runner):
             commands,
             num_splits,
             pipeline_run_name=pipeline_run_name)
-        job_id = submit_job(cmd=cmd, **args)
+        job_id = self.run_command(cmd=cmd, **args)
 
         job_info = dict(
             name=args['job_name'],
@@ -178,5 +104,76 @@ class AWSBatchRunner(Runner):
 
             return cmd, args
 
-    def get_split_ind(self):
+    def get_split_ind(self) -> int:
         return int(os.environ.get('AWS_BATCH_JOB_ARRAY_INDEX', 0))
+
+    def run_command(self,
+                    cmd: List[str],
+                    job_name: Optional[str] = None,
+                    debug: bool = False,
+                    attempts: int = 1,
+                    parent_job_ids: Optional[List[str]] = None,
+                    num_array_jobs: Optional[int] = None,
+                    use_gpu: bool = False,
+                    job_queue: Optional[str] = None,
+                    job_def: Optional[str] = None,
+                    **kwargs) -> str:
+        """Submit a command as a job to AWS Batch.
+
+        Args:
+            cmd: Command to run in the Docker container for the remote job as
+                list of strings.
+            job_name: Optional job name. If None, is set to
+                "raster-vision-<uuid>".
+            debug: If True, run the command using a ptvsd wrapper which sets up
+                a remote VS Code Python debugger server. Defaults to False.
+            attempts: The number of times to try running the command which is
+                useful in case of failure. Defaults to 5.
+            parent_job_ids: Optional list of parent Batch job IDs. The job
+                created by this will only run after the parent jobs complete
+                successfully. Defaults to None.
+            num_array_jobs: If set, make this a Batch array job with size equal
+                to num_array_jobs. Defaults to None.
+            use_gpu: If True, run the job in a GPU-enabled queue. Defaults to
+                False.
+            job_queue: If set, use this job queue. Default to None.
+            job_def: If set, use this job definition. Default to None.
+            **kwargs: Any other kwargs to pass to Batch when submitting job.
+        """
+        import boto3
+
+        batch_config = rv_config.get_namespace_config(AWS_BATCH)
+        device = 'gpu' if use_gpu else 'cpu'
+
+        if job_name is None:
+            job_name = f'raster-vision-{uuid.uuid4()}'
+        if job_queue is None:
+            job_queue = batch_config(f'{device}_job_queue')
+        if job_def is None:
+            job_queue = batch_config(f'{device}_job_def')
+
+        if debug:
+            cmd = [
+                'python', '-m', 'ptvsd', '--host', '0.0.0.0', '--port', '6006',
+                '--wait', '-m'
+            ] + cmd
+
+        args = {
+            'jobName': job_name,
+            'jobQueue': job_queue,
+            'jobDefinition': job_def,
+            'containerOverrides': {
+                'command': cmd
+            },
+            'retryStrategy': {
+                'attempts': attempts
+            },
+        }
+        if parent_job_ids:
+            args['dependsOn'] = [{'jobId': id} for id in parent_job_ids]
+        if num_array_jobs:
+            args['arrayProperties'] = {'size': num_array_jobs}
+
+        client = boto3.client('batch')
+        job_id = client.submit_job(**args, **kwargs)['jobId']
+        return job_id
