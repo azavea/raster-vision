@@ -152,11 +152,19 @@ class Learner(ABC):
         self.valid_ds = valid_ds
         self.test_ds = test_ds
 
+        self.train_dl = None
+        self.valid_dl = None
+        self.test_dl = None
+
         self.model = model
         self.loss = loss
         self.opt = optimizer
         self.epoch_scheduler = epoch_scheduler
         self.step_scheduler = step_scheduler
+
+        self.tb_process = None
+        self.tb_writer = None
+        self.tb_log_dir = None
 
         # ---------------------------
         # Set URIs
@@ -552,8 +560,8 @@ class Learner(ABC):
                 self.opt.step()
 
                 if (step + 1) % 25 == 0:
-                    log.info('\nstep: {}'.format(step))
-                    log.info('train_loss: {}'.format(loss))
+                    log.info('\nstep: %d', step)
+                    log.info('train_loss: %f', loss)
 
         torch.save(self.model.state_dict(), self.last_model_weights_path)
 
@@ -1261,12 +1269,11 @@ class Learner(ABC):
         """
         if split == 'train':
             return self.train_dl
-        elif split == 'valid':
+        if split == 'valid':
             return self.valid_dl
-        elif split == 'test':
+        if split == 'test':
             return self.test_dl
-        else:
-            raise ValueError('{} is not a valid split'.format(split))
+        raise ValueError(f'{split} is not a valid split')
 
     def normalize_input(self, x: np.ndarray) -> np.ndarray:
         """Normalize x to [0, 1].
@@ -1360,10 +1367,8 @@ class Learner(ABC):
         """Run TB server serving logged stats."""
         if self.cfg.run_tensorboard:
             log.info('Starting tensorboard process')
-            self.tb_process = Popen([
-                'tensorboard', '--bind_all',
-                '--logdir={}'.format(self.tb_log_dir)
-            ])
+            self.tb_process = Popen(
+                ['tensorboard', '--bind_all', f'--logdir={self.tb_log_dir}'])
             terminate_at_exit(self.tb_process)
 
     def stop_tensorboard(self):
