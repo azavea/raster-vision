@@ -33,8 +33,7 @@ class Runner():
         """Run a single command.
 
         Args:
-            cmd: Command to run in the Docker container for the remote job as list
-                of strings.
+            cmd: The command to run.
         """
 
     def get_split_ind(self) -> Optional[int]:
