@@ -50,6 +50,9 @@ If you are running on AWS Batch or any other remote runner, you will not be able
 
 Running ``rastervision run sagemaker ...`` will submit a DAG (directed acyclic graph) of jobs represented as a SageMaker Pipeline to be run on AWS SageMaker.
 
+.. note::
+   To run on AWS SageMaker, you'll need the proper setup. See :ref:`aws sagemaker setup` for instructions.
+
 .. _parallelizing commands:
 
 Running Commands in Parallel
