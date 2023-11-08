@@ -31,8 +31,8 @@ Configuration-file Sections
 
 .. _s3 config:
 
-AWS_S3
-~~~~~~
+``AWS_S3``
+~~~~~~~~~~
 
 .. code-block:: ini
 
@@ -41,10 +41,15 @@ AWS_S3
 
 * ``requester_pays`` - Set to True if you would like to allow using `requester pays <https://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html>`_ S3 buckets. The default value is False.
 
-BATCH
-~~~~~
+``BATCH``
+~~~~~~~~~
 
 See :ref:`aws batch setup`.
+
+``SAGEMAKER``
+~~~~~~~~~~~~~
+
+See :ref:`aws sagemaker setup`.
 
 Environment Variables
 ---------------------

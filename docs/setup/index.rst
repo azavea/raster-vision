@@ -10,6 +10,7 @@ Installation
     self
     configure
     gpu
+    aws
 
 .. _install raster vision:
 

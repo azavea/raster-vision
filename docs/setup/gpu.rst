@@ -3,7 +3,9 @@
 Using GPUs
 ==========
 
-To run Raster Vision on a realistic dataset in a reasonable amount of time, it is necessary to use a machine with a GPU. Note that Raster Vision will use a GPU if it detects that one is available. If you don't own a machine with a GPU, it is possible to rent one by the minute using a cloud provider such as AWS.
+To run Raster Vision on a realistic dataset in a reasonable amount of time, it is necessary to use a machine with a GPU. Note that Raster Vision will use a GPU if it detects that one is available. 
+
+If you don't own a machine with a GPU, it is possible to rent one by the minute using a cloud provider such as AWS. See :doc:`aws`.
 
 Check that GPU is available
 ---------------------------
@@ -45,61 +47,3 @@ When running your Docker container, be sure to include the ``--runtime=nvidia`` 
    > docker run --runtime=nvidia --rm -it quay.io/azavea/raster-vision:pytorch-{{ version }} /bin/bash
 
 or use the ``--gpu`` option with the ``docker/run`` script.
-
-.. _aws ec2 setup:
-
-Running on AWS EC2
-------------------
-
-The simplest way to run Raster Vision on an AWS GPU is by starting a GPU-enabled EC2 instance such as a p3.2xlarge using the `Deep Learning AMI <https://aws.amazon.com/machine-learning/amis/>`_. We have tested this using the "Deep Learning AMI GPU PyTorch 1.11.0 (Ubuntu 20.04)" with id ``ami-0c968d7ef8a4b0c34``. After SSH'ing into the instance, Raster Vision can be installed with ``pip``, and code can be transferred to this instance with a tool such as ``rsync``.
-
-.. _aws batch setup:
-
-Running on AWS Batch
---------------------
-
-AWS Batch is a service that makes it easier to run Dockerized computation pipelines in the cloud. It starts and stops the appropriate instances automatically and runs jobs sequentially or in parallel according to the dependencies between them. To run Raster Vision using AWS Batch, you'll need to setup your AWS account with a specific set of Batch resources, which you can do using :ref:`cloudformation setup`. After creating the resources on AWS, set the following configuration in your Raster Vision config. Check the AWS Batch console to see the names of the resources that were created, as they vary depending on how CloudFormation was configured.
-
-.. code:: ini
-
-    [BATCH]
-    gpu_job_queue=RasterVisionGpuJobQueue
-    gpu_job_def=RasterVisionHostedPyTorchGpuJobDefinition
-    cpu_job_queue=RasterVisionCpuJobQueue
-    cpu_job_def=RasterVisionHostedPyTorchCpuJobDefinition
-    attempts=5
-
-* ``gpu_job_queue`` - job queue for GPU jobs
-* ``gpu_job_def`` - job definition that defines the GPU Batch jobs
-* ``cpu_job_queue`` - job queue for CPU-only jobs
-* ``cpu_job_def`` - job definition that defines the CPU-only Batch jobs
-* ``attempts`` - Optional number of attempts to retry failed jobs. It is good to set this to > 1 since Batch often kills jobs for no apparent reason.
-
-.. seealso::
-   For more information about how Raster Vision uses AWS Batch, see the section: :ref:`aws batch`.
-
-
-.. _aws sagemaker setup:
-
-Running on AWS SageMaker
-------------------------
-
-.. code:: ini
-
-    [SAGEMAKER]
-    exec_role=AmazonSageMakerExecutionRole
-    cpu_image=123.dkr.ecr.us-east-1.amazonaws.com/raster-vision
-    cpu_instance_type=ml.p3.2xlarge
-    gpu_image=123.dkr.ecr.us-east-1.amazonaws.com/raster-vision
-    gpu_instance_type=ml.p3.2xlarge
-    use_spot_instances=yes
-
-* ``exec_role`` - Execution role.
-* ``cpu_image`` - Docker image URI for CPU jobs.
-* ``cpu_instance_type`` - Instance type for CPU jobs.
-* ``gpu_image`` - Docker image URI for GPU jobs.
-* ``gpu_instance_type`` - Instance type for GPU jobs.
-* ``use_spot_instances`` - Whether to use spot instances.
-
-.. seealso::
-   For more information about how Raster Vision uses AWS Batch, see the section: :ref:`aws sagemaker`.
