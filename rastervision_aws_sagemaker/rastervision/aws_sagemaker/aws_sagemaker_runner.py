@@ -30,7 +30,7 @@ class AWSSageMakerRunner(Runner):
     .. code-block:: ini
 
         [SAGEMAKER]
-        exec_role=
+        role=
         cpu_image=
         cpu_instance_type=
         gpu_image=
@@ -48,7 +48,7 @@ class AWSSageMakerRunner(Runner):
             ],
             pipeline_run_name: str = 'rv'):
         config = rv_config.get_namespace_config(AWS_SAGEMAKER)
-        exec_role = config('exec_role')
+        role = config('role')
 
         sagemaker_pipeline = self.build_pipeline(
             cfg_json_uri,
@@ -60,7 +60,7 @@ class AWSSageMakerRunner(Runner):
 
         # Submit the pipeline to SageMaker
         iam_client = boto3.client('iam')
-        role_arn = iam_client.get_role(RoleName=exec_role)['Role']['Arn']
+        role_arn = iam_client.get_role(RoleName=role)['Role']['Arn']
         sagemaker_pipeline.upsert(role_arn=role_arn)
         execution = sagemaker_pipeline.start()
 
@@ -78,7 +78,7 @@ class AWSSageMakerRunner(Runner):
         """Build a SageMaker Pipeline with each command as a step within it."""
 
         config = rv_config.get_namespace_config(AWS_SAGEMAKER)
-        exec_role = config('exec_role')
+        role = config('role')
         cpu_image = config('cpu_image')
         cpu_instance_type = config('cpu_instance_type')
         gpu_image = config('gpu_image')
@@ -116,7 +116,7 @@ class AWSSageMakerRunner(Runner):
                     step = self.build_step(
                         step_name=f'{job_name}_{i+1}of{num_splits}',
                         cmd=cmd,
-                        role=exec_role,
+                        role=role,
                         image_uri=gpu_image if use_gpu else cpu_image,
                         instance_type=(gpu_instance_type
                                        if use_gpu else cpu_instance_type),
@@ -131,7 +131,7 @@ class AWSSageMakerRunner(Runner):
                 step = self.build_step(
                     step_name=job_name,
                     cmd=cmd,
-                    role=exec_role,
+                    role=role,
                     image_uri=gpu_image if use_gpu else cpu_image,
                     instance_type=(gpu_instance_type
                                    if use_gpu else cpu_instance_type),
@@ -195,12 +195,34 @@ class AWSSageMakerRunner(Runner):
                     use_gpu: bool = False,
                     image_uri: Optional[str] = None,
                     instance_type: Optional[str] = None,
+                    role: Optional[str] = None,
                     job_name: Optional[str] = None,
                     sagemaker_session: Optional[Session] = None) -> None:
+        """Run a single command as a SageMaker processing job.
+
+        Args:
+            cmd (List[str]): The command to run.
+            use_gpu (bool): Use the GPU instance type and image from the
+                Everett config. This is ignored if image_uri and instance_type
+                are provided. Defaults to False.
+            image_uri (Optional[str]): URI of docker image to use. If not
+                provided, will be picked up from Everett config.
+                Defaults to None.
+            instance_type (Optional[str]): AWS instance type to use. If not
+                provided, will be picked up from Everett config.
+                Defaults to None.
+            role (Optional[str]): AWS IAM role with SageMaker permissions. If
+                not provided, will be picked up from Everett config.
+                Defaults to None.
+            job_name (Optional[str]): Optional job name. Defaults to None.
+            sagemaker_session (Optional[Session]): SageMaker session.
+                Defaults to None.
+        """
         config = rv_config.get_namespace_config(AWS_SAGEMAKER)
-        role = config('exec_role')
         device = 'gpu' if use_gpu else 'cpu'
 
+        if role is None:
+            role = config('role')
         if image_uri is None:
             image_uri = config(f'{device}_image')
         if instance_type is None:
