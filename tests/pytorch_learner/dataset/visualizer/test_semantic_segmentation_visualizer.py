@@ -32,6 +32,16 @@ class TestClassificationVisualizer(unittest.TestCase):
         z = torch.randn(size=(2, num_classes, 256, 256)).softmax(dim=-3)
         self.assertNoError(lambda: viz.plot_batch(x, y, z=z))
 
+        # w/ z, w/o y
+        viz = SemanticSegmentationVisualizer(
+            class_names=['bg', 'fg'],
+            channel_display_groups=dict(RGB=[0, 1, 2], IR=[3]))
+        num_classes = 2
+        x = torch.randn(size=(2, 4, 256, 256))
+        y = None
+        z = torch.randn(size=(2, num_classes, 256, 256)).softmax(dim=-3)
+        self.assertNoError(lambda: viz.plot_batch(x, y, z=z))
+
     def test_plot_batch_temporal(self):
         # w/o z
         viz = SemanticSegmentationVisualizer(
@@ -54,3 +64,13 @@ class TestClassificationVisualizer(unittest.TestCase):
         self.assertNoError(lambda: viz.plot_batch(x, y, z=z))
         # w/ z, batch size = 1
         self.assertNoError(lambda: viz.plot_batch(x[[0]], y[[0]]))
+
+        # w/ z, w/o y
+        viz = SemanticSegmentationVisualizer(
+            class_names=['bg', 'fg'],
+            channel_display_groups=dict(RGB=[0, 1, 2], IR=[3]))
+        num_classes = 2
+        x = torch.randn(size=(2, 3, 4, 256, 256))
+        y = None
+        z = torch.randn(size=(2, num_classes, 256, 256)).softmax(dim=-3)
+        self.assertNoError(lambda: viz.plot_batch(x, y, z=z))

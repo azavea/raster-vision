@@ -5,8 +5,8 @@ from abc import ABC, abstractmethod
 import numpy as np
 import torch
 from torch import Tensor
-import albumentations as A
 from torch.utils.data import DataLoader
+import albumentations as A
 import matplotlib.pyplot as plt
 
 from rastervision.pipeline.file_system import make_dir
@@ -34,7 +34,7 @@ class Visualizer(ABC):
     def __init__(self,
                  class_names: List[str],
                  class_colors: Optional[List[Union[str, RGBTuple]]] = None,
-                 transform: Optional[Dict] = A.to_dict(MinMaxNormalize()),
+                 transform: Optional[Dict] = None,
                  channel_display_groups: Optional[Union[Dict[
                      str, ChannelInds], Sequence[ChannelInds]]] = None):
         """Constructor.
@@ -62,6 +62,8 @@ class Visualizer(ABC):
         """
         self.class_names = class_names
         self.class_colors = ensure_class_colors(self.class_names, class_colors)
+        if transform is None:
+            transform = A.to_dict(MinMaxNormalize())
         self.transform = validate_albumentation_transform(transform)
         self._channel_display_groups = validate_channel_display_groups(
             channel_display_groups)
@@ -70,7 +72,7 @@ class Visualizer(ABC):
     def plot_xyz(self,
                  axs,
                  x: Tensor,
-                 y: Sequence,
+                 y: Optional[Sequence] = None,
                  z: Optional[Sequence] = None,
                  plot_title: bool = True):
         """Plot image, ground truth labels, and predicted labels.
@@ -84,7 +86,7 @@ class Visualizer(ABC):
 
     def plot_batch(self,
                    x: Tensor,
-                   y: Sequence,
+                   y: Optional[Sequence] = None,
                    output_path: Optional[str] = None,
                    z: Optional[Sequence] = None,
                    batch_limit: Optional[int] = None,
@@ -133,7 +135,7 @@ class Visualizer(ABC):
                 for args in plot_xyz_args[1:]:
                     args['plot_title'] = False
                 _x = x[i]
-                _y = [y[i]] * T
+                _y = None if y is None else [y[i]] * T
                 _z = None if z is None else [z[i]] * T
                 self._plot_batch(fig, axs, plot_xyz_args, _x, y=_y, z=_z)
         else:
@@ -166,9 +168,12 @@ class Visualizer(ABC):
             imgs = [tf(image=img)['image'] for img in x.numpy()]
             x = torch.from_numpy(np.stack(imgs))
 
+        if y is None:
+            y = [None] * len(x)
+        if z is None:
+            z = [None] * len(x)
         for i, row_axs in enumerate(axs):
-            _z = None if z is None else z[i]
-            self.plot_xyz(row_axs, x[i], y[i], z=_z, **plot_xyz_args[i])
+            self.plot_xyz(row_axs, x[i], y[i], z=z[i], **plot_xyz_args[i])
 
     def get_channel_display_groups(
             self, nb_img_channels: int
