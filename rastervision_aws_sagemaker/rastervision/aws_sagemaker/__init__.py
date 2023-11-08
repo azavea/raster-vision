@@ -7,7 +7,7 @@ def register_plugin(registry):
     registry.set_plugin_version('rastervision.aws_sagemaker', 0)
     registry.add_runner(AWS_SAGEMAKER, AWSSageMakerRunner)
     registry.add_rv_config_schema(AWS_SAGEMAKER, [
-        'exec_role',
+        'role',
         'cpu_image',
         'cpu_instance_type',
         'gpu_image',

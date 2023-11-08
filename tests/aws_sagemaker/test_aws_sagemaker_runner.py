@@ -18,7 +18,7 @@ class TestAWSSageMakerRunner(unittest.TestCase):
     def setUp(self):
         rv_config.set_everett_config(
             config_overrides=dict(
-                SAGEMAKER_exec_role='AmazonSageMakerExecutionRole',
+                SAGEMAKER_role='AmazonSageMakerExecutionRole',
                 SAGEMAKER_cpu_image='123.dkr.ecr.us-east-1.amazonaws.com/rv',
                 SAGEMAKER_cpu_instance_type='ml.p3.2xlarge',
                 SAGEMAKER_gpu_image='123.dkr.ecr.us-east-1.amazonaws.com/rv',
