@@ -42,6 +42,15 @@ class TestClassificationVisualizer(unittest.TestCase):
         z = [random_boxlist(_x) for _x in x]
         self.assertNoError(lambda: viz.plot_batch(x, y, z=z))
 
+        # w/ z, w/o y
+        viz = ObjectDetectionVisualizer(
+            class_names=['bg', 'fg'],
+            channel_display_groups=dict(RGB=[0, 1, 2], IR=[3]))
+        x = torch.randn(size=(2, 4, 256, 256))
+        y = None
+        z = [random_boxlist(_x) for _x in x]
+        self.assertNoError(lambda: viz.plot_batch(x, y, z=z))
+
     def test_plot_batch_temporal(self):
         # w/o z
         viz = ObjectDetectionVisualizer(
@@ -57,5 +66,14 @@ class TestClassificationVisualizer(unittest.TestCase):
             channel_display_groups=dict(RGB=[0, 1, 2], IR=[3]))
         x = torch.randn(size=(2, 3, 4, 256, 256))
         y = [random_boxlist(_x) for _x in x]
+        z = [random_boxlist(_x) for _x in x]
+        self.assertNoError(lambda: viz.plot_batch(x, y, z=z))
+
+        # w/ z, w/o y
+        viz = ObjectDetectionVisualizer(
+            class_names=['bg', 'fg'],
+            channel_display_groups=dict(RGB=[0, 1, 2], IR=[3]))
+        x = torch.randn(size=(2, 3, 4, 256, 256))
+        y = None
         z = [random_boxlist(_x) for _x in x]
         self.assertNoError(lambda: viz.plot_batch(x, y, z=z))

@@ -18,15 +18,18 @@ class ObjectDetectionVisualizer(Visualizer):
     def plot_xyz(self,
                  axs: Sequence,
                  x: torch.Tensor,
-                 y: BoxList,
+                 y: Optional[BoxList] = None,
                  z: Optional[BoxList] = None,
                  plot_title: bool = True) -> None:
-        y = y if z is None else z
         channel_groups = self.get_channel_display_groups(x.shape[1])
-
-        class_names = self.class_names
-        class_colors = self.class_colors
-
         imgs = channel_groups_to_imgs(x, channel_groups)
-        imgs = [draw_boxes(img, y, class_names, class_colors) for img in imgs]
+
+        if y is not None or z is not None:
+            y = y if z is None else z
+            class_names = self.class_names
+            class_colors = self.class_colors
+            imgs = [
+                draw_boxes(img, y, class_names, class_colors) for img in imgs
+            ]
+
         plot_channel_groups(axs, imgs, channel_groups, plot_title=plot_title)
