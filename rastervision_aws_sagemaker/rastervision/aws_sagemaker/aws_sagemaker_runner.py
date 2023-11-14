@@ -6,16 +6,13 @@ import boto3
 from rastervision.pipeline import rv_config_ as rv_config
 from rastervision.pipeline.runner import Runner
 
-from sagemaker import Session
-from sagemaker.processing import Processor
-from sagemaker.estimator import Estimator
-from sagemaker.workflow.pipeline import Pipeline as SageMakerPipeline
-from sagemaker.workflow.pipeline_context import PipelineSession
-from sagemaker.workflow.steps import ProcessingStep, TrainingStep
-
 if TYPE_CHECKING:
     from rastervision.pipeline.pipeline import Pipeline
     from sagemaker.workflow.pipeline_context import _JobStepArguments
+    from sagemaker import Session
+    from sagemaker.workflow.pipeline import Pipeline as SageMakerPipeline
+    from sagemaker.workflow.pipeline_context import PipelineSession
+    from sagemaker.workflow.steps import ProcessingStep, TrainingStep
 
 log = logging.getLogger(__name__)
 
@@ -74,8 +71,10 @@ class AWSSageMakerRunner(Runner):
                        cmd_prefix: List[str] = [
                            'python', '-m', 'rastervision.pipeline.cli'
                        ],
-                       pipeline_run_name: str = 'rv') -> SageMakerPipeline:
+                       pipeline_run_name: str = 'rv') -> 'SageMakerPipeline':
         """Build a SageMaker Pipeline with each command as a step within it."""
+        from sagemaker.workflow.pipeline_context import PipelineSession
+        from sagemaker.workflow.pipeline import Pipeline as SageMakerPipeline
 
         config = rv_config.get_namespace_config(AWS_SAGEMAKER)
         role = config('role')
@@ -152,8 +151,8 @@ class AWSSageMakerRunner(Runner):
     def build_step(self, step_name: str, cmd: List[str], role: str,
                    image_uri: str, instance_type: str,
                    use_spot_instances: bool,
-                   sagemaker_session: PipelineSession,
-                   use_gpu: bool) -> Union[TrainingStep, ProcessingStep]:
+                   sagemaker_session: 'PipelineSession',
+                   use_gpu: bool) -> Union['TrainingStep', 'ProcessingStep']:
         """Build an TrainingStep if use_gpu=True, otherwise a ProcessingStep.
         """
         if use_gpu:
@@ -161,6 +160,8 @@ class AWSSageMakerRunner(Runner):
             # Formally this should probably not be used for prediction in
             # this way, but it is expedient (especially given default
             # service quotas, and other stuff).
+            from sagemaker.estimator import Estimator
+            from sagemaker.workflow.steps import TrainingStep
             step_estimator = Estimator(
                 container_entry_point=cmd,
                 image_uri=image_uri,
@@ -176,6 +177,8 @@ class AWSSageMakerRunner(Runner):
             step = TrainingStep(step_name, step_args=step_args)
         else:
             # For non-GPU-enabled steps, create a ScriptProcessor.
+            from sagemaker.processing import Processor
+            from sagemaker.workflow.steps import ProcessingStep
             step_processor = Processor(
                 role=role,
                 image_uri=image_uri,
@@ -197,7 +200,7 @@ class AWSSageMakerRunner(Runner):
                     instance_type: Optional[str] = None,
                     role: Optional[str] = None,
                     job_name: Optional[str] = None,
-                    sagemaker_session: Optional[Session] = None) -> None:
+                    sagemaker_session: Optional['Session'] = None) -> None:
         """Run a single command as a SageMaker processing job.
 
         Args:
@@ -218,6 +221,8 @@ class AWSSageMakerRunner(Runner):
             sagemaker_session (Optional[Session]): SageMaker session.
                 Defaults to None.
         """
+        from sagemaker.processing import Processor
+
         config = rv_config.get_namespace_config(AWS_SAGEMAKER)
         device = 'gpu' if use_gpu else 'cpu'
 
@@ -228,6 +233,7 @@ class AWSSageMakerRunner(Runner):
         if instance_type is None:
             instance_type = config(f'{device}_instance_type')
         if sagemaker_session is None:
+            from sagemaker import Session
             sagemaker_session = Session()
 
         processor = Processor(
