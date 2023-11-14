@@ -171,6 +171,7 @@ The following table shows the corresponding ``Config`` counterparts for various 
      -  :class:`.RasterSourceConfig`
 
         - :class:`.RasterioSourceConfig`
+        - :class:`.XarraySourceConfig`
         - :class:`.MultiRasterSourceConfig`
         - :class:`.RasterizedSourceConfig`
 
