@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import conint, conlist
 
 from rastervision.pipeline.config import (Field, register_config, validator)
@@ -57,7 +58,8 @@ class MultiRasterSourceConfig(RasterSourceConfig):
                 'Setting channel_order is not allowed if temporal=True.')
         return v
 
-    def build(self, tmp_dir: str,
+    def build(self,
+              tmp_dir: Optional[str] = None,
               use_transformers: bool = True) -> MultiRasterSource:
         if use_transformers:
             raster_transformers = [t.build() for t in self.transformers]
