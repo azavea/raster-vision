@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Union
+from typing import Any, Dict, Optional, Tuple, Union
 import logging
 
 from rastervision.pipeline.config import Field, register_config
@@ -32,6 +32,8 @@ class XarraySourceConfig(RasterSourceConfig):
         'bbox is also specified. Defaults to None.')
     temporal: bool = Field(
         False, description='Whether the data is a time-series.')
+    stackstac_args: Dict[str, Any] = Field(
+        {}, description='Optional arguments to pass to stackstac.stack().')
 
     def build(self,
               tmp_dir: Optional[str] = None,
@@ -39,7 +41,8 @@ class XarraySourceConfig(RasterSourceConfig):
         import stackstac
 
         item_or_item_collection = self.stac.build()
-        data_array = stackstac.stack(item_or_item_collection)
+        data_array = stackstac.stack(item_or_item_collection,
+                                     **self.stackstac_args)
 
         if not self.temporal and 'time' in data_array.dims:
             if len(data_array.time) > 1:
