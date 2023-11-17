@@ -1,0 +1,64 @@
+[MASTER]
+
+# Specify a configuration file name.
+rcfile=.pylintrc
+
+# Add additional code-checking plugins.
+load-plugins=
+
+[MESSAGES CONTROL]
+
+# Enable or disable messages. Options: 'disable', 'enable', 'disable-msg', 'enable-msg'.
+disable=
+
+[REPORTS]
+
+# Set the output format. Options: 'text', 'parseable', 'colorized', 'json'.
+output-format=text
+
+[REPORTS/MISCELLANEOUS]
+
+# Set the maximum number of parents for a class (see R0901).
+max-parents=
+
+[FORMAT]
+
+# Set the maximum number of characters on a single line.
+max-line-length=80
+
+[TYPECHECK]
+
+# Enable or disable type checking.
+disable=
+    invalid-name,
+    too-many-locals,
+    too-many-arguments,
+    too-many-statements,
+    unused-import,
+    no-name-in-module,
+	import-outside-toplevel
+
+[LOGGING]
+
+# Set the logging level. Options: 'CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'NOTSET'.
+logging-level=WARNING
+
+[DESIGN]
+
+# Set the maximum number of attributes for a class (see R0902).
+max-attributes=
+
+[IMPORTS]
+
+# Set the maximum number of import statements allowed (see C0411).
+max-imports=
+
+[UNITTEST]
+
+# Enable or disable the use of assertions in unittests.
+disable=no-self-use, invalid-name
+
+[FORMAT]
+
+# Set the expected format for docstrings. Options: 'google', 'numpy', 'restructuredtext', 'plaintext'.
+docstring-format=google
