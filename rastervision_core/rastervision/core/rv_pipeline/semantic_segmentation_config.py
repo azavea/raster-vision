@@ -1,5 +1,4 @@
-from typing import (List, Optional, Union)
-from typing_extensions import Literal
+from typing import (List, Literal, Optional, Union)
 from pydantic import conint
 from enum import Enum
 

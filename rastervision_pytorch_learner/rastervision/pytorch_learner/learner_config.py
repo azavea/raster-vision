@@ -5,8 +5,7 @@ import uuid
 import logging
 
 from typing import (TYPE_CHECKING, Any, Callable, Dict, Iterable, List,
-                    Optional, Sequence, Tuple, Union)
-from typing_extensions import Literal
+                    Literal, Optional, Sequence, Tuple, Union)
 from pydantic import (PositiveFloat, PositiveInt as PosInt, constr, confloat,
                       conint)
 from pydantic.utils import sequence_like

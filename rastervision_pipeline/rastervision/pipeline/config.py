@@ -1,12 +1,11 @@
-from typing import List, Type, Union, Optional, Callable, Dict, TYPE_CHECKING
+from typing import (TYPE_CHECKING, Callable, Dict, List, Literal, Optional,
+                    Type, Union)
 import inspect
 import logging
 
 from pydantic import (  # noqa
     BaseModel, create_model, Field, root_validator, validate_model,
     ValidationError, validator)
-
-from typing_extensions import Literal
 
 from rastervision.pipeline import (registry_ as registry, rv_config_ as
                                    rv_config)

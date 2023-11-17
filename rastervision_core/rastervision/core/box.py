@@ -1,6 +1,5 @@
-from typing import (TYPE_CHECKING, Callable, Dict, List, Optional, Sequence,
-                    Tuple, Union)
-from typing_extensions import Literal
+from typing import (TYPE_CHECKING, Callable, Dict, List, Literal, Optional,
+                    Sequence, Tuple, Union)
 from pydantic import PositiveInt as PosInt, conint
 import math
 import random
