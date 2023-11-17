@@ -58,7 +58,8 @@ class XarraySourceConfig(RasterSourceConfig):
                                if use_transformers else [])
 
         if self.bbox is not None:
-            log.info('Using bbox and ignoring bbox_map_coords.')
+            if self.bbox_map_coords is not None:
+                log.info('Using bbox and ignoring bbox_map_coords.')
             bbox = Box(*self.bbox)
         elif self.bbox_map_coords is not None:
             bbox_map_coords = Box(*self.bbox_map_coords)
