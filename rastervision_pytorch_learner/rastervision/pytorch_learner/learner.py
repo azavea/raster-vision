@@ -1,6 +1,5 @@
 from typing import (TYPE_CHECKING, Any, Callable, Dict, Iterator, List,
-                    Optional, Tuple, Union, Type)
-from typing_extensions import Literal
+                    Literal, Optional, Tuple, Union, Type)
 from abc import ABC, abstractmethod
 from os.path import join, isfile, basename, isdir
 import warnings

@@ -1,5 +1,4 @@
-from typing import Union, Optional, Tuple, Any, TypeVar
-from typing_extensions import Literal
+from typing import Any, Literal, Optional, Tuple, TypeVar, Union
 import logging
 
 import numpy as np
