@@ -144,8 +144,15 @@ class Learner(ABC):
             self._tmp_dir = get_tmp_dir()
             tmp_dir = self._tmp_dir.name
         self.tmp_dir = tmp_dir
-        self.device = torch.device('cuda'
-                                   if torch.cuda.is_available() else 'cpu')
+
+        if torch.cuda.is_available():
+            device = 'cuda'
+        elif torch.backends.mps.is_available():
+            device = 'mps'
+        else:
+            device = 'cpu'
+
+        self.device = torch.device(device)
 
         self.train_ds = train_ds
         self.valid_ds = valid_ds
