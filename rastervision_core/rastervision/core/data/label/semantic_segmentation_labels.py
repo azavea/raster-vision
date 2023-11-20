@@ -287,15 +287,20 @@ class SemanticSegmentationDiscreteLabels(SemanticSegmentationLabels):
         return self.get_label_arr(window)
 
     def add_window(self, window: Box, pixel_class_ids: np.ndarray) -> None:
+        # sub-window in self.extent coords to write to
         window_dst = window.intersection(self.extent)
-        dst_yslice, dst_xslice = window_dst.to_slices()
-        # pixel_class_scores coords
+
+        # sub-window in pixel_class_ids coords to read from
         window_src = window_dst.to_global_coords(
             self.extent).to_local_coords(window)
-        src_yslice, src_xslice = window_src.to_slices()
 
+        # read sub-window from source array
+        src_yslice, src_xslice = window_src.to_slices()
         pixel_class_ids = pixel_class_ids.astype(self.dtype)
         pixel_class_ids = pixel_class_ids[..., src_yslice, src_xslice]
+
+        # write sub-window in destination array
+        dst_yslice, dst_xslice = window_dst.to_slices()
         window_pixel_counts = self.pixel_counts[:, dst_yslice, dst_xslice]
         for ch_class_id, ch in enumerate(window_pixel_counts):
             ch[pixel_class_ids == ch_class_id] += 1
@@ -462,16 +467,20 @@ class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
         return self.get_score_arr(window)
 
     def add_window(self, window: Box, pixel_class_scores: np.ndarray) -> None:
-        # self.extent coords
+        # sub-window in self.extent coords to write to
         window_dst = window.intersection(self.extent)
-        dst_yslice, dst_xslice = window_dst.to_slices()
-        # pixel_class_scores coords
+
+        # sub-window in pixel_class_scores coords to read from
         window_src = window_dst.to_global_coords(
             self.extent).to_local_coords(window)
-        src_yslice, src_xslice = window_src.to_slices()
 
+        # read sub-window from source array
+        src_yslice, src_xslice = window_src.to_slices()
         pixel_class_scores = pixel_class_scores.astype(self.dtype)
         pixel_class_scores = pixel_class_scores[..., src_yslice, src_xslice]
+
+        # write sub-window in destination array
+        dst_yslice, dst_xslice = window_dst.to_slices()
         self.pixel_scores[..., dst_yslice, dst_xslice] += pixel_class_scores
         self.pixel_hits[dst_yslice, dst_xslice] += 1
 
