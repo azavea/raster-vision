@@ -1,4 +1,4 @@
-from typing import Callable, Optional, Union
+from typing import TYPE_CHECKING, Callable, Iterable, Optional, Union
 from enum import Enum
 import logging
 
@@ -14,6 +14,9 @@ from rastervision.pytorch_learner.dataset import (
     ClassificationImageDataset, ClassificationSlidingWindowGeoDataset,
     ClassificationRandomWindowGeoDataset)
 from rastervision.pytorch_learner.utils import adjust_conv_channels
+
+if TYPE_CHECKING:
+    from rastervision.core.data import SceneConfig
 
 log = logging.getLogger(__name__)
 
@@ -53,11 +56,13 @@ class ClassificationGeoDataConfig(ClassificationDataConfig, GeoDataConfig):
     See :mod:`rastervision.pytorch_learner.dataset.classification_dataset`.
     """
 
-    def build_scenes(self, tmp_dir: str):
-        for s in self.scene_dataset.all_scenes:
+    def build_scenes(self,
+                     scene_configs: Iterable['SceneConfig'],
+                     tmp_dir: Optional[str] = None):
+        for s in scene_configs:
             if s.label_source is not None:
                 s.label_source.lazy = True
-        return super().build_scenes(tmp_dir=tmp_dir)
+        return super().build_scenes(scene_configs, tmp_dir=tmp_dir)
 
     def scene_to_dataset(self,
                          scene: Scene,
