@@ -1,4 +1,5 @@
-from typing import Any
+from typing import Any, Callable, Optional
+import os
 import atexit
 import logging
 from math import ceil
@@ -45,3 +46,13 @@ def repr_with_args(obj: Any, **kwargs) -> str:
     arg_strs = [f'{k}={v!r}' for k, v in kwargs.items()]
     arg_str = ', '.join(arg_strs)
     return f'{cls}({arg_str})'
+
+
+def get_env_var(key: str,
+                default: Optional[Any] = None,
+                out_type: Optional[type | Callable] = None) -> Optional[Any]:
+    val = os.environ.get(key, default)
+    if val is not None and out_type is not None:
+        if out_type == bool:
+            return val.lower() in ('1', 'true', 'y', 'yes')
+        return out_type(val)
