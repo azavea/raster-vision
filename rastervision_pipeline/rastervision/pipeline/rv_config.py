@@ -207,7 +207,7 @@ class RVConfig:
                              namespace: str,
                              key: str,
                              default: Optional[Any] = None,
-                             as_bool: bool = False) -> str:
+                             as_bool: bool = False) -> Optional[Any]:
         """Get the value of an option from a namespace."""
         namespace_options = self.config.with_namespace(namespace)
         try:
@@ -217,7 +217,7 @@ class RVConfig:
             return val
         except ConfigurationMissingError:
             if as_bool:
-                return False
+                return bool(default)
             return default
 
     def get_config_dict(
