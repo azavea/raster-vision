@@ -80,10 +80,10 @@ class RVConfig:
 
         To set the value, the following rules are used in decreasing priority:
 
-        1) the tmp_dir_root argument if it is not None
-        2) an environment variable (TMPDIR, TEMP, or TMP)
-        3) a default temporary directory which is
-        4) a directory returned by tempfile.TemporaryDirectory()
+        1) the ``tmp_dir_root`` argument if it is not ``None``
+        2) an environment variable (``TMPDIR``, ``TEMP``, or ``TMP``)
+        3) a default temporary directory which is a directory returned by
+           :class:`tempfile.TemporaryDirectory`
         """
         # Check the various possibilities in order of priority.
         env_arr = [
