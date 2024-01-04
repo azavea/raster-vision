@@ -72,8 +72,8 @@ class TestTorchHubUtils(unittest.TestCase):
             hubconf_dir = join(tmp_dir, 'focal_loss')
             loss = torch_hub_load_github(
                 repo='AdeelH/pytorch-multi-class-focal-loss:1.1',
-                hubconf_dir=hubconf_dir,
                 entrypoint='focal_loss',
+                dst_dir=hubconf_dir,
                 alpha=[.75, .25],
                 gamma=2)
             self.assertIsInstance(loss, nn.Module)
@@ -95,8 +95,8 @@ class TestTorchHubUtils(unittest.TestCase):
             # local, via torch_hub_load_uri
             loss = torch_hub_load_uri(
                 uri=hubconf_dir,
-                hubconf_dir=hubconf_dir,
                 entrypoint='focal_loss',
+                dst_dir=hubconf_dir,
                 alpha=[.75, .25],
                 gamma=2)
             self.assertIsInstance(loss, nn.Module)
@@ -110,8 +110,8 @@ class TestTorchHubUtils(unittest.TestCase):
             loss = torch_hub_load_uri(
                 uri=
                 'https://github.com/AdeelH/pytorch-multi-class-focal-loss/archive/refs/tags/1.1.zip',  # noqa
-                hubconf_dir=hubconf_dir,
                 entrypoint='focal_loss',
+                dst_dir=hubconf_dir,
                 alpha=[.75, .25],
                 gamma=2)
             self.assertIsInstance(loss, nn.Module)

@@ -1,5 +1,6 @@
 from typing import (TYPE_CHECKING, Any, Callable, Dict, Iterable, List,
                     Literal, Optional, Sequence, Tuple, Union)
+import os
 from os.path import join, isdir
 from enum import Enum
 import random
@@ -164,7 +165,10 @@ class ExternalModuleConfig(Config):
                 'Must specify one (and only one) of github_repo and uri.')
         return values
 
-    def build(self, save_dir: str, hubconf_dir: Optional[str] = None) -> Any:
+    def build(self,
+              save_dir: str,
+              hubconf_dir: Optional[str] = None,
+              ddp_rank: Optional[int] = None) -> Any:
         """Load an external module via torch.hub.
 
         Note: Loading a PyTorch module is the typical use case, but there are
@@ -188,22 +192,28 @@ class ExternalModuleConfig(Config):
                 **self.entrypoint_kwargs)
             return module
 
-        hubconf_dir = get_hubconf_dir_from_cfg(self, parent=save_dir)
+        dst_dir = get_hubconf_dir_from_cfg(self, parent=save_dir)
+        if ddp_rank is not None:
+            # avoid conflicts when downloading
+            os.environ['TORCH_HOME'] = f'~/.cache/torch/{ddp_rank}'
+            if ddp_rank != 0:
+                dst_dir = None
+
         if self.github_repo is not None:
             log.info(f'Fetching module definition from: {self.github_repo}')
             module = torch_hub_load_github(
                 repo=self.github_repo,
-                hubconf_dir=hubconf_dir,
                 entrypoint=self.entrypoint,
                 *self.entrypoint_args,
+                dst_dir=dst_dir,
                 **self.entrypoint_kwargs)
         else:
             log.info(f'Fetching module definition from: {self.uri}')
             module = torch_hub_load_uri(
                 uri=self.uri,
-                hubconf_dir=hubconf_dir,
                 entrypoint=self.entrypoint,
                 *self.entrypoint_args,
+                dst_dir=dst_dir,
                 **self.entrypoint_kwargs)
         return module
 
@@ -253,6 +263,7 @@ class ModelConfig(Config):
               in_channels: int,
               save_dir: Optional[str] = None,
               hubconf_dir: Optional[str] = None,
+              ddp_rank: Optional[int] = None,
               **kwargs) -> nn.Module:
         """Build and return a model based on the config.
 
@@ -271,7 +282,7 @@ class ModelConfig(Config):
         """
         if self.external_def is not None:
             return self.build_external_model(
-                save_dir=save_dir, hubconf_dir=hubconf_dir)
+                save_dir=save_dir, hubconf_dir=hubconf_dir, ddp_rank=ddp_rank)
         return self.build_default_model(num_classes, in_channels, **kwargs)
 
     def build_default_model(self, num_classes: int, in_channels: int,
@@ -290,7 +301,8 @@ class ModelConfig(Config):
 
     def build_external_model(self,
                              save_dir: str,
-                             hubconf_dir: Optional[str] = None) -> nn.Module:
+                             hubconf_dir: Optional[str] = None,
+                             ddp_rank: Optional[int] = None) -> nn.Module:
         """Build and return an external model.
 
         Args:
@@ -301,7 +313,8 @@ class ModelConfig(Config):
         Returns:
             A PyTorch nn.Module.
         """
-        return self.external_def.build(save_dir, hubconf_dir=hubconf_dir)
+        return self.external_def.build(
+            save_dir, hubconf_dir=hubconf_dir, ddp_rank=ddp_rank)
 
 
 def solver_config_upgrader(cfg_dict: dict, version: int) -> dict:
