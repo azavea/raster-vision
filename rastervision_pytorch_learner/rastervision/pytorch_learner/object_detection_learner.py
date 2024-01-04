@@ -6,6 +6,7 @@ import logging
 
 import numpy as np
 import torch
+import torch.distributed as dist
 
 from rastervision.pytorch_learner.learner import Learner
 from rastervision.pytorch_learner.object_detection_utils import (
@@ -34,7 +35,8 @@ class ObjectDetectionLearner(Learner):
             in_channels=cfg.data.img_channels,
             save_dir=self.modules_dir,
             hubconf_dir=model_def_path,
-            img_sz=cfg.data.img_sz)
+            img_sz=cfg.data.img_sz,
+            ddp_rank=self.ddp_local_rank)
         return model
 
     def setup_model(self,
@@ -89,6 +91,23 @@ class ObjectDetectionLearner(Learner):
             outs.extend(o['outs'])
             ys.extend(o['ys'])
         num_class_ids = len(self.cfg.data.class_names)
+
+        if self.is_ddp_process:
+            is_master = self.is_ddp_master
+            all_outs = [None] * self.ddp_world_size
+            all_ys = [None] * self.ddp_world_size
+            dist.gather_object(
+                outs,
+                object_gather_list=(all_outs if is_master else None),
+                dst=0)
+            dist.gather_object(
+                ys, object_gather_list=(all_ys if is_master else None), dst=0)
+            if not is_master:
+                return {}
+            outs = sum(all_outs, [])
+            ys = sum(all_ys, [])
+
+        log.info(f'{self.ddp_rank} at coco eval')
         coco_eval = compute_coco_eval(outs, ys, num_class_ids)
 
         metrics = {'mAP': 0.0, 'mAP50': 0.0}

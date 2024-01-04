@@ -80,10 +80,10 @@ class RVConfig:
 
         To set the value, the following rules are used in decreasing priority:
 
-        1) the tmp_dir_root argument if it is not None
-        2) an environment variable (TMPDIR, TEMP, or TMP)
-        3) a default temporary directory which is
-        4) a directory returned by tempfile.TemporaryDirectory()
+        1) the ``tmp_dir_root`` argument if it is not ``None``
+        2) an environment variable (``TMPDIR``, ``TEMP``, or ``TMP``)
+        3) a default temporary directory which is a directory returned by
+           :class:`tempfile.TemporaryDirectory`
         """
         # Check the various possibilities in order of priority.
         env_arr = [
@@ -207,7 +207,7 @@ class RVConfig:
                              namespace: str,
                              key: str,
                              default: Optional[Any] = None,
-                             as_bool: bool = False) -> str:
+                             as_bool: bool = False) -> Optional[Any]:
         """Get the value of an option from a namespace."""
         namespace_options = self.config.with_namespace(namespace)
         try:
@@ -217,7 +217,7 @@ class RVConfig:
             return val
         except ConfigurationMissingError:
             if as_bool:
-                return False
+                return bool(default)
             return default
 
     def get_config_dict(

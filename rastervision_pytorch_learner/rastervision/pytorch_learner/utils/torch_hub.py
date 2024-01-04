@@ -62,16 +62,19 @@ def get_hubconf_dir_from_cfg(cfg, parent: Optional[str] = '') -> str:
     return path
 
 
-def torch_hub_load_github(repo: str, hubconf_dir: str, entrypoint: str, *args,
+def torch_hub_load_github(repo: str,
+                          entrypoint: str,
+                          *args,
+                          dst_dir: Optional[str] = None,
                           **kwargs) -> Any:
     """Load an entrypoint from a github repo using :func:`torch.hub.load`.
 
     Args:
         repo (str): <repo-owner>/<erpo-name>[:tag]
-        hubconf_dir (str): Where the contents from the uri will finally
-            be saved to.
         entrypoint (str): Name of a callable present in hubconf.py.
         *args: Args to be passed to the entrypoint.
+        dst_dir: If provided, the contents of the repo are copied there.
+            Defaults to None.
         **kwargs: Keyword args to be passed to the entrypoint.
 
     Returns:
@@ -85,14 +88,18 @@ def torch_hub_load_github(repo: str, hubconf_dir: str, entrypoint: str, *args,
         skip_validation=True,
         **kwargs)
 
-    orig_dir = join(torch.hub.get_dir(), _repo_name_to_dir_name(repo))
-    _remove_dir(hubconf_dir)
-    shutil.move(orig_dir, hubconf_dir)
+    if dst_dir is not None:
+        orig_dir = join(torch.hub.get_dir(), _repo_name_to_dir_name(repo))
+        _remove_dir(dst_dir)
+        shutil.move(orig_dir, dst_dir)
 
     return out
 
 
-def torch_hub_load_uri(uri: str, hubconf_dir: str, entrypoint: str, *args,
+def torch_hub_load_uri(uri: str,
+                       entrypoint: str,
+                       *args,
+                       dst_dir: Optional[str] = None,
                        **kwargs) -> Any:
     """Load an entrypoint from a uri.
 
@@ -103,24 +110,22 @@ def torch_hub_load_uri(uri: str, hubconf_dir: str, entrypoint: str, *args,
 
     The zip file should either have hubconf.py at the top level or contain
     a single sub-directory that contains hubconf.py at its top level. In the
-    latter case, the sub-directory will be copied to hubconf_dir.
+    latter case, the sub-directory will be copied to dst_dir.
 
     Args:
         uri (str): A URI.
-        hubconf_dir (str): The target directory where the contents from the uri
-            will finally be saved to.
         entrypoint (str): Name of a callable present in hubconf.py.
         *args: Args to be passed to the entrypoint.
+        dst_dir: If provided, the contents from the uri are copied there.
+            Defaults to None.
         **kwargs: Keyword args to be passed to the entrypoint.
 
     Returns:
         Any: The output from calling the entrypoint.
     """
-
     uri_path = Path(uri)
     is_zip = uri_path.suffix.lower() == '.zip'
     if is_zip:
-        # unzip
         zip_path = download_if_needed(uri)
         with get_tmp_dir() as tmp_dir:
             unzip_dir = join(tmp_dir, uri_path.stem)
@@ -128,22 +133,25 @@ def torch_hub_load_uri(uri: str, hubconf_dir: str, entrypoint: str, *args,
             unzip(zip_path, target_dir=unzip_dir)
             unzipped_contents = list(glob(f'{unzip_dir}/*', recursive=False))
 
-            _remove_dir(hubconf_dir)
-
             # if the top level only contains a directory
             if (len(unzipped_contents) == 1) and isdir(unzipped_contents[0]):
                 sub_dir = unzipped_contents[0]
-                shutil.move(sub_dir, hubconf_dir)
+                scr_dir = sub_dir
             else:
-                shutil.move(unzip_dir, hubconf_dir)
-    # assume uri is local and attempt copying
-    else:
-        # only copy if needed
-        if realpath(uri) != realpath(hubconf_dir):
-            _remove_dir(hubconf_dir)
-            shutil.copytree(uri, hubconf_dir)
+                scr_dir = unzip_dir
 
-    out = torch_hub_load_local(hubconf_dir, entrypoint, *args, **kwargs)
+            out = torch_hub_load_local(scr_dir, entrypoint, *args, **kwargs)
+
+            if dst_dir is not None:
+                _remove_dir(dst_dir)
+                shutil.move(scr_dir, dst_dir)
+    else:
+        # assume uri is local
+        out = torch_hub_load_local(uri, entrypoint, *args, **kwargs)
+        if dst_dir is not None and realpath(uri) != realpath(dst_dir):
+            _remove_dir(dst_dir)
+            shutil.copytree(uri, dst_dir)
+
     return out
 
 

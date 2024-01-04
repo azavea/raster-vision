@@ -39,7 +39,8 @@ class RegressionLearner(Learner):
             hubconf_dir=model_def_path,
             class_names=class_names,
             pos_class_names=pos_class_names,
-            prob_class_names=prob_class_names)
+            prob_class_names=prob_class_names,
+            ddp_rank=self.ddp_local_rank)
         return model
 
     def on_overfit_start(self):
@@ -75,8 +76,8 @@ class RegressionLearner(Learner):
     def prob_to_pred(self, x):
         return x
 
-    def eval_model(self, split):
-        super().eval_model(split)
+    def _validate(self, split):
+        super()._validate(split)
 
         y, out = self.predict_dataloader(
             self.get_dataloader(split), return_format='yz', raw_out=False)

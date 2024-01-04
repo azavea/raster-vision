@@ -1,6 +1,8 @@
 import warnings
 import logging
 
+import torch.distributed as dist
+
 from rastervision.pytorch_learner.learner import Learner
 from rastervision.pytorch_learner.utils import (
     compute_conf_mat_metrics, compute_conf_mat, aggregate_metrics)
@@ -35,6 +37,13 @@ class ClassificationLearner(Learner):
     def validate_end(self, outputs):
         metrics = aggregate_metrics(outputs, exclude_keys={'conf_mat'})
         conf_mat = sum([o['conf_mat'] for o in outputs])
+
+        if self.is_ddp_process:
+            metrics = self.reduce_distributed_metrics(metrics)
+            dist.reduce(conf_mat, dst=0, op=dist.ReduceOp.SUM)
+            if not self.is_ddp_master:
+                return metrics
+
         conf_mat_metrics = compute_conf_mat_metrics(conf_mat,
                                                     self.cfg.data.class_names)
         metrics.update(conf_mat_metrics)
