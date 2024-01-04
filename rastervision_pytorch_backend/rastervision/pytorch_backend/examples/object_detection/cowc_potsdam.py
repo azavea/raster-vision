@@ -47,8 +47,7 @@ def get_config(runner,
         test (bool, optional): If True, does the following simplifications:
             (1) Uses only the first 2 scenes
             (2) Uses only a 2000x2000 crop of the scenes
-            (3) Enables test mode in the learner, which makes it use the
-                test_batch_sz and test_num_epochs, among other things.
+            (3) Trains for only 2 epochs.
             Defaults to False.
 
     Returns:
@@ -181,13 +180,13 @@ def get_config(runner,
         model=model,
         solver=SolverConfig(
             lr=1e-4,
-            num_epochs=10,
-            test_num_epochs=2,
+            num_epochs=10 if not test else 2,
             batch_sz=16,
-            one_cycle=True),
+            one_cycle=True,
+        ),
         log_tensorboard=False,
         run_tensorboard=False,
-        test_mode=test)
+    )
 
     predict_options = ObjectDetectionPredictOptions(
         merge_thresh=0.5, score_thresh=0.9)

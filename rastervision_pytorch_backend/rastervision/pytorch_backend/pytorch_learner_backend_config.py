@@ -11,7 +11,17 @@ from rastervision.pytorch_learner.learner_config import (
 log = logging.getLogger(__name__)
 
 
-@register_config('pytorch_learner_backend')
+def pytorch_learner_backend_config_upgrader(cfg_dict: dict,
+                                            version: int) -> dict:
+    if version == 1:
+        # removed in version 2
+        cfg_dict.pop('test_mode', None)
+    return cfg_dict
+
+
+@register_config(
+    'pytorch_learner_backend',
+    upgrader=pytorch_learner_backend_config_upgrader)
 class PyTorchLearnerBackendConfig(BackendConfig):
     """Configure a :class:`.PyTorchLearnerBackend`."""
 
@@ -23,12 +33,6 @@ class PyTorchLearnerBackendConfig(BackendConfig):
     run_tensorboard: bool = Field(
         False,
         description='If True, run Tensorboard server pointing at log files.')
-    test_mode: bool = Field(
-        False,
-        description=
-        ('This field is passed along to the LearnerConfig which is returned by '
-         'get_learner_config(). For more info, see the docs for'
-         'pytorch_learner.learner_config.LearnerConfig.test_mode.'))
     save_all_checkpoints: bool = Field(
         False,
         description=(

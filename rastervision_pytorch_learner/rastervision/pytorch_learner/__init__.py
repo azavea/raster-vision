@@ -2,7 +2,7 @@
 
 
 def register_plugin(registry):
-    registry.set_plugin_version('rastervision.pytorch_learner', 4)
+    registry.set_plugin_version('rastervision.pytorch_learner', 5)
 
 
 import rastervision.pipeline

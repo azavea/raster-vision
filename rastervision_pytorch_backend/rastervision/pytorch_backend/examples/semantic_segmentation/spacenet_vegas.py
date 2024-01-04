@@ -147,8 +147,7 @@ def get_config(runner,
             True.
         test (bool, optional): If True, does the following simplifications:
             (1) Uses only a small subset of training and validation scenes.
-            (2) Enables test mode in the learner, which makes it use the
-                test_batch_sz and test_num_epochs, among other things.
+            (2) Trains for only 2 epochs.
             Defaults to False.
 
     Returns:
@@ -214,15 +213,10 @@ def get_config(runner,
     backend = PyTorchSemanticSegmentationConfig(
         data=data,
         model=SemanticSegmentationModelConfig(backbone=Backbone.resnet50),
-        solver=SolverConfig(
-            lr=1e-4,
-            num_epochs=5,
-            test_num_epochs=2,
-            batch_sz=8,
-            one_cycle=True),
+        solver=SolverConfig(lr=1e-4, num_epochs=5, batch_sz=8, one_cycle=True),
         log_tensorboard=True,
         run_tensorboard=False,
-        test_mode=test)
+    )
 
     return SemanticSegmentationConfig(
         root_uri=root_uri,

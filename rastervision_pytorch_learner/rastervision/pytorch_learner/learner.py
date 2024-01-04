@@ -221,7 +221,7 @@ class Learner(ABC):
         else:
             self.output_dir_local = get_local_path(self.output_dir, tmp_dir)
             make_dir(self.output_dir_local, force_empty=True)
-            if self.training and not cfg.overfit_mode:
+            if self.training:
                 self.sync_from_cloud()
             log.info(f'Local output dir: {self.output_dir_local}')
             log.info(f'Remote output dir: {self.output_dir}')
@@ -394,25 +394,19 @@ class Learner(ABC):
         resume if interrupted), logs stats, plots predictions, and syncs
         results to the cloud.
         """
+        cfg = self.cfg
         if not self.avoid_activating_cuda_runtime:
             log_system_details()
-        log.info(self.cfg)
+        log.info(cfg)
         log.info(f'Using device: {self.device}')
         self.log_data_stats()
         self.run_tensorboard()
 
-        cfg = self.cfg
-        if not cfg.predict_mode:
-            if not self.avoid_activating_cuda_runtime:
-                self.plot_dataloaders(self.cfg.data.preview_batch_limit)
-            if cfg.overfit_mode:
-                self.overfit()
-            else:
-                self.train()
-                if cfg.save_model_bundle:
-                    self.save_model_bundle()
-        else:
-            self.load_checkpoint()
+        if not self.avoid_activating_cuda_runtime:
+            self.plot_dataloaders(cfg.data.preview_batch_limit)
+        self.train()
+        if cfg.save_model_bundle:
+            self.save_model_bundle()
 
         self.stop_tensorboard()
         if cfg.eval_train:
@@ -755,31 +749,6 @@ class Learner(ABC):
 
         if (curr_epoch + 1) % self.cfg.solver.sync_interval == 0:
             self.sync_to_cloud()
-
-    def overfit(self):
-        """Optimize model using the same batch repeatedly."""
-        self.on_overfit_start()
-
-        x, y = next(iter(self.train_dl))
-        x = self.to_device(x, self.device)
-        y = self.to_device(y, self.device)
-        batch = (x, y)
-
-        num_steps = self.cfg.solver.overfit_num_steps
-        with tqdm(range(num_steps), desc='Overfitting') as bar:
-            for step in bar:
-                loss = self.train_step(batch, step)['train_loss']
-                loss.backward()
-                self.opt.step()
-
-                if (step + 1) % 25 == 0:
-                    log.info('\nstep: %d', step)
-                    log.info('train_loss: %f', loss)
-
-        self.save_weights(self.last_model_weights_path)
-
-    def on_overfit_start(self):
-        """Hook that is called at start of overfit routine."""
 
     ########################
     # Prediction/inference
@@ -1238,11 +1207,7 @@ class Learner(ABC):
     def build_datasets(self) -> Tuple['Dataset', 'Dataset', 'Dataset']:
         """Build Datasets for train, validation, and test splits."""
         log.info(f'Building datasets ...')
-        cfg = self.cfg
-        train_ds, val_ds, test_ds = self.cfg.data.build(
-            tmp_dir=self.tmp_dir,
-            overfit_mode=cfg.overfit_mode,
-            test_mode=cfg.test_mode)
+        train_ds, val_ds, test_ds = self.cfg.data.build(tmp_dir=self.tmp_dir)
         return train_ds, val_ds, test_ds
 
     def build_dataset(self, split: Literal['train', 'valid', 'test']
@@ -1250,11 +1215,7 @@ class Learner(ABC):
         """Build Dataset for split."""
         log.info('Building %s dataset ...', split)
         cfg = self.cfg
-        ds = cfg.data.build_dataset(
-            split=split,
-            tmp_dir=self.tmp_dir,
-            overfit_mode=cfg.overfit_mode,
-            test_mode=cfg.test_mode)
+        ds = cfg.data.build_dataset(split=split, tmp_dir=self.tmp_dir)
         return ds
 
     def build_dataloaders(self, distributed: Optional[bool] = None

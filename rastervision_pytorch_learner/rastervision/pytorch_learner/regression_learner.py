@@ -43,9 +43,6 @@ class RegressionLearner(Learner):
             ddp_rank=self.ddp_local_rank)
         return model
 
-    def on_overfit_start(self):
-        self.on_train_start()
-
     def on_train_start(self):
         ys = []
         for _, y in self.train_dl:
