@@ -340,8 +340,6 @@ class SolverConfig(Config):
         2, description='Number of epochs to use in test mode.')
     test_batch_sz: PosInt = Field(
         4, description='Batch size to use in test mode.')
-    overfit_num_steps: PosInt = Field(
-        1, description='Number of optimizer steps to use in overfit mode.')
     sync_interval: PosInt = Field(
         1, description='The interval in epochs for each sync to the cloud.')
     batch_sz: PosInt = Field(32, description='Batch size.')
@@ -785,9 +783,7 @@ class DataConfig(Config):
 
         return base_transform, aug_transform
 
-    def build(self,
-              tmp_dir: Optional[str] = None,
-              overfit_mode: bool = False,
+    def build(self, tmp_dir: Optional[str] = None,
               test_mode: bool = False) -> Tuple[Dataset, Dataset, Dataset]:
         """Build and return train, val, and test datasets."""
         raise NotImplementedError()
@@ -795,7 +791,6 @@ class DataConfig(Config):
     def build_dataset(self,
                       split: Literal['train', 'valid', 'test'],
                       tmp_dir: Optional[str] = None,
-                      overfit_mode: bool = False,
                       test_mode: bool = False) -> Dataset:
         """Build and return dataset for a single split."""
         raise NotImplementedError()
@@ -933,27 +928,19 @@ class ImageDataConfig(DataConfig):
                        transform: A.BasicTransform) -> Dataset:
         raise NotImplementedError()
 
-    def build(self,
-              tmp_dir: str,
-              overfit_mode: bool = False,
+    def build(self, tmp_dir: str,
               test_mode: bool = False) -> Tuple[Dataset, Dataset, Dataset]:
 
         if self.group_uris is None:
             return self._get_datasets_from_uri(
-                self.uri,
-                tmp_dir=tmp_dir,
-                overfit_mode=overfit_mode,
-                test_mode=test_mode)
+                self.uri, tmp_dir=tmp_dir, test_mode=test_mode)
 
         if self.uri is not None:
             log.warning('Both DataConfig.uri and DataConfig.group_uris '
                         'specified. Only DataConfig.group_uris will be used.')
 
         train_ds, valid_ds, test_ds = self._get_datasets_from_group_uris(
-            self.group_uris,
-            tmp_dir=tmp_dir,
-            overfit_mode=overfit_mode,
-            test_mode=test_mode)
+            self.group_uris, tmp_dir=tmp_dir, test_mode=test_mode)
 
         if self.train_sz is not None or self.train_sz_rel is not None:
             train_ds = self.random_subset_dataset(
@@ -964,16 +951,11 @@ class ImageDataConfig(DataConfig):
     def build_dataset(self,
                       split: Literal['train', 'valid', 'test'],
                       tmp_dir: Optional[str] = None,
-                      overfit_mode: bool = False,
                       test_mode: bool = False) -> Dataset:
 
         if self.group_uris is None:
             ds = self._get_dataset_from_uri(
-                self.uri,
-                split=split,
-                tmp_dir=tmp_dir,
-                overfit_mode=overfit_mode,
-                test_mode=test_mode)
+                self.uri, split=split, tmp_dir=tmp_dir, test_mode=test_mode)
             return ds
 
         if self.uri is not None:
@@ -981,11 +963,7 @@ class ImageDataConfig(DataConfig):
                         'specified. Only DataConfig.group_uris will be used.')
 
         ds = self._get_dataset_from_group_uris(
-            self.group_uris,
-            split=split,
-            tmp_dir=tmp_dir,
-            overfit_mode=overfit_mode,
-            test_mode=test_mode)
+            self.group_uris, split=split, tmp_dir=tmp_dir, test_mode=test_mode)
 
         if split == 'train':
             if self.train_sz is not None or self.train_sz_rel is not None:
@@ -998,7 +976,6 @@ class ImageDataConfig(DataConfig):
             self,
             uri: Union[str, List[str]],
             tmp_dir: str,
-            overfit_mode: bool = False,
             test_mode: bool = False) -> Tuple[Dataset, Dataset, Dataset]:
         """Get image train, validation, & test datasets from a single zip file.
 
@@ -1020,7 +997,7 @@ class ImageDataConfig(DataConfig):
         test_dirs = [d for d in test_dirs if isdir(d)]
 
         base_transform, aug_transform = self.get_data_transforms()
-        train_tf = (aug_transform if not overfit_mode else base_transform)
+        train_tf = aug_transform
         val_tf, test_tf = base_transform, base_transform
 
         train_ds, val_ds, test_ds = self._build_datasets(
@@ -1036,7 +1013,6 @@ class ImageDataConfig(DataConfig):
                               uri: Union[str, List[str]],
                               split: Literal['train', 'valid', 'test'],
                               tmp_dir: str,
-                              overfit_mode: bool = False,
                               test_mode: bool = False) -> Dataset:
         """Get image dataset from a single zip file.
 
@@ -1053,7 +1029,7 @@ class ImageDataConfig(DataConfig):
         dirs = [d for d in dirs if isdir(d)]
 
         base_transform, aug_transform = self.get_data_transforms()
-        if split == 'train' and not overfit_mode:
+        if split == 'train':
             tf = aug_transform
         else:
             tf = base_transform
@@ -1067,7 +1043,6 @@ class ImageDataConfig(DataConfig):
             tmp_dir: str,
             group_train_sz: Optional[int] = None,
             group_train_sz_rel: Optional[float] = None,
-            overfit_mode: bool = False,
             test_mode: bool = False,
     ) -> Tuple[Dataset, Dataset, Dataset]:
         train_ds_lst, valid_ds_lst, test_ds_lst = [], [], []
@@ -1082,10 +1057,7 @@ class ImageDataConfig(DataConfig):
 
         for uri, size in zip(uris, group_sizes):
             train_ds, valid_ds, test_ds = self._get_datasets_from_uri(
-                uri,
-                tmp_dir=tmp_dir,
-                overfit_mode=overfit_mode,
-                test_mode=test_mode)
+                uri, tmp_dir=tmp_dir, test_mode=test_mode)
             if size is not None:
                 if isinstance(size, float):
                     train_ds = self.random_subset_dataset(
@@ -1109,7 +1081,6 @@ class ImageDataConfig(DataConfig):
             tmp_dir: str,
             group_sz: Optional[int] = None,
             group_sz_rel: Optional[float] = None,
-            overfit_mode: bool = False,
             test_mode: bool = False,
     ) -> Dataset:
 
@@ -1124,11 +1095,7 @@ class ImageDataConfig(DataConfig):
         per_uri_dataset = []
         for uri, size in zip(uris, group_sizes):
             ds = self._get_dataset_from_uri(
-                uri,
-                split=split,
-                tmp_dir=tmp_dir,
-                overfit_mode=overfit_mode,
-                test_mode=test_mode)
+                uri, split=split, tmp_dir=tmp_dir, test_mode=test_mode)
             if size is not None:
                 if isinstance(size, float):
                     ds = self.random_subset_dataset(ds, fraction=size)
@@ -1459,11 +1426,10 @@ class GeoDataConfig(DataConfig):
     def build_dataset(self,
                       split: Literal['train', 'valid', 'test'],
                       tmp_dir: Optional[str] = None,
-                      overfit_mode: bool = False,
                       test_mode: bool = False) -> Dataset:
 
         base_transform, aug_transform = self.get_data_transforms()
-        if split == 'train' and not overfit_mode:
+        if split == 'train':
             tf = aug_transform
         else:
             tf = base_transform
@@ -1477,12 +1443,10 @@ class GeoDataConfig(DataConfig):
 
         return ds
 
-    def build(self,
-              tmp_dir: Optional[str] = None,
-              overfit_mode: bool = False,
+    def build(self, tmp_dir: Optional[str] = None,
               test_mode: bool = False) -> Tuple[Dataset, Dataset, Dataset]:
         base_transform, aug_transform = self.get_data_transforms()
-        train_tf = (aug_transform if not overfit_mode else base_transform)
+        train_tf = aug_transform
         val_tf, test_tf = base_transform, base_transform
 
         train_ds, val_ds, test_ds = self._build_datasets(
@@ -1495,7 +1459,14 @@ class GeoDataConfig(DataConfig):
         return train_ds, val_ds, test_ds
 
 
-@register_config('learner')
+def learner_config_upgrader(cfg_dict: dict, version: int) -> dict:
+    if version == 4:
+        # removed in version 5
+        cfg_dict.pop('overfit_mode', None)
+    return cfg_dict
+
+
+@register_config('learner', upgrader=learner_config_upgrader)
 class LearnerConfig(Config):
     """Config for Learner."""
     model: Optional[ModelConfig]
@@ -1513,12 +1484,6 @@ class LearnerConfig(Config):
          'only a single batch, image_sz that is cut in half, and num_workers = 0. '
          'This is useful for testing that code runs correctly on CPU without '
          'multithreading before running full job on GPU.'))
-    overfit_mode: bool = Field(
-        False,
-        description=
-        ('If True, uses half image size, and instead of doing epoch-based training, '
-         'optimizes the model using a single batch repeatedly for '
-         'overfit_num_steps number of steps.'))
     eval_train: bool = Field(
         False,
         description=
@@ -1568,15 +1533,9 @@ class LearnerConfig(Config):
 
     @root_validator(skip_on_failure=True)
     def update_for_mode(cls, values: dict) -> dict:
-        overfit_mode = values.get('overfit_mode')
         test_mode = values.get('test_mode')
         solver: SolverConfig = values.get('solver')
         data: DataConfig = values.get('data')
-
-        if overfit_mode:
-            data.img_sz = data.img_sz // 2
-            if test_mode:
-                solver.overfit_num_steps = solver.test_overfit_num_steps
 
         if test_mode:
             solver.num_epochs = solver.test_num_epochs
