@@ -394,22 +394,19 @@ class Learner(ABC):
         resume if interrupted), logs stats, plots predictions, and syncs
         results to the cloud.
         """
+        cfg = self.cfg
         if not self.avoid_activating_cuda_runtime:
             log_system_details()
-        log.info(self.cfg)
+        log.info(cfg)
         log.info(f'Using device: {self.device}')
         self.log_data_stats()
         self.run_tensorboard()
 
-        cfg = self.cfg
-        if not cfg.predict_mode:
-            if not self.avoid_activating_cuda_runtime:
-                self.plot_dataloaders(self.cfg.data.preview_batch_limit)
-            self.train()
-            if cfg.save_model_bundle:
-                self.save_model_bundle()
-        else:
-            self.load_checkpoint()
+        if not self.avoid_activating_cuda_runtime:
+            self.plot_dataloaders(cfg.data.preview_batch_limit)
+        self.train()
+        if cfg.save_model_bundle:
+            self.save_model_bundle()
 
         self.stop_tensorboard()
         if cfg.eval_train:
@@ -1210,9 +1207,7 @@ class Learner(ABC):
     def build_datasets(self) -> Tuple['Dataset', 'Dataset', 'Dataset']:
         """Build Datasets for train, validation, and test splits."""
         log.info(f'Building datasets ...')
-        cfg = self.cfg
-        train_ds, val_ds, test_ds = self.cfg.data.build(
-            tmp_dir=self.tmp_dir, test_mode=cfg.test_mode)
+        train_ds, val_ds, test_ds = self.cfg.data.build(tmp_dir=self.tmp_dir)
         return train_ds, val_ds, test_ds
 
     def build_dataset(self, split: Literal['train', 'valid', 'test']
@@ -1220,8 +1215,7 @@ class Learner(ABC):
         """Build Dataset for split."""
         log.info('Building %s dataset ...', split)
         cfg = self.cfg
-        ds = cfg.data.build_dataset(
-            split=split, tmp_dir=self.tmp_dir, test_mode=cfg.test_mode)
+        ds = cfg.data.build_dataset(split=split, tmp_dir=self.tmp_dir)
         return ds
 
     def build_dataloaders(self, distributed: Optional[bool] = None

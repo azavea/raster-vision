@@ -96,8 +96,7 @@ def get_config(runner,
         test (bool, optional): If True, does the following simplifications:
             (1) Uses only the first 2 scenes
             (2) Uses only a 600x600 crop of the scenes
-            (3) Enables test mode in the learner, which makes it use the
-                test_batch_sz and test_num_epochs, among other things.
+            (3) Trains for only 2 epochs and uses a batch size of 2.
             Defaults to False.
 
     Returns:
@@ -153,13 +152,10 @@ def get_config(runner,
     # --------------------------------------------
     model_config = SemanticSegmentationModelConfig(backbone=Backbone.resnet50)
 
+    num_epochs = NUM_EPOCHS if not test else TEST_MODE_NUM_EPOCHS
+    batch_sz = BATCH_SIZE if not test else TEST_MODE_BATCH_SIZE
     solver_config = SolverConfig(
-        lr=LR,
-        num_epochs=NUM_EPOCHS,
-        batch_sz=BATCH_SIZE,
-        test_num_epochs=TEST_MODE_NUM_EPOCHS,
-        test_batch_sz=TEST_MODE_BATCH_SIZE,
-        one_cycle=ONE_CYCLE)
+        lr=LR, num_epochs=num_epochs, batch_sz=batch_sz, one_cycle=ONE_CYCLE)
 
     backend_config = PyTorchSemanticSegmentationConfig(
         data=data,
@@ -167,7 +163,7 @@ def get_config(runner,
         solver=solver_config,
         log_tensorboard=LOG_TENSORBOARD,
         run_tensorboard=RUN_TENSORBOARD,
-        test_mode=test)
+    )
 
     # -----------------------------------------------
     # Pass configurations to the pipeline config

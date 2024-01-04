@@ -51,8 +51,7 @@ def get_config(runner,
         test (bool, optional): If True, does the following simplifications:
             (1) Uses only the first 1 scene
             (2) Uses only a 600x600 crop of the scenes
-            (3) Enables test mode in the learner, which makes it use the
-                test_batch_sz and test_num_epochs, among other things.
+            (3) Trains for only 4 epochs.
             Defaults to False.
 
     Returns:
@@ -173,8 +172,7 @@ def get_config(runner,
 
     solver = SolverConfig(
         lr=1e-4,
-        num_epochs=20,
-        test_num_epochs=4,
+        num_epochs=20 if not test else 4,
         batch_sz=32,
         one_cycle=True,
         external_loss_def=external_loss_def)
@@ -183,7 +181,6 @@ def get_config(runner,
         data=data,
         model=model,
         solver=solver,
-        test_mode=test,
         log_tensorboard=True,
         run_tensorboard=False)
 

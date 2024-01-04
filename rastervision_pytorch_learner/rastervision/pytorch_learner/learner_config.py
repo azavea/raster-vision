@@ -318,13 +318,17 @@ class ModelConfig(Config):
 
 
 def solver_config_upgrader(cfg_dict: dict, version: int) -> dict:
-    if version < 4:
+    if version == 3:
         # 'ignore_last_class' replaced by 'ignore_class_index' in version 4
         ignore_last_class = cfg_dict.get('ignore_last_class')
         if ignore_last_class is not None:
             if ignore_last_class is not False:
                 cfg_dict['ignore_class_index'] = -1
             del cfg_dict['ignore_last_class']
+    if version == 4:
+        # removed in version 5
+        cfg_dict.pop('test_batch_sz', None)
+        cfg_dict.pop('test_num_epochs', None)
     return cfg_dict
 
 
@@ -336,10 +340,6 @@ class SolverConfig(Config):
         10,
         description=
         'Number of epochs (ie. sweeps through the whole training set).')
-    test_num_epochs: PosInt = Field(
-        2, description='Number of epochs to use in test mode.')
-    test_batch_sz: PosInt = Field(
-        4, description='Batch size to use in test mode.')
     sync_interval: PosInt = Field(
         1, description='The interval in epochs for each sync to the cloud.')
     batch_sz: PosInt = Field(32, description='Batch size.')
@@ -783,15 +783,14 @@ class DataConfig(Config):
 
         return base_transform, aug_transform
 
-    def build(self, tmp_dir: Optional[str] = None,
-              test_mode: bool = False) -> Tuple[Dataset, Dataset, Dataset]:
+    def build(self, tmp_dir: Optional[str] = None
+              ) -> Tuple[Dataset, Dataset, Dataset]:
         """Build and return train, val, and test datasets."""
         raise NotImplementedError()
 
     def build_dataset(self,
                       split: Literal['train', 'valid', 'test'],
-                      tmp_dir: Optional[str] = None,
-                      test_mode: bool = False) -> Dataset:
+                      tmp_dir: Optional[str] = None) -> Dataset:
         """Build and return dataset for a single split."""
         raise NotImplementedError()
 
@@ -875,11 +874,10 @@ class ImageDataConfig(DataConfig):
                     'len(group_train_sz_rel) != len(group_uris).')
         return values
 
-    def _build_dataset(
-            self,
-            dirs: Iterable[str],
-            tf: Optional[A.BasicTransform] = None,
-    ) -> Tuple[Dataset, Dataset, Dataset]:
+    def _build_dataset(self,
+                       dirs: Iterable[str],
+                       tf: Optional[A.BasicTransform] = None
+                       ) -> Tuple[Dataset, Dataset, Dataset]:
         """Make datasets for a single split.
 
         Args:
@@ -928,19 +926,17 @@ class ImageDataConfig(DataConfig):
                        transform: A.BasicTransform) -> Dataset:
         raise NotImplementedError()
 
-    def build(self, tmp_dir: str,
-              test_mode: bool = False) -> Tuple[Dataset, Dataset, Dataset]:
+    def build(self, tmp_dir: str) -> Tuple[Dataset, Dataset, Dataset]:
 
         if self.group_uris is None:
-            return self._get_datasets_from_uri(
-                self.uri, tmp_dir=tmp_dir, test_mode=test_mode)
+            return self._get_datasets_from_uri(self.uri, tmp_dir=tmp_dir)
 
         if self.uri is not None:
             log.warning('Both DataConfig.uri and DataConfig.group_uris '
                         'specified. Only DataConfig.group_uris will be used.')
 
         train_ds, valid_ds, test_ds = self._get_datasets_from_group_uris(
-            self.group_uris, tmp_dir=tmp_dir, test_mode=test_mode)
+            self.group_uris, tmp_dir=tmp_dir)
 
         if self.train_sz is not None or self.train_sz_rel is not None:
             train_ds = self.random_subset_dataset(
@@ -950,12 +946,11 @@ class ImageDataConfig(DataConfig):
 
     def build_dataset(self,
                       split: Literal['train', 'valid', 'test'],
-                      tmp_dir: Optional[str] = None,
-                      test_mode: bool = False) -> Dataset:
+                      tmp_dir: Optional[str] = None) -> Dataset:
 
         if self.group_uris is None:
             ds = self._get_dataset_from_uri(
-                self.uri, split=split, tmp_dir=tmp_dir, test_mode=test_mode)
+                self.uri, split=split, tmp_dir=tmp_dir)
             return ds
 
         if self.uri is not None:
@@ -963,7 +958,7 @@ class ImageDataConfig(DataConfig):
                         'specified. Only DataConfig.group_uris will be used.')
 
         ds = self._get_dataset_from_group_uris(
-            self.group_uris, split=split, tmp_dir=tmp_dir, test_mode=test_mode)
+            self.group_uris, split=split, tmp_dir=tmp_dir)
 
         if split == 'train':
             if self.train_sz is not None or self.train_sz_rel is not None:
@@ -972,11 +967,8 @@ class ImageDataConfig(DataConfig):
 
         return ds
 
-    def _get_datasets_from_uri(
-            self,
-            uri: Union[str, List[str]],
-            tmp_dir: str,
-            test_mode: bool = False) -> Tuple[Dataset, Dataset, Dataset]:
+    def _get_datasets_from_uri(self, uri: Union[str, List[str]], tmp_dir: str
+                               ) -> Tuple[Dataset, Dataset, Dataset]:
         """Get image train, validation, & test datasets from a single zip file.
 
         Args:
@@ -1009,11 +1001,9 @@ class ImageDataConfig(DataConfig):
             test_tf=test_tf)
         return train_ds, val_ds, test_ds
 
-    def _get_dataset_from_uri(self,
-                              uri: Union[str, List[str]],
+    def _get_dataset_from_uri(self, uri: Union[str, List[str]],
                               split: Literal['train', 'valid', 'test'],
-                              tmp_dir: str,
-                              test_mode: bool = False) -> Dataset:
+                              tmp_dir: str) -> Dataset:
         """Get image dataset from a single zip file.
 
         Args:
@@ -1042,8 +1032,7 @@ class ImageDataConfig(DataConfig):
             uris: Union[str, List[str]],
             tmp_dir: str,
             group_train_sz: Optional[int] = None,
-            group_train_sz_rel: Optional[float] = None,
-            test_mode: bool = False,
+            group_train_sz_rel: Optional[float] = None
     ) -> Tuple[Dataset, Dataset, Dataset]:
         train_ds_lst, valid_ds_lst, test_ds_lst = [], [], []
 
@@ -1057,7 +1046,7 @@ class ImageDataConfig(DataConfig):
 
         for uri, size in zip(uris, group_sizes):
             train_ds, valid_ds, test_ds = self._get_datasets_from_uri(
-                uri, tmp_dir=tmp_dir, test_mode=test_mode)
+                uri, tmp_dir=tmp_dir)
             if size is not None:
                 if isinstance(size, float):
                     train_ds = self.random_subset_dataset(
@@ -1080,9 +1069,7 @@ class ImageDataConfig(DataConfig):
             uris: Union[str, List[str]],
             tmp_dir: str,
             group_sz: Optional[int] = None,
-            group_sz_rel: Optional[float] = None,
-            test_mode: bool = False,
-    ) -> Dataset:
+            group_sz_rel: Optional[float] = None) -> Dataset:
 
         group_sizes = None
         if group_sz is not None:
@@ -1094,8 +1081,7 @@ class ImageDataConfig(DataConfig):
 
         per_uri_dataset = []
         for uri, size in zip(uris, group_sizes):
-            ds = self._get_dataset_from_uri(
-                uri, split=split, tmp_dir=tmp_dir, test_mode=test_mode)
+            ds = self._get_dataset_from_uri(uri, split=split, tmp_dir=tmp_dir)
             if size is not None:
                 if isinstance(size, float):
                     ds = self.random_subset_dataset(ds, fraction=size)
@@ -1425,8 +1411,7 @@ class GeoDataConfig(DataConfig):
 
     def build_dataset(self,
                       split: Literal['train', 'valid', 'test'],
-                      tmp_dir: Optional[str] = None,
-                      test_mode: bool = False) -> Dataset:
+                      tmp_dir: Optional[str] = None) -> Dataset:
 
         base_transform, aug_transform = self.get_data_transforms()
         if split == 'train':
@@ -1443,8 +1428,8 @@ class GeoDataConfig(DataConfig):
 
         return ds
 
-    def build(self, tmp_dir: Optional[str] = None,
-              test_mode: bool = False) -> Tuple[Dataset, Dataset, Dataset]:
+    def build(self, tmp_dir: Optional[str] = None
+              ) -> Tuple[Dataset, Dataset, Dataset]:
         base_transform, aug_transform = self.get_data_transforms()
         train_tf = aug_transform
         val_tf, test_tf = base_transform, base_transform
@@ -1463,6 +1448,7 @@ def learner_config_upgrader(cfg_dict: dict, version: int) -> dict:
     if version == 4:
         # removed in version 5
         cfg_dict.pop('overfit_mode', None)
+        cfg_dict.pop('test_mode', None)
     return cfg_dict
 
 
@@ -1477,13 +1463,6 @@ class LearnerConfig(Config):
         False,
         description='If True, skips training, loads model, and does final eval.'
     )
-    test_mode: bool = Field(
-        False,
-        description=
-        ('If True, uses test_num_epochs, test_batch_sz, truncated datasets with '
-         'only a single batch, image_sz that is cut in half, and num_workers = 0. '
-         'This is useful for testing that code runs correctly on CPU without '
-         'multithreading before running full job on GPU.'))
     eval_train: bool = Field(
         False,
         description=
@@ -1529,19 +1508,6 @@ class LearnerConfig(Config):
                 raise ConfigError(
                     f'class_loss_weights ({num_weights}) must be same length as '
                     f'the number of classes ({num_classes})')
-        return values
-
-    @root_validator(skip_on_failure=True)
-    def update_for_mode(cls, values: dict) -> dict:
-        test_mode = values.get('test_mode')
-        solver: SolverConfig = values.get('solver')
-        data: DataConfig = values.get('data')
-
-        if test_mode:
-            solver.num_epochs = solver.test_num_epochs
-            solver.batch_sz = solver.test_batch_sz
-            data.num_workers = 0
-
         return values
 
     def build(self,
