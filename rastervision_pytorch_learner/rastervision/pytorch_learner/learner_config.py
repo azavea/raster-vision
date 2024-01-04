@@ -1449,6 +1449,7 @@ def learner_config_upgrader(cfg_dict: dict, version: int) -> dict:
         # removed in version 5
         cfg_dict.pop('overfit_mode', None)
         cfg_dict.pop('test_mode', None)
+        cfg_dict.pop('predict_mode', None)
     return cfg_dict
 
 
@@ -1459,15 +1460,10 @@ class LearnerConfig(Config):
     solver: SolverConfig
     data: DataConfig
 
-    predict_mode: bool = Field(
-        False,
-        description='If True, skips training, loads model, and does final eval.'
-    )
     eval_train: bool = Field(
         False,
-        description=
-        ('If True, runs final evaluation on training set (in addition to test set). '
-         'Useful for debugging.'))
+        description='If True, runs final evaluation on training set '
+        '(in addition to validation set). Useful for debugging.')
     save_model_bundle: bool = Field(
         True,
         description=
