@@ -2,6 +2,7 @@
 
 from rastervision.pytorch_learner.utils.utils import *
 from rastervision.pytorch_learner.utils.torch_hub import *
+from rastervision.pytorch_learner.utils.distributed import *
 
 __all__ = [
     SplitTensor.__name__,
@@ -21,4 +22,6 @@ __all__ = [
     torch_hub_load_github.__name__,
     torch_hub_load_uri.__name__,
     torch_hub_load_local.__name__,
+    DDPContextManager.__name__,
+    'DDP_BACKEND',
 ]
