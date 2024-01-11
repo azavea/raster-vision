@@ -166,4 +166,8 @@ COPY ./rastervision_aws_sagemaker/ /opt/src/rastervision_aws_sagemaker/
 COPY ./rastervision_pytorch_backend/ /opt/src/rastervision_pytorch_backend/
 COPY ./rastervision_pytorch_learner/ /opt/src/rastervision_pytorch_learner/
 
+# needed for this image to be used by the AWS SageMaker PyTorch Estimator
+RUN pip install sagemaker_pytorch_training==2.8.1
+ENV SAGEMAKER_TRAINING_MODULE=sagemaker_pytorch_container.training:main
+
 CMD ["bash"]
