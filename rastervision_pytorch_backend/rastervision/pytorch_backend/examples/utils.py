@@ -3,6 +3,7 @@ import os
 import csv
 from io import StringIO
 
+from rastervision.pipeline.file_system.utils import file_exists
 from rastervision.core.data import (RasterioSource, GeoJSONVectorSource,
                                     ClassInferenceTransformer)
 from rastervision.core.data.utils import geoms_to_geojson, crop_geotiff
@@ -48,6 +49,8 @@ def save_image_crop(
         ValueError if cannot find a crop satisfying min_features constraint.
     """
     print(f'Saving test crop to {image_crop_uri}...')
+    if file_exists(image_crop_uri):
+        print(f'Already exists. Skipping.')
     old_environ = os.environ.copy()
     try:
         request_payer = S3FileSystem.get_request_payer()
