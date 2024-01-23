@@ -1,6 +1,6 @@
 # flake8: noqa
 
-import os
+from typing import Optional
 from os.path import join, basename
 
 from rastervision.core.rv_pipeline import *
@@ -32,8 +32,8 @@ CLASS_COLORS = [
 
 def get_config(runner,
                raw_uri: str,
-               processed_uri: str,
                root_uri: str,
+               processed_uri: Optional[str] = None,
                multiband: bool = False,
                external_model: bool = True,
                augment: bool = False,
@@ -47,9 +47,9 @@ def get_config(runner,
     Args:
         runner (Runner): Runner for the pipeline. Will be provided by RV.
         raw_uri (str): Directory where the raw data resides
-        processed_uri (str): Directory for storing processed data.
-                             E.g. crops for testing.
         root_uri (str): Directory where all the output will be written.
+        processed_uri (str): Directory for storing processed data.
+                             E.g. crops for testing. Defaults to None.
         multiband (bool, optional): If True, all 4 channels (R, G, B, & IR)
             available in the raster source will be used. If False, only
             IR, R, G (in that order) will be used. Defaults to False.
