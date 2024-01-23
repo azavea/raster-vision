@@ -1,16 +1,22 @@
-# flake8: noqa
-
-import os
+from typing import Optional
 from os.path import join, basename
 
-from rastervision.core.rv_pipeline import *
-from rastervision.core.backend import *
-from rastervision.core.data import *
-from rastervision.core.analyzer import *
-from rastervision.pytorch_backend import *
-from rastervision.pytorch_learner import *
-from rastervision.pytorch_backend.examples.utils import (get_scene_info,
-                                                         save_image_crop)
+import albumentations as A
+
+from rastervision.core.rv_pipeline import (SemanticSegmentationConfig,
+                                           SemanticSegmentationChipOptions,
+                                           SemanticSegmentationWindowMethod)
+from rastervision.core.data import (
+    ClassConfig, DatasetConfig, PolygonVectorOutputConfig,
+    RasterioSourceConfig, RGBClassTransformerConfig, SceneConfig,
+    SemanticSegmentationLabelSourceConfig,
+    SemanticSegmentationLabelStoreConfig)
+from rastervision.pytorch_backend import PyTorchSemanticSegmentationConfig
+from rastervision.pytorch_learner import (
+    Backbone, ExternalModuleConfig, GeoDataWindowConfig, GeoDataWindowMethod,
+    PlotOptions, SolverConfig, SemanticSegmentationGeoDataConfig,
+    SemanticSegmentationImageDataConfig, SemanticSegmentationModelConfig)
+from rastervision.pytorch_backend.examples.utils import save_image_crop
 from rastervision.pytorch_backend.examples.semantic_segmentation.utils import (
     example_multiband_transform, example_rgb_transform, imagenet_stats,
     Unnormalize)
@@ -32,22 +38,24 @@ CLASS_COLORS = [
 
 def get_config(runner,
                raw_uri: str,
-               processed_uri: str,
                root_uri: str,
+               processed_uri: Optional[str] = None,
                multiband: bool = False,
                external_model: bool = True,
                augment: bool = False,
                nochip: bool = True,
-               test: bool = False):
+               num_epochs: int = 10,
+               batch_sz: int = 8,
+               test: bool = False) -> SemanticSegmentationConfig:
     """Generate the pipeline config for this task. This function will be called
     by RV, with arguments from the command line, when this example is run.
 
     Args:
         runner (Runner): Runner for the pipeline. Will be provided by RV.
         raw_uri (str): Directory where the raw data resides
-        processed_uri (str): Directory for storing processed data.
-                             E.g. crops for testing.
         root_uri (str): Directory where all the output will be written.
+        processed_uri (str): Directory for storing processed data.
+                             E.g. crops for testing. Defaults to None.
         multiband (bool, optional): If True, all 4 channels (R, G, B, & IR)
             available in the raster source will be used. If False, only
             IR, R, G (in that order) will be used. Defaults to False.
@@ -61,6 +69,8 @@ def get_config(runner,
             training instead of from pre-generated chips. The analyze and chip
             commands should not be run, if this is set to True. Defaults to
             True.
+        num_epochs (int): Number of epochs to train for.
+        batch_sz (int): Batch size.
         test (bool, optional): If True, does the following simplifications:
             (1) Uses only the first 2 scenes
             (2) Uses only a 600x600 crop of the scenes
@@ -203,7 +213,7 @@ def get_config(runner,
         num_classes = len(class_config)
         model = SemanticSegmentationModelConfig(
             external_def=ExternalModuleConfig(
-                github_repo='AdeelH/pytorch-fpn:0.2',
+                github_repo='AdeelH/pytorch-fpn:0.3',
                 name='fpn',
                 entrypoint='make_fpn_resnet',
                 entrypoint_kwargs={
@@ -217,11 +227,15 @@ def get_config(runner,
     else:
         model = SemanticSegmentationModelConfig(backbone=Backbone.resnet50)
 
+    num_epochs = 2 if test else int(num_epochs)
+    batch_sz = 2 if test else int(batch_sz)
+    solver = SolverConfig(
+        lr=1e-4, num_epochs=num_epochs, batch_sz=batch_sz, one_cycle=True)
+
     backend = PyTorchSemanticSegmentationConfig(
         data=data,
         model=model,
-        solver=SolverConfig(
-            lr=1e-4, num_epochs=10, batch_sz=8, one_cycle=True),
+        solver=solver,
         log_tensorboard=True,
         run_tensorboard=False,
     )

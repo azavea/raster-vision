@@ -1,17 +1,24 @@
-# flake8: noqa
-
 from typing import Optional
 import re
 import random
 import os
 from abc import abstractmethod
 
-from rastervision.pipeline.file_system import list_paths
-from rastervision.core.rv_pipeline import *
-from rastervision.core.backend import *
-from rastervision.core.data import *
-from rastervision.pytorch_backend import *
-from rastervision.pytorch_learner import *
+from rastervision.pipeline.file_system.utils import list_paths
+from rastervision.core.rv_pipeline import (SemanticSegmentationConfig,
+                                           SemanticSegmentationChipOptions,
+                                           SemanticSegmentationWindowMethod)
+from rastervision.core.data import (
+    BufferTransformerConfig, ClassConfig, ClassInferenceTransformerConfig,
+    DatasetConfig, GeoJSONVectorSourceConfig, PolygonVectorOutputConfig,
+    RasterioSourceConfig, RasterizedSourceConfig, RasterizerConfig,
+    SceneConfig, SemanticSegmentationLabelSourceConfig,
+    SemanticSegmentationLabelStoreConfig, StatsTransformerConfig)
+from rastervision.pytorch_backend import PyTorchSemanticSegmentationConfig
+from rastervision.pytorch_learner import (
+    Backbone, GeoDataWindowConfig, GeoDataWindowMethod, SolverConfig,
+    SemanticSegmentationGeoDataConfig, SemanticSegmentationImageDataConfig,
+    SemanticSegmentationModelConfig)
 
 BUILDINGS = 'buildings'
 ROADS = 'roads'
@@ -28,21 +35,22 @@ class SpacenetConfig(object):
         elif target.lower() == ROADS:
             return VegasRoads(raw_uri)
         else:
-            raise ValueError('{} is not a valid target.'.format(target))
+            raise ValueError(f'{target} is not a valid target.')
 
     def get_raster_source_uri(self, id):
+        filename = f'{self.raster_fn_prefix}{id}.tif'
         return os.path.join(self.raw_uri, self.base_dir, self.raster_dir,
-                            '{}{}.tif'.format(self.raster_fn_prefix, id))
+                            filename)
 
     def get_geojson_uri(self, id):
+        filename = f'{self.label_fn_prefix}{id}.geojson'
         return os.path.join(self.raw_uri, self.base_dir, self.label_dir,
-                            '{}{}.geojson'.format(self.label_fn_prefix, id))
+                            filename)
 
     def get_scene_ids(self):
         label_dir = os.path.join(self.raw_uri, self.base_dir, self.label_dir)
         label_paths = list_paths(label_dir, ext='.geojson')
-        label_re = re.compile(r'.*{}(\d+)\.geojson'.format(
-            self.label_fn_prefix))
+        label_re = re.compile(rf'.*{self.label_fn_prefix}(\d+)\.geojson')
         scene_ids = [
             label_re.match(label_path).group(1) for label_path in label_paths
         ]
