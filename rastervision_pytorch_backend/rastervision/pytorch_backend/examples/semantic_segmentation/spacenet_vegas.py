@@ -1,17 +1,24 @@
-# flake8: noqa
-
 from typing import Optional
 import re
 import random
 import os
 from abc import abstractmethod
 
-from rastervision.pipeline.file_system import list_paths
-from rastervision.core.rv_pipeline import *
-from rastervision.core.backend import *
-from rastervision.core.data import *
-from rastervision.pytorch_backend import *
-from rastervision.pytorch_learner import *
+from rastervision.pipeline.file_system.utils import list_paths
+from rastervision.core.rv_pipeline import (SemanticSegmentationConfig,
+                                           SemanticSegmentationChipOptions,
+                                           SemanticSegmentationWindowMethod)
+from rastervision.core.data import (
+    BufferTransformerConfig, ClassConfig, ClassInferenceTransformerConfig,
+    DatasetConfig, GeoJSONVectorSourceConfig, PolygonVectorOutputConfig,
+    RasterioSourceConfig, RasterizedSourceConfig, RasterizerConfig,
+    SceneConfig, SemanticSegmentationLabelSourceConfig,
+    SemanticSegmentationLabelStoreConfig, StatsTransformerConfig)
+from rastervision.pytorch_backend import PyTorchSemanticSegmentationConfig
+from rastervision.pytorch_learner import (
+    Backbone, GeoDataWindowConfig, GeoDataWindowMethod, SolverConfig,
+    SemanticSegmentationGeoDataConfig, SemanticSegmentationImageDataConfig,
+    SemanticSegmentationModelConfig)
 
 BUILDINGS = 'buildings'
 ROADS = 'roads'
