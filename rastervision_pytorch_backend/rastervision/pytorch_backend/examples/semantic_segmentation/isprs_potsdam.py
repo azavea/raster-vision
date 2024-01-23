@@ -38,7 +38,9 @@ def get_config(runner,
                external_model: bool = True,
                augment: bool = False,
                nochip: bool = True,
-               test: bool = False):
+               num_epochs: int = 10,
+               batch_sz: int = 8,
+               test: bool = False) -> SemanticSegmentationConfig:
     """Generate the pipeline config for this task. This function will be called
     by RV, with arguments from the command line, when this example is run.
 
@@ -61,6 +63,8 @@ def get_config(runner,
             training instead of from pre-generated chips. The analyze and chip
             commands should not be run, if this is set to True. Defaults to
             True.
+        num_epochs (int): Number of epochs to train for.
+        batch_sz (int): Batch size.
         test (bool, optional): If True, does the following simplifications:
             (1) Uses only the first 2 scenes
             (2) Uses only a 600x600 crop of the scenes
@@ -217,11 +221,15 @@ def get_config(runner,
     else:
         model = SemanticSegmentationModelConfig(backbone=Backbone.resnet50)
 
+    num_epochs = 2 if test else int(num_epochs)
+    batch_sz = 2 if test else int(batch_sz)
+    solver = SolverConfig(
+        lr=1e-4, num_epochs=num_epochs, batch_sz=batch_sz, one_cycle=True)
+
     backend = PyTorchSemanticSegmentationConfig(
         data=data,
         model=model,
-        solver=SolverConfig(
-            lr=1e-4, num_epochs=10, batch_sz=8, one_cycle=True),
+        solver=solver,
         log_tensorboard=True,
         run_tensorboard=False,
     )
