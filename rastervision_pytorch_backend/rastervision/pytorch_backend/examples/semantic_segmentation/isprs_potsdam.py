@@ -203,7 +203,7 @@ def get_config(runner,
         num_classes = len(class_config)
         model = SemanticSegmentationModelConfig(
             external_def=ExternalModuleConfig(
-                github_repo='AdeelH/pytorch-fpn:0.2',
+                github_repo='AdeelH/pytorch-fpn:0.3',
                 name='fpn',
                 entrypoint='make_fpn_resnet',
                 entrypoint_kwargs={
