@@ -35,21 +35,22 @@ class SpacenetConfig(object):
         elif target.lower() == ROADS:
             return VegasRoads(raw_uri)
         else:
-            raise ValueError('{} is not a valid target.'.format(target))
+            raise ValueError(f'{target} is not a valid target.')
 
     def get_raster_source_uri(self, id):
+        filename = f'{self.raster_fn_prefix}{id}.tif'
         return os.path.join(self.raw_uri, self.base_dir, self.raster_dir,
-                            '{}{}.tif'.format(self.raster_fn_prefix, id))
+                            filename)
 
     def get_geojson_uri(self, id):
+        filename = f'{self.label_fn_prefix}{id}.geojson'
         return os.path.join(self.raw_uri, self.base_dir, self.label_dir,
-                            '{}{}.geojson'.format(self.label_fn_prefix, id))
+                            filename)
 
     def get_scene_ids(self):
         label_dir = os.path.join(self.raw_uri, self.base_dir, self.label_dir)
         label_paths = list_paths(label_dir, ext='.geojson')
-        label_re = re.compile(r'.*{}(\d+)\.geojson'.format(
-            self.label_fn_prefix))
+        label_re = re.compile(rf'.*{self.label_fn_prefix}(\d+)\.geojson')
         scene_ids = [
             label_re.match(label_path).group(1) for label_path in label_paths
         ]
