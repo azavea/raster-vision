@@ -6,5 +6,5 @@ unify==0.5
 sphinx-autobuild==2021.3.14
 seaborn==0.12.2
 jupyter==1.0.0
-jupyterlab==4.0.4
+jupyterlab==4.0.11
 jupyter_contrib_nbextensions==0.7.0
