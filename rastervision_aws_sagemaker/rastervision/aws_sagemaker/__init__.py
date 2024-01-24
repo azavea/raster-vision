@@ -12,7 +12,12 @@ def register_plugin(registry):
         'cpu_instance_type',
         'gpu_image',
         'gpu_instance_type',
+        'train_image',
+        'train_instance_type',
+        'train_instance_count',
         'use_spot_instances',
+        'spot_instance_max_wait_time',
+        'max_run_time',
     ])
 
 
