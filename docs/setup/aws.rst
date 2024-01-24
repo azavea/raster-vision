@@ -80,14 +80,24 @@ Add the following to your ``~/.rastervision/default`` file.
     cpu_instance_type=ml.p3.2xlarge
     gpu_image=123.dkr.ecr.us-east-1.amazonaws.com/raster-vision
     gpu_instance_type=ml.p3.2xlarge
-    use_spot_instances=yes
+    train_image=123.dkr.ecr.us-east-1.amazonaws.com/raster-vision
+    train_instance_type=ml.p3.8xlarge
+    train_instance_count=2
+    use_spot_instances=no
+    spot_instance_max_wait_time=86400
+    max_run_time=86400
 
 * ``role`` - AWS IAM role with appropriate SageMaker permissions.
 * ``cpu_image`` - Docker image URI for CPU jobs.
 * ``cpu_instance_type`` - Instance type for CPU jobs.
 * ``gpu_image`` - Docker image URI for GPU jobs.
 * ``gpu_instance_type`` - Instance type for GPU jobs.
-* ``use_spot_instances`` - Whether to use spot instances.
+* ``train_image`` - Docker image URI for training jobs. Defaults to ``gpu_image``.
+* ``train_instance_type`` - Instance type for training jobs. Defaults to ``gpu_instance_type``.
+* ``train_instance_count`` - Number of parallel nodes to run for training jobs. Defaults to 1.
+* ``use_spot_instances`` - Whether to use spot instances. Only applies to training jobs.
+* ``spot_instance_max_wait_time`` - Maximum time, in seconds, to wait for a spot instance to be allocated. Must be greater than or equal to ``max_run_time``. Default: ``max_run_time``.
+* ``max_run_time`` - Maximum job run time in seconds. Default: 86400 (24 hours).
 
 
 Environment variables
@@ -102,14 +112,24 @@ Alternatively, you can set the following environment variables:
     SAGEMAKER_CPU_INSTANCE_TYPE="ml.p3.2xlarge"
     SAGEMAKER_GPU_IMAGE="123.dkr.ecr.us-east-1.amazonaws.com/raster-vision"
     SAGEMAKER_GPU_INSTANCE_TYPE="ml.p3.2xlarge"
-    SAGEMAKER_USE_SPOT_INSTANCES="yes"
+    SAGEMAKER_TRAIN_IMAGE="123.dkr.ecr.us-east-1.amazonaws.com/raster-vision"
+    SAGEMAKER_TRAIN_INSTANCE_TYPE="ml.p3.8xlarge"
+    SAGEMAKER_TRAIN_INSTANCE_COUNT="2"
+    SAGEMAKER_USE_SPOT_INSTANCES="no"
+    SPOT_INSTANCE_MAX_WAIT_TIME="86400"
+    MAX_RUN_TIME="86400"
 
 * ``SAGEMAKER_ROLE`` - AWS IAM role with appropriate SageMaker permissions.
 * ``SAGEMAKER_CPU_IMAGE`` - Docker image URI for CPU jobs.
 * ``SAGEMAKER_CPU_INSTANCE_TYPE`` - Instance type for CPU jobs.
 * ``SAGEMAKER_GPU_IMAGE`` - Docker image URI for GPU jobs.
 * ``SAGEMAKER_GPU_INSTANCE_TYPE`` - Instance type for GPU jobs.
-* ``SAGEMAKER_USE_SPOT_INSTANCES`` - Whether to use spot instances.
+* ``SAGEMAKER_TRAIN_IMAGE`` - Docker image URI for training jobs. Defaults to ``SAGEMAKER_GPU_IMAGE``.
+* ``SAGEMAKER_TRAIN_INSTANCE_TYPE`` - Instance type for training jobs. Defaults to ``SAGEMAKER_GPU_INSTANCE_TYPE``.
+* ``SAGEMAKER_TRAIN_INSTANCE_COUNT`` - Number of parallel nodes to run for training jobs. Defaults to 1.
+* ``SAGEMAKER_USE_SPOT_INSTANCES`` - Whether to use spot instances. Only applies to training jobs.
+* ``SPOT_INSTANCE_MAX_WAIT_TIME`` - Maximum time, in seconds, to wait for a spot instance to be allocated. Must be greater than or equal to ``MAX_RUN_TIME``. Default: ``MAX_RUN_TIME``.
+* ``MAX_RUN_TIME`` - Maximum job run time in seconds. Default: 86400 (24 hours).
 
 
 .. seealso::
