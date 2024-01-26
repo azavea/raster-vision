@@ -13,5 +13,5 @@ triangle==20220202
 opencv-python-headless==4.6.0.66
 matplotlib==3.7.1
 tqdm==4.66.1
-onnx==1.14.0
-onnxruntime-gpu==1.15.0
+onnx==1.15.0
+onnxruntime-gpu==1.16.3
