@@ -1397,8 +1397,8 @@ class GeoDataConfig(DataConfig):
             validation, and test datasets.
         """
         train_ds = self._build_dataset('train', train_tf, tmp_dir, **kwargs)
-        val_ds = self._build_dataset('valid', train_tf, tmp_dir, **kwargs)
-        test_ds = self._build_dataset('test', train_tf, tmp_dir, **kwargs)
+        val_ds = self._build_dataset('valid', val_tf, tmp_dir, **kwargs)
+        test_ds = self._build_dataset('test', test_tf, tmp_dir, **kwargs)
         return train_ds, val_ds, test_ds
 
     def scene_to_dataset(self,
