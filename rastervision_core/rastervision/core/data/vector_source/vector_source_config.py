@@ -10,7 +10,8 @@ if TYPE_CHECKING:
                                         SceneConfig, VectorSource)
 
 
-def vector_source_config_upgrader(cfg_dict: dict, version: int) -> dict:
+def vector_source_config_upgrader(cfg_dict: dict,
+                                  version: int) -> dict:  # pragma: no cover
     if version == 4:
         from rastervision.core.data.vector_transformer import (
             ClassInferenceTransformerConfig, BufferTransformerConfig)

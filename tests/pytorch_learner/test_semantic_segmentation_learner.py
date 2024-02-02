@@ -122,7 +122,8 @@ class TestSemanticSegmentationLearner(unittest.TestCase):
             learner = backend.learner_cfg.build(tmp_dir, training=True)
 
             learner.plot_dataloaders()
-            learner.train()
+            learner.train(1)
+            learner.train(1)
             learner.plot_predictions(split='valid')
             learner.save_model_bundle()
 

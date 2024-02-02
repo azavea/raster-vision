@@ -7,13 +7,11 @@ from rastervision.core.data.label_source import (
 from rastervision.pipeline.config import (register_config, Field)
 
 
-def ss_label_source_config_upgrader(cfg_dict: dict, version: int) -> dict:
-    if version < 4:
-        try:
-            # removed in version 4
-            del cfg_dict['rgb_class_config']
-        except KeyError:
-            pass
+def ss_label_source_config_upgrader(cfg_dict: dict,
+                                    version: int) -> dict:  # pragma: no cover
+    if version == 3:
+        # removed in version 4
+        cfg_dict.pop('rgb_class_config', None)
     return cfg_dict
 
 
