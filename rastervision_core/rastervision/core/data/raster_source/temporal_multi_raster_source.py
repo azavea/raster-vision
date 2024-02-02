@@ -73,9 +73,7 @@ class TemporalMultiRasterSource(MultiRasterSource):
     def _get_chip(self,
                   window: Box,
                   out_shape: Optional[Tuple[int, int]] = None) -> np.ndarray:
-        """Return the raw chip located in the window.
-
-        Get raw chips from sub raster sources and stack them.
+        """Get chip w/o applying channel_order and transformers.
 
         Args:
             window (Box): The window for which to get the chip, in pixel
@@ -86,7 +84,7 @@ class TemporalMultiRasterSource(MultiRasterSource):
         Returns:
             np.ndarray: 4D array of shape (T, H, W, C).
         """
-        sub_chips = self._get_sub_chips(window, raw=True, out_shape=out_shape)
+        sub_chips = self._get_sub_chips(window, out_shape=out_shape)
         chip = np.stack(sub_chips)
         return chip
 
@@ -108,7 +106,7 @@ class TemporalMultiRasterSource(MultiRasterSource):
         Returns:
             np.ndarray: 4D array of shape (T, H, W, C).
         """
-        sub_chips = self._get_sub_chips(window, raw=False, out_shape=out_shape)
+        sub_chips = self._get_sub_chips(window, out_shape=out_shape)
         chip = np.stack(sub_chips)
 
         for transformer in self.raster_transformers:
