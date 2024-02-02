@@ -51,6 +51,7 @@ def save_image_crop(
     print(f'Saving test crop to {image_crop_uri}...')
     if file_exists(image_crop_uri):
         print(f'Already exists. Skipping.')
+        return
     old_environ = os.environ.copy()
     try:
         request_payer = S3FileSystem.get_request_payer()
