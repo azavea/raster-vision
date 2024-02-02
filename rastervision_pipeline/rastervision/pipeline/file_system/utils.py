@@ -8,6 +8,8 @@ import json
 import zipfile
 from typing import TYPE_CHECKING, Optional, List
 
+from tqdm.auto import tqdm
+
 from rastervision.pipeline import rv_config_ as rv_config
 from rastervision.pipeline.file_system import FileSystem
 from rastervision.pipeline.file_system.local_file_system import (
@@ -323,9 +325,14 @@ def zipdir(dir: str, zip_path: str):
     """
     make_dir(zip_path, use_dirname=True)
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as ziph:
-        for dirpath, dirnames, filenames in os.walk(dir):
-            for fn in filenames:
-                ziph.write(join(dirpath, fn), join(dirpath[len(dir):], fn))
+        with tqdm(desc='Zipping', delay=5) as bar:
+            for dirpath, dirnames, filenames in os.walk(dir):
+                for fn in filenames:
+                    bar.set_postfix_str(fn)
+                    src = join(dirpath, fn)
+                    dst = join(dirpath[len(dir):], fn)
+                    ziph.write(src, dst)
+                    bar.update(1)
 
 
 def unzip(zip_path: str, target_dir: str):
