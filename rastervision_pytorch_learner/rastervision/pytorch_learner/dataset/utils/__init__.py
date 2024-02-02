@@ -1,10 +1,8 @@
 # flake8: noqa
 
 from rastervision.pytorch_learner.dataset.utils.utils import *
-from rastervision.pytorch_learner.dataset.utils.aoi_sampler import *
 
 __all__ = [
-    AoiSampler.__name__,
     DatasetError.__name__,
     ImageDatasetError.__name__,
     GeoDatasetError.__name__,

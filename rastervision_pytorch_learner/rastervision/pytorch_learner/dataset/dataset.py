@@ -8,10 +8,10 @@ from torch.utils.data import Dataset
 
 from rastervision.core.box import Box
 from rastervision.core.data import Scene
+from rastervision.core.data.utils import AoiSampler
 from rastervision.pytorch_learner.learner_config import PosInt, NonNegInt
 from rastervision.pytorch_learner.dataset.transform import (TransformType,
                                                             TF_TYPE_TO_TF_FUNC)
-from rastervision.pytorch_learner.dataset.utils import AoiSampler
 
 log = logging.getLogger(__name__)
 
