@@ -1,17 +1,16 @@
 import os
 from os.path import join
 
-from rastervision.core.rv_pipeline import (ObjectDetectionConfig,
-                                           ObjectDetectionChipOptions,
-                                           ObjectDetectionPredictOptions)
+from rastervision.core.rv_pipeline import (
+    ObjectDetectionConfig, ObjectDetectionChipOptions,
+    ObjectDetectionPredictOptions, WindowSamplingConfig, WindowSamplingMethod)
 from rastervision.core.data import (
     ClassConfig, ClassInferenceTransformerConfig, DatasetConfig,
     GeoJSONVectorSourceConfig, ObjectDetectionLabelSourceConfig,
     RasterioSourceConfig, SceneConfig)
 from rastervision.pytorch_backend import PyTorchObjectDetectionConfig
 from rastervision.pytorch_learner import (
-    Backbone, GeoDataWindowMethod, ObjectDetectionGeoDataConfig,
-    ObjectDetectionGeoDataWindowConfig, ObjectDetectionImageDataConfig,
+    Backbone, ObjectDetectionGeoDataConfig, ObjectDetectionImageDataConfig,
     ObjectDetectionModelConfig, SolverConfig)
 from rastervision.pytorch_backend.examples.utils import (get_scene_info,
                                                          save_image_crop)
@@ -89,21 +88,20 @@ def get_config(runner,
     chip_sz = 300
     img_sz = chip_sz
 
-    chip_options = ObjectDetectionChipOptions(neg_ratio=1.0, ioa_thresh=0.8)
-
-    if nochip:
-        window_opts = ObjectDetectionGeoDataWindowConfig(
-            method=GeoDataWindowMethod.random,
+    chip_options = ObjectDetectionChipOptions(
+        sampling=WindowSamplingConfig(
+            method=WindowSamplingMethod.random,
             size=chip_sz,
             size_lims=(chip_sz, chip_sz + 1),
             max_windows=200,
             clip=True,
-            neg_ratio=chip_options.neg_ratio,
-            ioa_thresh=chip_options.ioa_thresh)
+            neg_ratio=1.0,
+            ioa_thresh=0.8))
 
+    if nochip:
         data = ObjectDetectionGeoDataConfig(
             scene_dataset=scene_dataset,
-            window_opts=window_opts,
+            sampling=chip_options.sampling,
             img_sz=img_sz,
             augmentors=[])
     else:
@@ -129,7 +127,6 @@ def get_config(runner,
         root_uri=root_uri,
         dataset=scene_dataset,
         backend=backend,
-        train_chip_sz=chip_sz,
         predict_chip_sz=chip_sz,
         chip_options=chip_options,
         predict_options=predict_options)

@@ -3,6 +3,7 @@
 TRAIN = 'train'
 VALIDATION = 'validation'
 
+from rastervision.core.rv_pipeline.chip_options import *
 from rastervision.core.rv_pipeline.rv_pipeline import *
 from rastervision.core.rv_pipeline.rv_pipeline_config import *
 from rastervision.core.rv_pipeline.chip_classification import *
@@ -22,10 +23,12 @@ __all__ = [
     SemanticSegmentationConfig.__name__,
     SemanticSegmentationChipOptions.__name__,
     SemanticSegmentationPredictOptions.__name__,
-    SemanticSegmentationWindowMethod.__name__,
     ObjectDetection.__name__,
     ObjectDetectionConfig.__name__,
-    ObjectDetectionChipOptions.__name__,
+    ObjectDetectionWindowSamplingConfig.__name__,
     ObjectDetectionChipOptions.__name__,
     ObjectDetectionPredictOptions.__name__,
+    ChipOptions.__name__,
+    WindowSamplingConfig.__name__,
+    WindowSamplingMethod.__name__,
 ]

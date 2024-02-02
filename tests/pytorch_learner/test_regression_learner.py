@@ -10,10 +10,11 @@ from rastervision.pipeline.file_system import get_tmp_dir
 from rastervision.core.data import (
     ClassConfig, DatasetConfig, RasterioSourceConfig, MultiRasterSourceConfig,
     ReclassTransformerConfig, SceneConfig, LabelSourceConfig)
+from rastervision.core.rv_pipeline import (WindowSamplingConfig,
+                                           WindowSamplingMethod)
 from rastervision.pytorch_learner import (
     RegressionModelConfig, SolverConfig, RegressionGeoDataConfig,
-    GeoDataWindowConfig, RegressionLearnerConfig, RegressionPlotOptions,
-    RegressionLearner, GeoDataWindowMethod)
+    RegressionLearnerConfig, RegressionPlotOptions, RegressionLearner)
 from tests import data_file_path
 
 
@@ -84,8 +85,9 @@ class TestRegressionLearner(unittest.TestCase):
             data_cfg = RegressionGeoDataConfig(
                 scene_dataset=dataset_cfg,
                 img_channels=num_channels,
-                window_opts=GeoDataWindowConfig(
-                    method=GeoDataWindowMethod.random, size=20, max_windows=8),
+                sampling=WindowSamplingConfig(
+                    method=WindowSamplingMethod.random, size=20,
+                    max_windows=8),
                 class_names=class_config.names,
                 class_colors=class_config.colors,
                 plot_options=RegressionPlotOptions(

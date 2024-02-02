@@ -2,7 +2,7 @@
 
 
 def register_plugin(registry):
-    registry.set_plugin_version('rastervision.core', 10)
+    registry.set_plugin_version('rastervision.core', 11)
     from rastervision.core.cli import predict, predict_scene
     registry.add_plugin_command(predict)
     registry.add_plugin_command(predict_scene)

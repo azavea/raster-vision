@@ -1,7 +1,9 @@
 import os
 from os.path import join
 
-from rastervision.core.rv_pipeline import ChipClassificationConfig
+from rastervision.core.rv_pipeline import (ChipClassificationConfig,
+                                           ChipOptions, WindowSamplingConfig,
+                                           WindowSamplingMethod)
 from rastervision.core.data import (
     ChipClassificationLabelSourceConfig, ClassConfig,
     ClassInferenceTransformerConfig, DatasetConfig, GeoJSONVectorSourceConfig,
@@ -9,8 +11,7 @@ from rastervision.core.data import (
 from rastervision.pytorch_backend import PyTorchChipClassificationConfig
 from rastervision.pytorch_learner import (
     Backbone, ClassificationGeoDataConfig, ClassificationImageDataConfig,
-    ClassificationModelConfig, ExternalModuleConfig, GeoDataWindowConfig,
-    GeoDataWindowMethod, SolverConfig)
+    ClassificationModelConfig, ExternalModuleConfig, SolverConfig)
 from rastervision.pytorch_backend.examples.utils import (get_scene_info,
                                                          save_image_crop)
 
@@ -122,22 +123,24 @@ def get_config(runner,
         train_scenes=train_scenes,
         validation_scenes=val_scenes)
 
-    if nochip:
-        window_opts = {}
-        for s in train_scenes:
-            window_opts[s.id] = GeoDataWindowConfig(
-                method=GeoDataWindowMethod.sliding,
-                size=chip_sz,
-                stride=chip_sz // 2)
-        for s in val_scenes:
-            window_opts[s.id] = GeoDataWindowConfig(
-                method=GeoDataWindowMethod.sliding,
-                size=chip_sz,
-                stride=chip_sz // 2)
+    window_sampling_opts = {}
+    for s in train_scenes:
+        window_sampling_opts[s.id] = WindowSamplingConfig(
+            method=WindowSamplingMethod.sliding,
+            size=chip_sz,
+            stride=chip_sz // 2)
+    for s in val_scenes:
+        window_sampling_opts[s.id] = WindowSamplingConfig(
+            method=WindowSamplingMethod.sliding,
+            size=chip_sz,
+            stride=chip_sz // 2)
 
+    chip_options = ChipOptions(sampling=window_sampling_opts)
+
+    if nochip:
         data = ClassificationGeoDataConfig(
             scene_dataset=scene_dataset,
-            window_opts=window_opts,
+            sampling=window_sampling_opts,
             img_sz=img_sz,
             num_workers=4)
     else:
@@ -188,7 +191,7 @@ def get_config(runner,
         root_uri=root_uri,
         dataset=scene_dataset,
         backend=backend,
-        train_chip_sz=chip_sz,
+        chip_options=chip_options,
         predict_chip_sz=chip_sz)
 
     return pipeline

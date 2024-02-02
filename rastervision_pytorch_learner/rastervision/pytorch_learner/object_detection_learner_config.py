@@ -9,11 +9,11 @@ from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
 from torchvision.models.detection.faster_rcnn import FasterRCNN
 
 from rastervision.core.data import Scene
+from rastervision.core.rv_pipeline import WindowSamplingMethod
 from rastervision.pipeline.config import (Config, register_config, Field,
                                           validator, ConfigError)
 from rastervision.pytorch_learner.learner_config import (
-    LearnerConfig, ModelConfig, Backbone, ImageDataConfig, GeoDataConfig,
-    GeoDataWindowMethod, GeoDataWindowConfig)
+    LearnerConfig, ModelConfig, Backbone, ImageDataConfig, GeoDataConfig)
 from rastervision.pytorch_learner.dataset import (
     ObjectDetectionImageDataset, ObjectDetectionSlidingWindowGeoDataset,
     ObjectDetectionRandomWindowGeoDataset)
@@ -60,37 +60,6 @@ class ObjectDetectionImageDataConfig(ObjectDetectionDataConfig,
         return ds
 
 
-@register_config('object_detection_geo_data_window')
-class ObjectDetectionGeoDataWindowConfig(GeoDataWindowConfig):
-    """Configure an object detection :class:`.GeoDataset`.
-
-    See :mod:`rastervision.pytorch_learner.dataset.object_detection_dataset`.
-    """
-    ioa_thresh: float = Field(
-        0.8,
-        description='When a box is partially outside of a training chip, it '
-        'is not clear if (a clipped version) of the box should be included in '
-        'the chip. If the IOA (intersection over area) of the box with the '
-        'chip is greater than ioa_thresh, it is included in the chip. '
-        'Defaults to 0.8.')
-    clip: bool = Field(
-        False,
-        description='Clip bounding boxes to window limits when retrieving '
-        'labels for a window.')
-    neg_ratio: Optional[float] = Field(
-        None,
-        description='The ratio of negative chips (those containing no '
-        'bounding boxes) to positive chips. This can be useful if the '
-        'statistics of the background is different in positive chips. For '
-        'example, in car detection, the positive chips will always contain '
-        'roads, but no examples of rooftops since cars tend to not be near '
-        'rooftops. Defaults to None.')
-    neg_ioa_thresh: float = Field(
-        0.2,
-        description='A window will be considered negative if its max IoA with '
-        'any bounding box is less than this threshold. Defaults to 0.2.')
-
-
 @register_config('object_detection_geo_data')
 class ObjectDetectionGeoDataConfig(ObjectDetectionDataConfig, GeoDataConfig):
     """Configure object detection :class:`GeoDatasets <.GeoDataset>`.
@@ -102,23 +71,31 @@ class ObjectDetectionGeoDataConfig(ObjectDetectionDataConfig, GeoDataConfig):
             self,
             scene: Scene,
             transform: Optional[A.BasicTransform] = None,
-            bbox_params: Optional[A.BboxParams] = DEFAULT_BBOX_PARAMS
+            bbox_params: Optional[A.BboxParams] = DEFAULT_BBOX_PARAMS,
+            for_chipping: bool = False
     ) -> Union[ObjectDetectionSlidingWindowGeoDataset,
                ObjectDetectionRandomWindowGeoDataset]:
-        if isinstance(self.window_opts, dict):
-            opts = self.window_opts[scene.id]
+        if isinstance(self.sampling, dict):
+            opts = self.sampling[scene.id]
         else:
-            opts = self.window_opts
+            opts = self.sampling
 
-        if opts.method == GeoDataWindowMethod.sliding:
+        extra_args = {}
+        if for_chipping:
+            extra_args = dict(
+                normalize=False, to_pytorch=False, return_window=True)
+
+        if opts.method == WindowSamplingMethod.sliding:
             ds = ObjectDetectionSlidingWindowGeoDataset(
                 scene,
                 size=opts.size,
                 stride=opts.stride,
                 padding=opts.padding,
                 pad_direction=opts.pad_direction,
-                transform=transform)
-        elif opts.method == GeoDataWindowMethod.random:
+                transform=transform,
+                **extra_args,
+            )
+        elif opts.method == WindowSamplingMethod.random:
             ds = ObjectDetectionRandomWindowGeoDataset(
                 scene,
                 size_lims=opts.size_lims,
@@ -134,7 +111,9 @@ class ObjectDetectionGeoDataConfig(ObjectDetectionDataConfig, GeoDataConfig):
                 neg_ratio=opts.neg_ratio,
                 neg_ioa_thresh=opts.neg_ioa_thresh,
                 efficient_aoi_sampling=opts.efficient_aoi_sampling,
-                transform=transform)
+                transform=transform,
+                **extra_args,
+            )
         else:
             raise NotImplementedError()
         return ds

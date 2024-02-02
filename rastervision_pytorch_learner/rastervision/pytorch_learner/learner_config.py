@@ -24,6 +24,7 @@ from rastervision.pipeline.file_system import (list_paths, download_if_needed,
                                                get_local_path, sync_from_dir)
 from rastervision.core.data import (ClassConfig, Scene, DatasetConfig as
                                     SceneDatasetConfig)
+from rastervision.core.rv_pipeline import (WindowSamplingConfig)
 from rastervision.pytorch_learner.utils import (
     color_to_triple, validate_albumentation_transform, MinMaxNormalize,
     deserialize_albumentation_transform, get_hubconf_dir_from_cfg,
@@ -329,6 +330,7 @@ def solver_config_upgrader(cfg_dict: dict, version: int) -> dict:
         # removed in version 5
         cfg_dict.pop('test_batch_sz', None)
         cfg_dict.pop('test_num_epochs', None)
+        cfg_dict.pop('overfit_num_steps', None)
     return cfg_dict
 
 
@@ -1175,105 +1177,13 @@ class ImageDataConfig(DataConfig):
         return data_dirs
 
 
-class GeoDataWindowMethod(Enum):
-    sliding = 'sliding'
-    random = 'random'
+def geo_data_config_upgrader(cfg_dict: dict, version: int) -> dict:
+    if version == 5:
+        cfg_dict['sampling'] = cfg_dict.pop('window_opts')
+    return cfg_dict
 
 
-@register_config('geo_data_window')
-class GeoDataWindowConfig(Config):
-    """Configure a :class:`.GeoDataset`.
-
-    See :mod:`rastervision.pytorch_learner.dataset.dataset`.
-    """
-
-    method: GeoDataWindowMethod = Field(
-        GeoDataWindowMethod.sliding, description='')
-    size: Union[PosInt, Tuple[PosInt, PosInt]] = Field(
-        ...,
-        description='If method = sliding, this is the size of sliding window. '
-        'If method = random, this is the size that all the windows are '
-        'resized to before they are returned. If method = random and neither '
-        'size_lims nor h_lims and w_lims have been specified, then size_lims '
-        'is set to (size, size + 1).')
-    stride: Optional[Union[PosInt, Tuple[PosInt, PosInt]]] = Field(
-        None,
-        description='Stride of sliding window. Only used if method = sliding.')
-    padding: Optional[Union[NonNegInt, Tuple[NonNegInt, NonNegInt]]] = Field(
-        None,
-        description='How many pixels are windows allowed to overflow '
-        'the edges of the raster source.')
-    pad_direction: Literal['both', 'start', 'end'] = Field(
-        'end',
-        description='If "end", only pad ymax and xmax (bottom and right). '
-        'If "start", only pad ymin and xmin (top and left). If "both", '
-        'pad all sides. Has no effect if paddiong is zero. Defaults to "end".')
-    size_lims: Optional[Tuple[PosInt, PosInt]] = Field(
-        None,
-        description='[min, max) interval from which window sizes will be '
-        'uniformly randomly sampled. The upper limit is exclusive. To fix the '
-        'size to a constant value, use size_lims = (sz, sz + 1). '
-        'Only used if method = random. Specify either size_lims or '
-        'h_lims and w_lims, but not both. If neither size_lims nor h_lims '
-        'and w_lims have been specified, then this will be set to '
-        '(size, size + 1).')
-    h_lims: Optional[Tuple[PosInt, PosInt]] = Field(
-        None,
-        description='[min, max] interval from which window heights will be '
-        'uniformly randomly sampled. Only used if method = random.')
-    w_lims: Optional[Tuple[PosInt, PosInt]] = Field(
-        None,
-        description='[min, max] interval from which window widths will be '
-        'uniformly randomly sampled. Only used if method = random.')
-    max_windows: NonNegInt = Field(
-        10_000,
-        description='Max allowed reads from a GeoDataset. Only used if '
-        'method = random.')
-    max_sample_attempts: PosInt = Field(
-        100,
-        description='Max attempts when trying to find a window within the AOI '
-        'of a scene. Only used if method = random and the scene has '
-        'aoi_polygons specified.')
-    efficient_aoi_sampling: bool = Field(
-        True,
-        description='If the scene has AOIs, sampling windows at random '
-        'anywhere in the extent and then checking if they fall within any of '
-        'the AOIs can be very inefficient. This flag enables the use of an '
-        'alternate algorithm that only samples window locations inside the '
-        'AOIs. Only used if method = random and the scene has aoi_polygons '
-        'specified. Defaults to True',
-    )
-
-    @root_validator(skip_on_failure=True)
-    def validate_options(cls, values: dict) -> dict:
-        method = values.get('method')
-        size = values.get('size')
-        if method == GeoDataWindowMethod.sliding:
-            has_stride = values.get('stride') is not None
-
-            if not has_stride:
-                values['stride'] = size
-        elif method == GeoDataWindowMethod.random:
-            size_lims = values.get('size_lims')
-            h_lims = values.get('h_lims')
-            w_lims = values.get('w_lims')
-
-            has_size_lims = size_lims is not None
-            has_h_lims = h_lims is not None
-            has_w_lims = w_lims is not None
-
-            if not (has_size_lims or has_h_lims or has_w_lims):
-                size_lims = (size, size + 1)
-                has_size_lims = True
-                values['size_lims'] = size_lims
-            if has_size_lims == (has_w_lims or has_h_lims):
-                raise ConfigError('Specify either size_lims or h and w lims.')
-            if has_h_lims != has_w_lims:
-                raise ConfigError('h_lims and w_lims must both be specified')
-        return values
-
-
-@register_config('geo_data')
+@register_config('geo_data', upgrader=geo_data_config_upgrader)
 class GeoDataConfig(DataConfig):
     """Configure :class:`GeoDatasets <.GeoDataset>`.
 
@@ -1281,31 +1191,31 @@ class GeoDataConfig(DataConfig):
     """
 
     scene_dataset: Optional['SceneDatasetConfig'] = Field(None, description='')
-    window_opts: Union[GeoDataWindowConfig, Dict[str,
-                                                 GeoDataWindowConfig]] = Field(
-                                                     {}, description='')
+    sampling: Union[WindowSamplingConfig, Dict[
+        str, WindowSamplingConfig]] = Field(
+            ..., description='Window sampling config.')
 
     def __repr_args__(self):
         ds = self.scene_dataset
         ds_repr = (f'<{len(ds.train_scenes)} train_scenes, '
                    f'{len(ds.validation_scenes)} validation_scenes, '
                    f'{len(ds.test_scenes)} test_scenes>')
-        out = [('scene_dataset', ds_repr), ('window_opts',
-                                            str(self.window_opts))]
+        out = [('scene_dataset', ds_repr), ('sampling', str(self.sampling))]
         return out
 
-    @validator('window_opts')
-    def validate_window_opts(
-            cls, v: Union[GeoDataWindowConfig, Dict[str, GeoDataWindowConfig]],
+    @validator('sampling')
+    def validate_sampling(
+            cls,
+            v: Union[WindowSamplingConfig, Dict[str, WindowSamplingConfig]],
             values: dict
-    ) -> Union[GeoDataWindowConfig, Dict[str, GeoDataWindowConfig]]:
+    ) -> Union[WindowSamplingConfig, Dict[str, WindowSamplingConfig]]:
         if isinstance(v, dict):
             if len(v) == 0:
                 return v
             scene_dataset: Optional['SceneDatasetConfig'] = values.get(
                 'scene_dataset')
             if scene_dataset is None:
-                raise ConfigError('window_opts is a non-empty dict but '
+                raise ConfigError('sampling is a non-empty dict but '
                                   'scene_dataset is None.')
             for s in scene_dataset.all_scenes:
                 if s.id not in v:
@@ -1403,8 +1313,8 @@ class GeoDataConfig(DataConfig):
 
     def scene_to_dataset(self,
                          scene: Scene,
-                         transform: Optional[A.BasicTransform] = None
-                         ) -> Dataset:
+                         transform: Optional[A.BasicTransform] = None,
+                         for_chipping: bool = False) -> Dataset:
         """Make a dataset from a single scene.
         """
         raise NotImplementedError()
@@ -1428,14 +1338,21 @@ class GeoDataConfig(DataConfig):
 
         return ds
 
-    def build(self, tmp_dir: Optional[str] = None
-              ) -> Tuple[Dataset, Dataset, Dataset]:
+    def build(self, tmp_dir: Optional[str] = None,
+              for_chipping: bool = False) -> Tuple[Dataset, Dataset, Dataset]:
         base_transform, aug_transform = self.get_data_transforms()
-        train_tf = aug_transform
-        val_tf, test_tf = base_transform, base_transform
+        if for_chipping:
+            train_tf, val_tf, test_tf = None, None, None
+        else:
+            train_tf = aug_transform
+            val_tf, test_tf = base_transform, base_transform
 
         train_ds, val_ds, test_ds = self._build_datasets(
-            tmp_dir=tmp_dir, train_tf=train_tf, val_tf=val_tf, test_tf=test_tf)
+            tmp_dir=tmp_dir,
+            train_tf=train_tf,
+            val_tf=val_tf,
+            test_tf=test_tf,
+            for_chipping=for_chipping)
 
         if self.train_sz is not None or self.train_sz_rel is not None:
             train_ds = self.random_subset_dataset(

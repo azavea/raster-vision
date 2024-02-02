@@ -4,7 +4,8 @@ from contextlib import AbstractContextManager
 
 if TYPE_CHECKING:
     from rastervision.core.data_sample import DataSample
-    from rastervision.core.data import Labels, Scene
+    from rastervision.core.data import DatasetConfig, Labels, Scene
+    from rastervision.core.rv_pipeline import ChipOptions
 
 
 class SampleWriter(AbstractContextManager):
@@ -56,4 +57,13 @@ class Backend(ABC):
 
         Return:
             Labels object containing predictions
+        """
+
+    @abstractmethod
+    def chip_dataset(self, dataset: 'DatasetConfig',
+                     chip_options: 'ChipOptions') -> None:
+        """Create and write chips for scenes in a :class:`.DatasetConfig`.
+
+        Args:
+            scenes: Scenes to chip.
         """
