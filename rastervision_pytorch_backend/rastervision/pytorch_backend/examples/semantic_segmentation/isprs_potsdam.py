@@ -201,7 +201,6 @@ def get_config(runner,
         data = SemanticSegmentationImageDataConfig(
             img_sz=img_sz,
             num_workers=4,
-            channel_display_groups=channel_display_groups,
             base_transform=base_transform,
             aug_transform=aug_transform,
             plot_options=PlotOptions(
