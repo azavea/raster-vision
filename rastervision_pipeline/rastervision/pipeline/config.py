@@ -182,16 +182,20 @@ def _upgrade_config(x: Union[dict, List[dict]], plugin_versions: Dict[str, int]
         for k, v in x.items():
             new_x[k] = _upgrade_config(v, plugin_versions)
         type_hint = new_x.get('type_hint')
-        if type_hint is not None:
-            type_hint_lineage = registry.get_type_hint_lineage(type_hint)
-            for th in type_hint_lineage:
-                plugin = registry.get_plugin(th)
-                old_version = plugin_versions[plugin]
-                curr_version = registry.get_plugin_version(plugin)
-                upgrader = registry.get_upgrader(th)
-                if upgrader:
-                    for version in range(old_version, curr_version):
-                        new_x = upgrader(new_x, version)
+        if type_hint is None:
+            return new_x
+        if type_hint in registry.renamed_type_hints:
+            type_hint = registry.renamed_type_hints[type_hint]
+            new_x['type_hint'] = type_hint
+        type_hint_lineage = registry.get_type_hint_lineage(type_hint)
+        for th in type_hint_lineage:
+            plugin = registry.get_plugin(th)
+            old_version = plugin_versions[plugin]
+            curr_version = registry.get_plugin_version(plugin)
+            upgrader = registry.get_upgrader(th)
+            if upgrader:
+                for version in range(old_version, curr_version):
+                    new_x = upgrader(new_x, version)
         return new_x
     elif isinstance(x, list):
         return [_upgrade_config(v, plugin_versions) for v in x]
