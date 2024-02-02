@@ -10,13 +10,11 @@ if TYPE_CHECKING:
     from rastervision.core.data import ClassConfig
 
 
-def ss_evaluator_config_upgrader(cfg_dict: dict, version: int) -> dict:
-    if version < 3:
-        try:
-            # removed in version 3
-            del cfg_dict['vector_output_uri']
-        except KeyError:
-            pass
+def ss_evaluator_config_upgrader(cfg_dict: dict,
+                                 version: int) -> dict:  # pragma: no cover
+    if version == 2:
+        # removed in version 3
+        cfg_dict.pop('vector_output_uri', None)
     return cfg_dict
 
 

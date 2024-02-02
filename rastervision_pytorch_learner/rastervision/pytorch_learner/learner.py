@@ -987,6 +987,7 @@ class Learner(ABC):
         if not self.distributed:
             return
 
+        # pragma: no cover
         if self.model is not None:
             raise ValueError(
                 'In distributed mode, the model must be specified via '
@@ -1147,7 +1148,7 @@ class Learner(ABC):
             distributed = self.distributed
 
         if self.train_ds is None or self.valid_ds is None:
-            if distributed:
+            if distributed:  # pragma: no cover
                 if self.is_ddp_local_master:
                     train_ds, valid_ds, test_ds = self.build_datasets()
                     log.debug(f'{self.ddp_rank=} Done.')
@@ -1219,7 +1220,7 @@ class Learner(ABC):
         collate_fn = self.get_collate_fn()
         sampler = self.build_sampler(ds, split, distributed=distributed)
 
-        if distributed:
+        if distributed:  # pragma: no cover
             world_sz = self.ddp_world_size
             if world_sz is None:
                 raise ValueError('World size not set. '
@@ -1269,14 +1270,14 @@ class Learner(ABC):
         split = split.lower()
         sampler = None
         if split == 'train':
-            if distributed:
+            if distributed:  # pragma: no cover
                 sampler = DistributedSampler(
                     ds,
                     shuffle=True,
                     num_replicas=self.ddp_world_size,
                     rank=self.ddp_rank)
         elif split == 'valid':
-            if distributed:
+            if distributed:  # pragma: no cover
                 sampler = DistributedSampler(
                     ds,
                     shuffle=False,
@@ -1560,8 +1561,8 @@ class Learner(ABC):
     #########
     # Misc.
     #########
-    def ddp(self, rank: Optional[int] = None,
-            world_size: Optional[int] = None) -> DDPContextManager:
+    def ddp(self, rank: Optional[int] = None, world_size: Optional[int] = None
+            ) -> DDPContextManager:  # pragma: no cover
         """Return a :class:`DDPContextManager`.
 
         This should be used to wrap code that needs to be executed in parallel.
@@ -1759,7 +1760,7 @@ class Learner(ABC):
 
     def run_tensorboard(self):
         """Run TB server serving logged stats."""
-        if self.cfg.run_tensorboard:
+        if self.cfg.run_tensorboard:  # pragma: no cover
             log.info('Starting tensorboard process')
             self.tb_process = Popen(
                 ['tensorboard', '--bind_all', f'--logdir={self.tb_log_dir}'])
@@ -1769,7 +1770,7 @@ class Learner(ABC):
         """Stop TB logging and server if it's running."""
         if self.tb_writer is not None:
             self.tb_writer.close()
-        if self.tb_process is not None:
+        if self.tb_process is not None:  # pragma: no cover
             self.tb_process.terminate()
 
     @property

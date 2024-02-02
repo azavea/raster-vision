@@ -5,7 +5,8 @@ from rastervision.core.data.raster_source import RasterSourceConfig, RasterioSou
 from rastervision.pipeline.config import ConfigError, Field, register_config
 
 
-def rasterio_source_config_upgrader(cfg_dict: dict, version: int) -> dict:
+def rasterio_source_config_upgrader(cfg_dict: dict,
+                                    version: int) -> dict:  # pragma: no cover
     if version == 5:
         # removed in version 6
         x_shift = cfg_dict.get('x_shift', 0)

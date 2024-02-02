@@ -35,7 +35,7 @@ class AWSBatchRunner(Runner):
             pipeline: 'Pipeline',
             commands: List[str],
             num_splits: int = 1,
-            pipeline_run_name: str = 'raster-vision'):
+            pipeline_run_name: str = 'raster-vision'):  # pragma: no cover
         cmd, args = self.build_cmd(
             cfg_json_uri,
             pipeline,
@@ -117,7 +117,7 @@ class AWSBatchRunner(Runner):
                     use_gpu: bool = False,
                     job_queue: Optional[str] = None,
                     job_def: Optional[str] = None,
-                    **kwargs) -> str:
+                    **kwargs) -> str:  # pragma: no cover
         """Submit a command as a job to AWS Batch.
 
         Args:

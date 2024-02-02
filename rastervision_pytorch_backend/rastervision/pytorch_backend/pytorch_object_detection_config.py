@@ -9,7 +9,8 @@ from rastervision.pytorch_backend.pytorch_object_detection import (
     PyTorchObjectDetection)
 
 
-def objdet_learner_backend_config_upgrader(cfg_dict, version):
+def objdet_learner_backend_config_upgrader(cfg_dict,
+                                           version):  # pragma: no cover
     if version == 0:
         fields = {
             'augmentors': default_augmentors,

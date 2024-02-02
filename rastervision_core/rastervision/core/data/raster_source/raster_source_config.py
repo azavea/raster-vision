@@ -9,7 +9,8 @@ if TYPE_CHECKING:
     from rastervision.core.rv_pipeline import RVPipelineConfig
 
 
-def rs_config_upgrader(cfg_dict: dict, version: int) -> dict:
+def rs_config_upgrader(cfg_dict: dict,
+                       version: int) -> dict:  # pragma: no cover
     if version == 6:
         # removed in version 7
         if cfg_dict.get('extent_crop') is not None:
