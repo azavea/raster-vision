@@ -1150,15 +1150,15 @@ class Learner(ABC):
             if distributed:
                 if self.is_ddp_local_master:
                     train_ds, valid_ds, test_ds = self.build_datasets()
-                    log.info(f'{self.ddp_rank=} Done.')
+                    log.debug(f'{self.ddp_rank=} Done.')
                 else:
-                    log.info(f'{self.ddp_rank=} Waiting.')
+                    log.debug(f'{self.ddp_rank=} Waiting.')
                 dist.barrier()
                 if not self.is_ddp_local_master:
                     train_ds, valid_ds, test_ds = self.build_datasets()
-                    log.info(f'{self.ddp_rank=} Done.')
+                    log.debug(f'{self.ddp_rank=} Done.')
                 else:
-                    log.info(f'{self.ddp_rank=} Waiting.')
+                    log.debug(f'{self.ddp_rank=} Waiting.')
                 dist.barrier()
             else:
                 train_ds, valid_ds, test_ds = self.build_datasets()
