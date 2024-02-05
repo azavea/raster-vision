@@ -12,7 +12,7 @@ opencv-python-headless==4.9.0.80
 tqdm==4.66.1
 xarray==2024.1.1
 scikit-image==0.21.0
-boto3==1.34.14
+boto3==1.34.34
 stackstac==0.5.0
 humanize==4.8.0
 triangle==20220202
