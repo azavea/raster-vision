@@ -27,6 +27,7 @@ class Registry():
         self.type_hint_to_lineage = {}
         self.type_hint_to_plugin = {}
         self.type_hint_to_upgrader = {}
+        self.renamed_type_hints = {}
 
     def add_plugin_command(self, cmd: Command):
         """Add a click command contributed by a plugin."""
@@ -55,6 +56,16 @@ class Registry():
                 each time a config schema changes
         """
         self.plugin_versions[plugin] = version
+
+    def register_renamed_type_hints(self, type_hint_old: str,
+                                    type_hint_new: str):
+        """Register renamed type_hints.
+
+        Args:
+            type_hint_old: Old type hint.
+            type_hint_new: New type hint.
+        """
+        self.renamed_type_hints[type_hint_old] = type_hint_new
 
     def get_type_hint_lineage(self, type_hint: str) -> List[str]:
         """Get the lineage for a type hint.

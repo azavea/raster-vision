@@ -6,7 +6,7 @@ import numpy as np
 from scipy.stats import chisquare
 from shapely.geometry import Polygon, MultiPolygon, MultiPoint
 
-from rastervision.pytorch_learner.dataset.utils import AoiSampler
+from rastervision.core.data.utils import AoiSampler
 
 
 class TestAoiSampler(unittest.TestCase):

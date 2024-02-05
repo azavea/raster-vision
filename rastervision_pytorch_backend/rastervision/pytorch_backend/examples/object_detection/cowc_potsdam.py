@@ -1,17 +1,17 @@
 import os
 from os.path import join
 
-from rastervision.core.rv_pipeline import (ObjectDetectionConfig,
-                                           ObjectDetectionChipOptions,
-                                           ObjectDetectionPredictOptions)
+from rastervision.core.rv_pipeline import (
+    ObjectDetectionConfig, ObjectDetectionChipOptions,
+    ObjectDetectionPredictOptions, WindowSamplingMethod,
+    ObjectDetectionWindowSamplingConfig)
 from rastervision.core.data import (
     ClassConfig, ClassInferenceTransformerConfig, DatasetConfig,
     GeoJSONVectorSourceConfig, ObjectDetectionLabelSourceConfig,
     RasterioSourceConfig, SceneConfig)
 from rastervision.pytorch_backend import PyTorchObjectDetectionConfig
 from rastervision.pytorch_learner import (
-    Backbone, ExternalModuleConfig, GeoDataWindowMethod,
-    ObjectDetectionGeoDataConfig, ObjectDetectionGeoDataWindowConfig,
+    Backbone, ExternalModuleConfig, ObjectDetectionGeoDataConfig,
     ObjectDetectionImageDataConfig, ObjectDetectionModelConfig, PlotOptions,
     SolverConfig)
 from rastervision.pytorch_backend.examples.utils import save_image_crop
@@ -61,9 +61,14 @@ def get_config(runner,
     train_ids = TRAIN_IDS
     val_ids = VAL_IDS
 
+    chip_sz = 300
+    img_sz = chip_sz
+    chips_per_scene = 100
+
     if test:
         train_ids = train_ids[:2]
         val_ids = val_ids[:2]
+        chips_per_scene = 10
 
     if multiband:
         channel_order = [0, 1, 2, 3]
@@ -109,25 +114,22 @@ def get_config(runner,
         train_scenes=[make_scene(id) for id in train_ids],
         validation_scenes=[make_scene(id) for id in val_ids])
 
-    chip_sz = 300
-    img_sz = chip_sz
+    window_sampling_opts = ObjectDetectionWindowSamplingConfig(
+        method=WindowSamplingMethod.random,
+        size=chip_sz,
+        size_lims=(chip_sz, chip_sz + 1),
+        max_windows=chips_per_scene,
+        max_sample_attempts=100,
+        clip=True,
+        neg_ratio=5.0,
+        ioa_thresh=0.9,
+        neg_ioa_thresh=0.2)
 
-    chip_options = ObjectDetectionChipOptions(neg_ratio=5.0, ioa_thresh=0.9)
+    chip_options = ObjectDetectionChipOptions(sampling=window_sampling_opts)
     if nochip:
-        window_opts = ObjectDetectionGeoDataWindowConfig(
-            method=GeoDataWindowMethod.random,
-            size=chip_sz,
-            size_lims=(chip_sz, chip_sz + 1),
-            max_windows=500,
-            max_sample_attempts=100,
-            clip=True,
-            neg_ratio=chip_options.neg_ratio,
-            ioa_thresh=chip_options.ioa_thresh,
-            neg_ioa_thresh=0.2)
-
         data = ObjectDetectionGeoDataConfig(
             scene_dataset=scene_dataset,
-            window_opts=window_opts,
+            sampling=window_sampling_opts,
             img_sz=img_sz,
             num_workers=4,
             plot_options=PlotOptions(
@@ -200,9 +202,8 @@ def get_config(runner,
         root_uri=root_uri,
         dataset=scene_dataset,
         backend=backend,
-        train_chip_sz=chip_sz,
-        predict_chip_sz=chip_sz,
         chip_options=chip_options,
+        predict_chip_sz=chip_sz,
         predict_options=predict_options)
 
     return pipeline

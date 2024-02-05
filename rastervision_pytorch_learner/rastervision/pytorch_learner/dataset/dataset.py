@@ -8,10 +8,10 @@ from torch.utils.data import Dataset
 
 from rastervision.core.box import Box
 from rastervision.core.data import Scene
+from rastervision.core.data.utils import AoiSampler
 from rastervision.pytorch_learner.learner_config import PosInt, NonNegInt
 from rastervision.pytorch_learner.dataset.transform import (TransformType,
                                                             TF_TYPE_TO_TF_FUNC)
-from rastervision.pytorch_learner.dataset.utils import AoiSampler
 
 log = logging.getLogger(__name__)
 
@@ -107,7 +107,8 @@ class GeoDataset(AlbumentationsDataset):
                  transform: Optional[A.BasicTransform] = None,
                  transform_type: Optional[TransformType] = None,
                  normalize: bool = True,
-                 to_pytorch: bool = True):
+                 to_pytorch: bool = True,
+                 return_window: bool = False):
         """Constructor.
 
         Args:
@@ -127,6 +128,8 @@ class GeoDataset(AlbumentationsDataset):
                 based on its data type. Defaults to True.
             to_pytorch (bool, optional): If True, x and y are converted to
                 pytorch tensors. Defaults to True.
+            return_window (bool, optional): Make __getitem__ return the window
+                coordinates used to generate the image. Defaults to False.
         """
         self.scene = scene
 
@@ -136,6 +139,7 @@ class GeoDataset(AlbumentationsDataset):
             transform_type=transform_type,
             normalize=normalize,
             to_pytorch=to_pytorch)
+        self.return_window = return_window
 
     def __len__(self):
         raise NotImplementedError()
@@ -171,7 +175,8 @@ class SlidingWindowGeoDataset(GeoDataset):
                  transform: Optional[A.BasicTransform] = None,
                  transform_type: Optional[TransformType] = None,
                  normalize: bool = True,
-                 to_pytorch: bool = True):
+                 to_pytorch: bool = True,
+                 return_window: bool = False):
         """Constructor.
 
         Args:
@@ -202,13 +207,16 @@ class SlidingWindowGeoDataset(GeoDataset):
                 based on its data type. Defaults to True.
             to_pytorch (bool, optional): If True, x and y are converted to
                 pytorch tensors. Defaults to True.
+            return_window (bool, optional): Make __getitem__ return the window
+                coordinates used to generate the image. Defaults to False.
         """
         super().__init__(
             scene=scene,
             transform=transform,
             transform_type=transform_type,
             normalize=normalize,
-            to_pytorch=to_pytorch)
+            to_pytorch=to_pytorch,
+            return_window=return_window)
         self.size = _to_tuple(size)
         self.stride = _to_tuple(stride)
         self.padding = padding
@@ -231,7 +239,10 @@ class SlidingWindowGeoDataset(GeoDataset):
         if idx >= len(self):
             raise StopIteration()
         window = self.windows[idx]
-        return super().__getitem__(window)
+        out = super().__getitem__(window)
+        if self.return_window:
+            return (out, window)
+        return out
 
     def __len__(self):
         return len(self.windows)
@@ -251,12 +262,12 @@ class RandomWindowGeoDataset(GeoDataset):
                                                           NonNegInt]]] = None,
                  max_windows: Optional[NonNegInt] = None,
                  max_sample_attempts: PosInt = 100,
-                 return_window: bool = False,
                  efficient_aoi_sampling: bool = True,
                  transform: Optional[A.BasicTransform] = None,
                  transform_type: Optional[TransformType] = None,
                  normalize: bool = True,
-                 to_pytorch: bool = True):
+                 to_pytorch: bool = True,
+                 return_window: bool = False):
         """Constructor.
 
         Will sample square windows if size_lims is specified. Otherwise, will
@@ -298,8 +309,6 @@ class RandomWindowGeoDataset(GeoDataset):
                 to find a window within the AOI of the scene. Only used if the
                 scene has aoi_polygons specified. StopIteratioin is raised if
                 this is exceeded. Defaults to 100.
-            return_window (bool, optional): Make __getitem__ return the window
-                coordinates used to generate the image. Defaults to False.
             efficient_aoi_sampling (bool, optional): If the scene has AOIs,
                 sampling windows at random anywhere in the extent and then
                 checking if they fall within any of the AOIs can be very
@@ -314,6 +323,8 @@ class RandomWindowGeoDataset(GeoDataset):
                 based on its data type. Defaults to True.
             to_pytorch (bool, optional): If True, x and y are converted to
                 pytorch tensors. Defaults to True.
+            return_window (bool, optional): Make __getitem__ return the window
+                coordinates used to generate the image. Defaults to False.
         """ # noqa
         has_size_lims = size_lims is not None
         has_h_lims = h_lims is not None
@@ -336,7 +347,8 @@ class RandomWindowGeoDataset(GeoDataset):
             transform=transform,
             transform_type=transform_type,
             normalize=normalize,
-            to_pytorch=to_pytorch)
+            to_pytorch=to_pytorch,
+            return_window=return_window)
 
         if padding is None:
             if size_lims is not None:
@@ -354,7 +366,6 @@ class RandomWindowGeoDataset(GeoDataset):
         self.h_lims = h_lims
         self.w_lims = w_lims
         self.padding = padding
-        self.return_window = return_window
         self.max_windows = max_windows
         self.max_sample_attempts = max_sample_attempts
 
@@ -456,9 +467,10 @@ class RandomWindowGeoDataset(GeoDataset):
         if idx >= len(self):
             raise StopIteration()
         window = self.sample_window()
+        out = super().__getitem__(window)
         if self.return_window:
-            return (super().__getitem__(window), window)
-        return super().__getitem__(window)
+            return (out, window)
+        return out
 
     def __len__(self):
         return self.max_windows

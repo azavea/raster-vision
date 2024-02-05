@@ -43,7 +43,7 @@ In the {{ tiny_spacenet }} example, the :class:`.SemanticSegmentationConfig` is 
 
 .. literalinclude:: /../rastervision_pytorch_backend/rastervision/pytorch_backend/examples/tiny_spacenet.py
     :language: python
-    :lines: 48-53
+    :lines: 48-52
     :dedent:
 
 .. seealso:: The :class:`.ChipClassificationConfig`, :class:`.SemanticSegmentationConfig`, and :class:`.ObjectDetectionConfig` API docs have more information on configuring pipelines.

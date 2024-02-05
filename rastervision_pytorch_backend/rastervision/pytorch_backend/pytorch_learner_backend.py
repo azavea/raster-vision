@@ -3,18 +3,24 @@ from os.path import join, splitext
 import tempfile
 
 import numpy as np
+from tqdm.auto import tqdm
 
+from rastervision.pipeline import rv_config_ as rv_config
 from rastervision.pipeline.file_system import (make_dir, upload_or_copy,
                                                zipdir)
 from rastervision.core.backend import Backend, SampleWriter
 from rastervision.core.data.utils.misc import save_img
+from rastervision.core.data_sample import DataSample
 from rastervision.pytorch_learner.learner import Learner
+from rastervision.pytorch_learner.learner_config import DataConfig
 
 if TYPE_CHECKING:
-    from rastervision.core.data import ClassConfig, Scene
-    from rastervision.core.data_sample import DataSample
-    from rastervision.core.rv_pipeline import RVPipelineConfig
+    from torch.utils.data import Dataset
+    from rastervision.core.data import ClassConfig, DatasetConfig, Scene
+    from rastervision.core.rv_pipeline import RVPipelineConfig, ChipOptions
     from rastervision.pytorch_learner.learner_config import LearnerConfig
+
+SPLITS = ['train', 'valid', 'test']
 
 
 def write_chip(chip: np.ndarray, path: str) -> None:
@@ -23,13 +29,12 @@ def write_chip(chip: np.ndarray, path: str) -> None:
     if ext == '.npy':
         np.save(path, chip)
     else:
+        chip = chip.astype(np.uint8)
         save_img(chip, path)
 
 
 def get_image_ext(chip: np.ndarray) -> str:
     """Decide which format to store the image in."""
-    if chip.ndim not in (2, 3):
-        raise ValueError('chip shape must be (H, W) or (H, W, C)')
     if chip.ndim == 2 or chip.shape[-1] == 3:
         return 'png'
     else:
@@ -79,13 +84,17 @@ class PyTorchLearnerSampleWriter(SampleWriter):
         """Write a single sample to disk."""
         raise NotImplementedError()
 
-    def get_image_path(self, split_name: str, sample: 'DataSample') -> str:
+    def get_image_path(self, sample: 'DataSample') -> str:
         """Decide the save location of the image. Also, ensure that the target
         directory exists."""
-        img_dir = join(self.sample_dir, split_name, 'img')
+        split = '' if sample.split is None else sample.split
+        img_dir = join(self.sample_dir, split, 'img')
         make_dir(img_dir)
 
-        sample_name = f'{sample.scene_id}-{self.sample_ind}'
+        if sample.scene_id is not None:
+            sample_name = f'{sample.scene_id}-{self.sample_ind}'
+        else:
+            sample_name = f'{self.sample_ind}'
         ext = self.get_image_ext(sample.chip)
         img_path = join(img_dir, f'{sample_name}.{ext}')
         return img_path
@@ -135,8 +144,70 @@ class PyTorchLearnerBackend(Backend):
     def get_sample_writer(self):
         raise NotImplementedError()
 
+    def chip_dataset(self,
+                     dataset: 'DatasetConfig',
+                     chip_options: 'ChipOptions',
+                     dataloader_kw: dict = {}) -> None:
+        data_config = self._make_chip_data_config(dataset, chip_options)
+        train_ds, valid_ds, test_ds = data_config.build(for_chipping=True)
+
+        with self.get_sample_writer() as sample_writer:
+            for split, ds in zip(SPLITS, [train_ds, valid_ds, test_ds]):
+                if len(ds) == 0:
+                    continue
+                self.chip_pytorch_dataset(
+                    ds,
+                    sample_writer=sample_writer,
+                    chip_options=chip_options,
+                    split=split,
+                    dataloader_kw=dataloader_kw)
+
+    def chip_pytorch_dataset(
+            self,
+            dataset: 'Dataset',
+            sample_writer: 'PyTorchLearnerSampleWriter',
+            chip_options: 'ChipOptions',
+            split: Optional[str] = None,
+            dataloader_kw: dict = {},
+    ) -> None:
+        from torch.utils.data import DataLoader
+
+        num_workers = rv_config.get_namespace_option(
+            'rastervision',
+            'CHIP_NUM_WORKERS',
+            default=self.learner_cfg.data.num_workers)
+        batch_size = rv_config.get_namespace_option(
+            'rastervision',
+            'CHIP_BATCH_SIZE',
+            default=self.learner_cfg.solver.batch_sz)
+
+        dl_kw = dict(
+            batch_size=int(batch_size),
+            num_workers=int(num_workers),
+            shuffle=False,
+            pin_memory=True)
+        dl_kw.update(dataloader_kw)
+        dl = DataLoader(dataset, **dl_kw)
+
+        if split is not None:
+            desc = f'Chipping {split} scenes.'
+        else:
+            desc = f'Chipping dataset.'
+        with tqdm(total=len(dataset), desc=desc) as bar:
+            for (xs, ys), ws in dl:
+                for x, y, w in zip(xs, ys, ws):
+                    if not chip_options.keep_chip(x, y):
+                        continue
+                    sample = DataSample(chip=x, label=y, window=w, split=split)
+                    sample_writer.write_sample(sample)
+                    bar.update(1)
+
     def predict_scene(self,
                       scene: 'Scene',
                       chip_sz: int,
                       stride: Optional[int] = None):
+        raise NotImplementedError()
+
+    def _make_chip_data_config(self, dataset: 'DatasetConfig',
+                               chip_options: 'ChipOptions') -> 'DataConfig':
         raise NotImplementedError()

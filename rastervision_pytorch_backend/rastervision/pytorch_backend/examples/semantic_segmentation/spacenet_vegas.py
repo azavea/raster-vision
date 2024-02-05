@@ -5,9 +5,9 @@ import os
 from abc import abstractmethod
 
 from rastervision.pipeline.file_system.utils import list_paths
-from rastervision.core.rv_pipeline import (SemanticSegmentationConfig,
-                                           SemanticSegmentationChipOptions,
-                                           SemanticSegmentationWindowMethod)
+from rastervision.core.rv_pipeline import (
+    SemanticSegmentationConfig, SemanticSegmentationChipOptions,
+    WindowSamplingConfig, WindowSamplingMethod)
 from rastervision.core.data import (
     BufferTransformerConfig, ClassConfig, ClassInferenceTransformerConfig,
     DatasetConfig, GeoJSONVectorSourceConfig, PolygonVectorOutputConfig,
@@ -16,9 +16,8 @@ from rastervision.core.data import (
     SemanticSegmentationLabelStoreConfig, StatsTransformerConfig)
 from rastervision.pytorch_backend import PyTorchSemanticSegmentationConfig
 from rastervision.pytorch_learner import (
-    Backbone, GeoDataWindowConfig, GeoDataWindowMethod, SolverConfig,
-    SemanticSegmentationGeoDataConfig, SemanticSegmentationImageDataConfig,
-    SemanticSegmentationModelConfig)
+    Backbone, SolverConfig, SemanticSegmentationGeoDataConfig,
+    SemanticSegmentationImageDataConfig, SemanticSegmentationModelConfig)
 
 BUILDINGS = 'buildings'
 ROADS = 'roads'
@@ -186,6 +185,8 @@ def get_config(runner,
         val_ids = val_ids[:4]
 
     channel_order = [0, 1, 2]
+    chip_sz = 325
+    img_sz = chip_sz
 
     class_config = spacenet_cfg.get_class_config()
     train_scenes = [
@@ -199,19 +200,14 @@ def get_config(runner,
         train_scenes=train_scenes,
         validation_scenes=val_scenes)
 
-    chip_sz = 325
-    img_sz = chip_sz
-
     chip_options = SemanticSegmentationChipOptions(
-        window_method=SemanticSegmentationWindowMethod.sliding, stride=chip_sz)
+        sampling=WindowSamplingConfig(
+            method=WindowSamplingMethod.sliding, size=chip_sz, stride=chip_sz))
 
     if nochip:
         data = SemanticSegmentationGeoDataConfig(
             scene_dataset=scene_dataset,
-            window_opts=GeoDataWindowConfig(
-                method=GeoDataWindowMethod.sliding,
-                size=chip_sz,
-                stride=chip_options.stride),
+            sampling=chip_options.sampling,
             img_sz=img_sz,
             num_workers=4)
     else:
@@ -230,6 +226,5 @@ def get_config(runner,
         root_uri=root_uri,
         dataset=scene_dataset,
         backend=backend,
-        train_chip_sz=chip_sz,
         predict_chip_sz=chip_sz,
         chip_options=chip_options)

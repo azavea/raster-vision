@@ -7,14 +7,12 @@ from functools import lru_cache
 
 import click
 import numpy as np
-from tqdm.auto import tqdm
 
 from rastervision.pipeline.pipeline import Pipeline
 from rastervision.core.box import Box
 from rastervision.core.data_sample import DataSample
 from rastervision.core.data import Scene, Labels
 from rastervision.core.backend import Backend
-from rastervision.core.rv_pipeline import TRAIN, VALIDATION
 from rastervision.pipeline.file_system.utils import (
     download_if_needed, zipdir, get_local_path, upload_or_copy, make_dir,
     sync_from_dir, file_exists)
@@ -117,39 +115,12 @@ class RVPipeline(Pipeline):
     def chip(self, split_ind: int = 0, num_splits: int = 1):
         """Save training and validation chips."""
         cfg = self.config
-        backend = cfg.backend.build(cfg, self.tmp_dir)
+        log.info(f'Chip options: {cfg.chip_options}')
         dataset = cfg.dataset.get_split_config(split_ind, num_splits)
         if not dataset.train_scenes and not dataset.validation_scenes:
             return
-
-        class_cfg = dataset.class_config
-        with backend.get_sample_writer() as writer:
-
-            def chip_scene(scene, split):
-                windows = self.get_train_windows(scene)
-                if len(windows) == 0:
-                    log.warning(f'Scene {scene.id} produced no windows')
-                    return
-                with tqdm(
-                        windows,
-                        desc=f'Making {split} chips from scene {scene.id}',
-                        mininterval=0.5) as bar:
-                    for window in bar:
-                        chip = scene.raster_source.get_chip(window)
-                        labels = self.get_train_labels(window, scene)
-                        sample = DataSample(
-                            chip=chip,
-                            window=window,
-                            labels=labels,
-                            scene_id=str(scene.id),
-                            is_train=split == TRAIN)
-                        sample = self.post_process_sample(sample)
-                        writer.write_sample(sample)
-
-            for s in dataset.train_scenes:
-                chip_scene(s.build(class_cfg, self.tmp_dir), TRAIN)
-            for s in dataset.validation_scenes:
-                chip_scene(s.build(class_cfg, self.tmp_dir), VALIDATION)
+        backend = cfg.backend.build(cfg, self.tmp_dir)
+        backend.chip_dataset(dataset, cfg.chip_options)
 
     def train(self):
         """Train a model and save it."""

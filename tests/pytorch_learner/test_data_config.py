@@ -3,6 +3,8 @@ import unittest
 
 from rastervision.pipeline.file_system import get_tmp_dir
 from rastervision.pipeline.config import (ValidationError, build_config)
+from rastervision.core.rv_pipeline import (WindowSamplingConfig,
+                                           WindowSamplingMethod)
 from rastervision.pytorch_learner import (
     DataConfig, ImageDataConfig, SemanticSegmentationDataConfig,
     SemanticSegmentationImageDataConfig, SemanticSegmentationGeoDataConfig,
@@ -10,9 +12,8 @@ from rastervision.pytorch_learner import (
     RegressionDataConfig, RegressionImageDataConfig, ObjectDetectionDataConfig,
     ObjectDetectionImageDataConfig, data_config_upgrader,
     ss_data_config_upgrader, clf_data_config_upgrader,
-    reg_data_config_upgrader, objdet_data_config_upgrader, GeoDataWindowConfig,
-    GeoDataWindowMethod, GeoDataConfig, PlotOptions,
-    ss_image_data_config_upgrader)
+    reg_data_config_upgrader, objdet_data_config_upgrader, GeoDataConfig,
+    PlotOptions, ss_image_data_config_upgrader)
 from rastervision.core.data import DatasetConfig, ClassConfig
 
 
@@ -102,7 +103,7 @@ class TestSemanticSegmentationGeoDataConfig(unittest.TestCase):
             class_config=ClassConfig(names=['abc']))
         old_cfg = SemanticSegmentationGeoDataConfig(
             scene_dataset=scene_dataset,
-            window_opts=GeoDataWindowConfig(size=100),
+            sampling=WindowSamplingConfig(size=100),
             img_channels=8)
         old_cfg_dict = old_cfg.dict()
         old_cfg_dict['channel_display_groups'] = None
@@ -309,53 +310,57 @@ class TestGeoDataConfig(unittest.TestCase):
 
     def test_window_config(self):
         # update() correctly initializes size_lims
-        args = dict(method=GeoDataWindowMethod.random, size=10)
-        self.assertNoError(lambda: GeoDataWindowConfig(**args))
-        self.assertEqual(GeoDataWindowConfig(**args).size_lims, (10, 11))
+        args = dict(method=WindowSamplingMethod.random, size=10)
+        self.assertNoError(lambda: WindowSamplingConfig(**args))
+        self.assertEqual(WindowSamplingConfig(**args).size_lims, (10, 11))
 
         # update() only initializes size_lims if method = random
-        args = dict(method=GeoDataWindowMethod.sliding, size=10)
-        self.assertEqual(GeoDataWindowConfig(**args).size_lims, None)
+        args = dict(method=WindowSamplingMethod.sliding, size=10)
+        self.assertEqual(WindowSamplingConfig(**args).size_lims, None)
 
         # only allow one of size_lims and h_lims+w_lims
         args = dict(
-            method=GeoDataWindowMethod.random,
+            method=WindowSamplingMethod.random,
             size=10,
             size_lims=(10, 20),
             h_lims=(10, 20),
             w_lims=(10, 20))
-        self.assertRaises(ValidationError, lambda: GeoDataWindowConfig(**args))
+        self.assertRaises(ValidationError,
+                          lambda: WindowSamplingConfig(**args))
 
         # require both h_lims and w_lims if either specified
         args = dict(
-            method=GeoDataWindowMethod.random,
+            method=WindowSamplingMethod.random,
             size=10,
             h_lims=None,
             w_lims=(10, 20))
-        self.assertRaises(ValidationError, lambda: GeoDataWindowConfig(**args))
+        self.assertRaises(ValidationError,
+                          lambda: WindowSamplingConfig(**args))
 
         # require both h_lims and w_lims if either specified
         args = dict(
-            method=GeoDataWindowMethod.random,
+            method=WindowSamplingMethod.random,
             size=10,
             h_lims=(10, 20),
             w_lims=None)
-        self.assertRaises(ValidationError, lambda: GeoDataWindowConfig(**args))
+        self.assertRaises(ValidationError,
+                          lambda: WindowSamplingConfig(**args))
 
         # only allow one of size_lims and h_lims+w_lims
         args = dict(
-            method=GeoDataWindowMethod.random,
+            method=WindowSamplingMethod.random,
             size=10,
             size_lims=(10, 20),
             h_lims=(10, 20),
             w_lims=None)
-        self.assertRaises(ValidationError, lambda: GeoDataWindowConfig(**args))
+        self.assertRaises(ValidationError,
+                          lambda: WindowSamplingConfig(**args))
 
     def test_get_class_info_from_class_config_if_needed(self):
         class_config = ClassConfig(names=['bg', 'fg'])
         scene_dataset = DatasetConfig(
             class_config=class_config, train_scenes=[], validation_scenes=[])
-        args = dict(scene_dataset=scene_dataset, window_opts={})
+        args = dict(scene_dataset=scene_dataset, sampling={})
         self.assertNoError(lambda: GeoDataConfig(**args))
 
         cfg = GeoDataConfig(**args)
@@ -416,7 +421,7 @@ class TestGeoDataConfig(unittest.TestCase):
             test_scenes=[make_scene(nchannels, nclasses) for _ in range(0)])
         data_cfg = SemanticSegmentationGeoDataConfig(
             scene_dataset=dataset_cfg,
-            window_opts=GeoDataWindowConfig(
+            sampling=WindowSamplingConfig(
                 size=chip_sz, stride=chip_sz, padding=0),
             class_names=class_config.names,
             class_colors=class_config.colors,

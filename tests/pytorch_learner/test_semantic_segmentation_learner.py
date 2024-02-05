@@ -9,12 +9,12 @@ from rastervision.core.data import (
     ClassConfig, DatasetConfig, RasterioSourceConfig, MultiRasterSourceConfig,
     ReclassTransformerConfig, SceneConfig,
     SemanticSegmentationLabelSourceConfig)
-from rastervision.core.rv_pipeline import SemanticSegmentationConfig
+from rastervision.core.rv_pipeline import (
+    SemanticSegmentationConfig, WindowSamplingConfig, WindowSamplingMethod)
 from rastervision.pytorch_backend import PyTorchSemanticSegmentationConfig
 from rastervision.pytorch_learner import (
     SemanticSegmentationModelConfig, SolverConfig,
-    SemanticSegmentationGeoDataConfig, PlotOptions, GeoDataWindowConfig,
-    GeoDataWindowMethod)
+    SemanticSegmentationGeoDataConfig, PlotOptions)
 from rastervision.pytorch_learner.utils import (
     serialize_albumentation_transform)
 from tests.data_files.lambda_transforms import lambda_transforms
@@ -101,8 +101,9 @@ class TestSemanticSegmentationLearner(unittest.TestCase):
                 aug_tf = None
             data_cfg = SemanticSegmentationGeoDataConfig(
                 scene_dataset=dataset_cfg,
-                window_opts=GeoDataWindowConfig(
-                    method=GeoDataWindowMethod.random, size=20, max_windows=8),
+                sampling=WindowSamplingConfig(
+                    method=WindowSamplingMethod.random, size=20,
+                    max_windows=8),
                 class_names=class_config.names,
                 class_colors=class_config.colors,
                 aug_transform=aug_tf,

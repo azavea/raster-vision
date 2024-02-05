@@ -3,7 +3,7 @@ from typing import Tuple, Union
 
 from rastervision.core.rv_pipeline import (
     SceneConfig, DatasetConfig, SemanticSegmentationChipOptions,
-    SemanticSegmentationWindowMethod, SemanticSegmentationConfig)
+    SemanticSegmentationConfig, WindowSamplingConfig, WindowSamplingMethod)
 
 from rastervision.core.data import (
     ClassConfig, RasterioSourceConfig, MultiRasterSourceConfig,
@@ -16,8 +16,7 @@ from rastervision.pytorch_backend import (PyTorchSemanticSegmentationConfig,
 from rastervision.pytorch_backend.examples.utils import (save_image_crop)
 from rastervision.pytorch_learner import (
     Backbone, SolverConfig, SemanticSegmentationImageDataConfig,
-    SemanticSegmentationGeoDataConfig, GeoDataWindowConfig,
-    GeoDataWindowMethod, PlotOptions)
+    SemanticSegmentationGeoDataConfig, PlotOptions)
 
 # -----------------------
 # Input files and paths
@@ -124,18 +123,15 @@ def get_config(runner,
         validation_scenes=[_make_scene(scene_id) for scene_id in val_ids])
 
     chip_options = SemanticSegmentationChipOptions(
-        window_method=SemanticSegmentationWindowMethod.sliding,
-        stride=CHIP_SIZE)
+        sampling=WindowSamplingConfig(
+            method=WindowSamplingMethod.sliding,
+            size=CHIP_SIZE,
+            stride=CHIP_SIZE))
 
     if nochip:
-        window_opts = GeoDataWindowConfig(
-            method=GeoDataWindowMethod.sliding,
-            size=CHIP_SIZE,
-            stride=chip_options.stride)
-
         data = SemanticSegmentationGeoDataConfig(
             scene_dataset=dataset_config,
-            window_opts=window_opts,
+            sampling=chip_options.sampling,
             img_sz=CHIP_SIZE,
             num_workers=4,
             plot_options=PlotOptions(
@@ -170,7 +166,6 @@ def get_config(runner,
     # -----------------------------------------------
     pipeline_config = SemanticSegmentationConfig(
         root_uri=root_uri,
-        train_chip_sz=CHIP_SIZE,
         predict_chip_sz=CHIP_SIZE,
         chip_options=chip_options,
         dataset=dataset_config,

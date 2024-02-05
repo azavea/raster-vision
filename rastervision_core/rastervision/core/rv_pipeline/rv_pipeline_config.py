@@ -1,15 +1,16 @@
+from typing import (TYPE_CHECKING, List, Optional)
 from os.path import join
-from typing import List, TYPE_CHECKING, Optional
 
 from rastervision.pipeline.pipeline_config import PipelineConfig
 from rastervision.core.data import (DatasetConfig, StatsTransformerConfig,
                                     LabelStoreConfig, SceneConfig)
-from rastervision.core.utils.misc import Proportion
 from rastervision.core.analyzer import StatsAnalyzerConfig
 from rastervision.core.backend import BackendConfig
 from rastervision.core.evaluation import EvaluatorConfig
 from rastervision.core.analyzer import AnalyzerConfig
-from rastervision.pipeline.config import (register_config, Field, Config)
+from rastervision.core.rv_pipeline.chip_options import (ChipOptions,
+                                                        WindowSamplingConfig)
+from rastervision.pipeline.config import (Config, Field, register_config)
 
 if TYPE_CHECKING:
     from rastervision.core.backend.backend import Backend  # noqa
@@ -21,7 +22,21 @@ class PredictOptions(Config):
     pass
 
 
-@register_config('rv_pipeline')
+def rv_pipeline_config_upgrader(cfg_dict: dict, version: int) -> dict:
+    if version == 10:
+        train_chip_sz = cfg_dict.pop('train_chip_sz', 300)
+        nodata_threshold = cfg_dict.pop('chip_nodata_threshold')
+        if 'chip_options' not in cfg_dict:
+            cfg_dict['chip_options'] = ChipOptions(
+                sampling=WindowSamplingConfig(size=train_chip_sz),
+                nodata_threshold=nodata_threshold)
+        else:
+            cfg_dict['chip_options']['sampling']['size'] = train_chip_sz
+            cfg_dict['chip_options']['nodata_threshold'] = nodata_threshold
+    return cfg_dict
+
+
+@register_config('rv_pipeline', upgrader=rv_pipeline_config_upgrader)
 class RVPipelineConfig(PipelineConfig):
     """Configure an :class:`.RVPipeline`."""
 
@@ -42,18 +57,12 @@ class RVPipelineConfig(PipelineConfig):
         ('Analyzers to run during analyzer command. A StatsAnalyzer will be added '
          'automatically if any scenes have a RasterTransformer.'))
 
-    train_chip_sz: int = Field(
-        300, description='Size of training chips in pixels.')
+    chip_options: Optional[ChipOptions] = Field(
+        None, description='Config for chip stage.')
     predict_chip_sz: int = Field(
         300, description='Size of predictions chips in pixels.')
     predict_batch_sz: int = Field(
         8, description='Batch size to use during prediction.')
-    chip_nodata_threshold: Proportion = Field(
-        1,
-        description='Discard chips where the proportion of NODATA values is '
-        'greater than or equal to this value. Might result in false positives '
-        'if there are many legitimate black pixels in the chip. Use with '
-        'caution.')
 
     analyze_uri: Optional[str] = Field(
         None,

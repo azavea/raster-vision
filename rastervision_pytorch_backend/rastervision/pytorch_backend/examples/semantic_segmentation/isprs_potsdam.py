@@ -3,9 +3,9 @@ from os.path import join, basename
 
 import albumentations as A
 
-from rastervision.core.rv_pipeline import (SemanticSegmentationConfig,
-                                           SemanticSegmentationChipOptions,
-                                           SemanticSegmentationWindowMethod)
+from rastervision.core.rv_pipeline import (
+    SemanticSegmentationConfig, SemanticSegmentationChipOptions,
+    WindowSamplingConfig, WindowSamplingMethod)
 from rastervision.core.data import (
     ClassConfig, DatasetConfig, PolygonVectorOutputConfig,
     RasterioSourceConfig, RGBClassTransformerConfig, SceneConfig,
@@ -13,9 +13,9 @@ from rastervision.core.data import (
     SemanticSegmentationLabelStoreConfig)
 from rastervision.pytorch_backend import PyTorchSemanticSegmentationConfig
 from rastervision.pytorch_learner import (
-    Backbone, ExternalModuleConfig, GeoDataWindowConfig, GeoDataWindowMethod,
-    PlotOptions, SolverConfig, SemanticSegmentationGeoDataConfig,
-    SemanticSegmentationImageDataConfig, SemanticSegmentationModelConfig)
+    Backbone, ExternalModuleConfig, PlotOptions, SolverConfig,
+    SemanticSegmentationGeoDataConfig, SemanticSegmentationImageDataConfig,
+    SemanticSegmentationModelConfig)
 from rastervision.pytorch_backend.examples.utils import save_image_crop
 from rastervision.pytorch_backend.examples.semantic_segmentation.utils import (
     example_multiband_transform, example_rgb_transform, imagenet_stats,
@@ -83,9 +83,16 @@ def get_config(runner,
     train_ids = TRAIN_IDS
     val_ids = VAL_IDS
 
+    chip_sz = 300
+    img_sz = chip_sz
+    num_epochs = int(num_epochs)
+    batch_sz = int(batch_sz)
+
     if test:
         train_ids = train_ids[:2]
         val_ids = val_ids[:2]
+        num_epochs = 2
+        batch_sz = 2
 
     if multiband:
         # use all 4 channels
@@ -117,8 +124,9 @@ def get_config(runner,
 
     def make_scene(id) -> SceneConfig:
         id = id.replace('-', '_')
-        raster_uri = f'{raw_uri}/4_Ortho_RGBIR/top_potsdam_{id}_RGBIR.tif'
-        label_uri = f'{raw_uri}/5_Labels_for_participants/top_potsdam_{id}_label.tif'
+        raster_uri = join(raw_uri, f'4_Ortho_RGBIR/top_potsdam_{id}_RGBIR.tif')
+        label_uri = join(
+            raw_uri, f'5_Labels_for_participants/top_potsdam_{id}_label.tif')
 
         if test:
             crop_uri = join(processed_uri, 'crops', basename(raster_uri))
@@ -164,31 +172,24 @@ def get_config(runner,
         train_scenes=[make_scene(id) for id in train_ids],
         validation_scenes=[make_scene(id) for id in val_ids])
 
-    chip_sz = 300
-    img_sz = chip_sz
+    window_sampling_opts = {}
+    # set window configs for training scenes
+    for s in scene_dataset.train_scenes:
+        window_sampling_opts[s.id] = WindowSamplingConfig(
+            method=WindowSamplingMethod.sliding, size=chip_sz, stride=chip_sz)
+
+    # set window configs for validation scenes
+    for s in scene_dataset.validation_scenes:
+        window_sampling_opts[s.id] = WindowSamplingConfig(
+            method=WindowSamplingMethod.sliding, size=chip_sz, stride=chip_sz)
 
     chip_options = SemanticSegmentationChipOptions(
-        window_method=SemanticSegmentationWindowMethod.sliding, stride=chip_sz)
+        sampling=window_sampling_opts)
 
     if nochip:
-        window_opts = {}
-        # set window configs for training scenes
-        for s in scene_dataset.train_scenes:
-            window_opts[s.id] = GeoDataWindowConfig(
-                method=GeoDataWindowMethod.sliding,
-                size=chip_sz,
-                stride=chip_options.stride)
-
-        # set window configs for validation scenes
-        for s in scene_dataset.validation_scenes:
-            window_opts[s.id] = GeoDataWindowConfig(
-                method=GeoDataWindowMethod.sliding,
-                size=chip_sz,
-                stride=chip_options.stride)
-
         data = SemanticSegmentationGeoDataConfig(
             scene_dataset=scene_dataset,
-            window_opts=window_opts,
+            sampling=window_sampling_opts,
             img_sz=img_sz,
             img_channels=len(channel_order),
             num_workers=4,
@@ -226,8 +227,6 @@ def get_config(runner,
     else:
         model = SemanticSegmentationModelConfig(backbone=Backbone.resnet50)
 
-    num_epochs = 2 if test else int(num_epochs)
-    batch_sz = 2 if test else int(batch_sz)
     solver = SolverConfig(
         lr=1e-4, num_epochs=num_epochs, batch_sz=batch_sz, one_cycle=True)
 
@@ -243,8 +242,7 @@ def get_config(runner,
         root_uri=root_uri,
         dataset=scene_dataset,
         backend=backend,
-        train_chip_sz=chip_sz,
-        predict_chip_sz=chip_sz,
-        chip_options=chip_options)
+        chip_options=chip_options,
+        predict_chip_sz=chip_sz)
 
     return pipeline

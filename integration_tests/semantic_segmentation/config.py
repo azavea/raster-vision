@@ -5,14 +5,13 @@ from rastervision.core.data import (
     SemanticSegmentationLabelStoreConfig, RasterioSourceConfig, SceneConfig,
     PolygonVectorOutputConfig, DatasetConfig, BuildingVectorOutputConfig,
     RGBClassTransformerConfig)
-from rastervision.core.rv_pipeline import (SemanticSegmentationChipOptions,
-                                           SemanticSegmentationWindowMethod,
-                                           SemanticSegmentationConfig)
+from rastervision.core.rv_pipeline import (
+    SemanticSegmentationChipOptions, SemanticSegmentationConfig,
+    WindowSamplingConfig, WindowSamplingMethod)
 from rastervision.pytorch_backend import PyTorchSemanticSegmentationConfig
 from rastervision.pytorch_learner import (
     Backbone, SolverConfig, SemanticSegmentationModelConfig,
-    SemanticSegmentationImageDataConfig, SemanticSegmentationGeoDataConfig,
-    GeoDataWindowConfig, GeoDataWindowMethod)
+    SemanticSegmentationImageDataConfig, SemanticSegmentationGeoDataConfig)
 
 
 def get_config(runner, root_uri, data_uri=None, full_train=False,
@@ -62,17 +61,14 @@ def get_config(runner, root_uri, data_uri=None, full_train=False,
         validation_scenes=scenes)
 
     chip_options = SemanticSegmentationChipOptions(
-        window_method=SemanticSegmentationWindowMethod.sliding, stride=chip_sz)
+        sampling=WindowSamplingConfig(
+            method=WindowSamplingMethod.sliding, stride=chip_sz, size=chip_sz))
 
     if nochip:
-        window_opts = GeoDataWindowConfig(
-            method=GeoDataWindowMethod.sliding,
-            stride=chip_options.stride,
-            size=chip_sz)
 
         data = SemanticSegmentationGeoDataConfig(
             scene_dataset=scene_dataset,
-            window_opts=window_opts,
+            sampling=chip_options.sampling,
             img_sz=img_sz,
             augmentors=[])
     else:
@@ -110,6 +106,5 @@ def get_config(runner, root_uri, data_uri=None, full_train=False,
         root_uri=root_uri,
         dataset=scene_dataset,
         backend=backend,
-        train_chip_sz=chip_sz,
-        predict_chip_sz=chip_sz,
-        chip_options=chip_options)
+        chip_options=chip_options,
+        predict_chip_sz=chip_sz)

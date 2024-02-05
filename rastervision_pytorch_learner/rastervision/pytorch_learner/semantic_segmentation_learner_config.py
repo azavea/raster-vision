@@ -9,11 +9,11 @@ from torch.utils.data import Dataset
 from torchvision import models
 
 from rastervision.core.data import Scene
+from rastervision.core.rv_pipeline import WindowSamplingMethod
 from rastervision.pipeline.config import (Config, register_config, Field,
                                           validator, ConfigError)
 from rastervision.pytorch_learner.learner_config import (
-    Backbone, LearnerConfig, ModelConfig, ImageDataConfig, GeoDataConfig,
-    GeoDataWindowMethod)
+    Backbone, LearnerConfig, ModelConfig, ImageDataConfig, GeoDataConfig)
 from rastervision.pytorch_learner.dataset import (
     SemanticSegmentationImageDataset,
     SemanticSegmentationSlidingWindowGeoDataset,
@@ -113,22 +113,29 @@ class SemanticSegmentationGeoDataConfig(SemanticSegmentationDataConfig,
 
     def scene_to_dataset(self,
                          scene: Scene,
-                         transform: Optional[A.BasicTransform] = None
-                         ) -> Dataset:
-        if isinstance(self.window_opts, dict):
-            opts = self.window_opts[scene.id]
+                         transform: Optional[A.BasicTransform] = None,
+                         for_chipping: bool = False) -> Dataset:
+        if isinstance(self.sampling, dict):
+            opts = self.sampling[scene.id]
         else:
-            opts = self.window_opts
+            opts = self.sampling
 
-        if opts.method == GeoDataWindowMethod.sliding:
+        extra_args = {}
+        if for_chipping:
+            extra_args = dict(
+                normalize=False, to_pytorch=False, return_window=True)
+
+        if opts.method == WindowSamplingMethod.sliding:
             ds = SemanticSegmentationSlidingWindowGeoDataset(
                 scene,
                 size=opts.size,
                 stride=opts.stride,
                 padding=opts.padding,
                 pad_direction=opts.pad_direction,
-                transform=transform)
-        elif opts.method == GeoDataWindowMethod.random:
+                transform=transform,
+                **extra_args,
+            )
+        elif opts.method == WindowSamplingMethod.random:
             ds = SemanticSegmentationRandomWindowGeoDataset(
                 scene,
                 size_lims=opts.size_lims,
@@ -139,7 +146,9 @@ class SemanticSegmentationGeoDataConfig(SemanticSegmentationDataConfig,
                 max_windows=opts.max_windows,
                 max_sample_attempts=opts.max_sample_attempts,
                 efficient_aoi_sampling=opts.efficient_aoi_sampling,
-                transform=transform)
+                transform=transform,
+                **extra_args,
+            )
         else:
             raise NotImplementedError()
         return ds

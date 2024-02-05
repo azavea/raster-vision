@@ -1,6 +1,8 @@
 from os.path import join, dirname, basename
 
-from rastervision.core.rv_pipeline import ChipClassificationConfig
+from rastervision.core.rv_pipeline import (ChipClassificationConfig,
+                                           ChipOptions, WindowSamplingConfig,
+                                           WindowSamplingMethod)
 from rastervision.core.data import (
     ClassConfig, ChipClassificationLabelSourceConfig,
     GeoJSONVectorSourceConfig, RasterioSourceConfig, StatsTransformerConfig,
@@ -8,8 +10,7 @@ from rastervision.core.data import (
 from rastervision.pytorch_backend import PyTorchChipClassificationConfig
 from rastervision.pytorch_learner import (
     Backbone, SolverConfig, ClassificationModelConfig,
-    ClassificationImageDataConfig, ClassificationGeoDataConfig,
-    GeoDataWindowConfig, GeoDataWindowMethod)
+    ClassificationImageDataConfig, ClassificationGeoDataConfig)
 
 
 def get_config(runner, root_uri, data_uri=None, full_train=False,
@@ -56,13 +57,14 @@ def get_config(runner, root_uri, data_uri=None, full_train=False,
     chip_sz = 200
     img_sz = chip_sz
 
-    if nochip:
-        window_opts = GeoDataWindowConfig(
-            method=GeoDataWindowMethod.sliding, stride=chip_sz, size=chip_sz)
+    chip_options = ChipOptions(
+        sampling=WindowSamplingConfig(
+            method=WindowSamplingMethod.sliding, stride=chip_sz, size=chip_sz))
 
+    if nochip:
         data = ClassificationGeoDataConfig(
             scene_dataset=scene_dataset,
-            window_opts=window_opts,
+            sampling=chip_options.sampling,
             img_sz=img_sz,
             augmentors=[])
     else:
@@ -99,7 +101,7 @@ def get_config(runner, root_uri, data_uri=None, full_train=False,
         root_uri=root_uri,
         dataset=scene_dataset,
         backend=backend,
-        train_chip_sz=chip_sz,
+        chip_options=chip_options,
         predict_chip_sz=chip_sz)
 
     return config

@@ -1,12 +1,14 @@
 from typing import Callable
 import unittest
+
 from pydantic import ValidationError
+import numpy as np
 
 from rastervision.core.data import (ClassConfig, DatasetConfig)
 from rastervision.pipeline.config import build_config
 from rastervision.core.rv_pipeline.semantic_segmentation_config import (
     SemanticSegmentationConfig, SemanticSegmentationPredictOptions,
-    ss_config_upgrader)
+    SemanticSegmentationChipOptions, ss_config_upgrader)
 from rastervision.pytorch_backend import PyTorchSemanticSegmentationConfig
 from rastervision.pytorch_learner import (SemanticSegmentationModelConfig,
                                           SolverConfig,
@@ -67,6 +69,22 @@ class TestSemanticSegmentationPredictOptions(unittest.TestCase):
         args = dict(stride=10, crop_sz=0)
         self.assertRaises(ValidationError,
                           lambda: SemanticSegmentationPredictOptions(**args))
+
+
+class TestSemanticSegmentationChipOptions(unittest.TestCase):
+    def test_enough_target_pixels_true(self):
+        chip = np.zeros((10, 10, 1), dtype=np.uint8)
+        chip[4:, 4:, :] = 1
+        chip_options = SemanticSegmentationChipOptions(
+            sampling={}, target_class_ids=[1], target_count_threshold=30)
+        self.assertTrue(chip_options.enough_target_pixels(chip))
+
+    def test_enough_target_pixels_false(self):
+        chip = np.zeros((10, 10, 1), dtype=np.uint8)
+        chip[7:, 7:, :] = 1
+        chip_options = SemanticSegmentationChipOptions(
+            sampling={}, target_class_ids=[1], target_count_threshold=30)
+        self.assertFalse(chip_options.enough_target_pixels(chip))
 
 
 if __name__ == '__main__':

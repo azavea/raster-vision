@@ -1,16 +1,16 @@
 from os.path import join, dirname
 
-from rastervision.core.rv_pipeline import (ObjectDetectionConfig,
-                                           ObjectDetectionChipOptions,
-                                           ObjectDetectionPredictOptions)
+from rastervision.core.rv_pipeline import (
+    ObjectDetectionConfig, ObjectDetectionChipOptions,
+    ObjectDetectionPredictOptions, ObjectDetectionWindowSamplingConfig,
+    WindowSamplingMethod)
 from rastervision.core.data import (
     ClassConfig, ObjectDetectionLabelSourceConfig, GeoJSONVectorSourceConfig,
     RasterioSourceConfig, SceneConfig, DatasetConfig)
 from rastervision.pytorch_backend import PyTorchObjectDetectionConfig
 from rastervision.pytorch_learner import (
     Backbone, SolverConfig, ObjectDetectionModelConfig,
-    ObjectDetectionImageDataConfig, ObjectDetectionGeoDataConfig,
-    ObjectDetectionGeoDataWindowConfig, GeoDataWindowMethod)
+    ObjectDetectionImageDataConfig, ObjectDetectionGeoDataConfig)
 
 
 def get_config(runner, root_uri, data_uri=None, full_train=False,
@@ -48,19 +48,18 @@ def get_config(runner, root_uri, data_uri=None, full_train=False,
         train_scenes=scenes,
         validation_scenes=scenes)
 
-    chip_options = ObjectDetectionChipOptions(neg_ratio=1.0, ioa_thresh=1.0)
-
-    if nochip:
-        window_opts = ObjectDetectionGeoDataWindowConfig(
-            method=GeoDataWindowMethod.sliding,
+    chip_options = ObjectDetectionChipOptions(
+        sampling=ObjectDetectionWindowSamplingConfig(
+            method=WindowSamplingMethod.sliding,
             stride=chip_sz,
             size=chip_sz,
-            neg_ratio=chip_options.neg_ratio,
-            ioa_thresh=chip_options.ioa_thresh)
+            neg_ratio=1.0,
+            ioa_thresh=1.0))
 
+    if nochip:
         data = ObjectDetectionGeoDataConfig(
             scene_dataset=scene_dataset,
-            window_opts=window_opts,
+            sampling=chip_options.sampling,
             img_sz=img_sz,
             augmentors=[])
     else:
@@ -100,7 +99,6 @@ def get_config(runner, root_uri, data_uri=None, full_train=False,
         root_uri=root_uri,
         dataset=scene_dataset,
         backend=backend,
-        train_chip_sz=chip_sz,
         predict_chip_sz=chip_sz,
         chip_options=chip_options,
         predict_options=predict_options)

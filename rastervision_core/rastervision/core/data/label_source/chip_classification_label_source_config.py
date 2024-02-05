@@ -55,7 +55,7 @@ class ChipClassificationLabelSourceConfig(LabelSourceConfig):
         None,
         description=
         ('Size of a cell to use in pixels. If None, and this Config is part '
-         'of an RVPipeline, this field will be set from RVPipeline.train_chip_sz.'
+         'of an RVPipeline, this field will be set from RVPipeline.chip_options.'
          ))
     lazy: bool = Field(
         False,
@@ -107,6 +107,6 @@ class ChipClassificationLabelSourceConfig(LabelSourceConfig):
     def update(self, pipeline=None, scene=None):
         super().update(pipeline, scene)
         if self.cell_sz is None and pipeline is not None:
-            self.cell_sz = pipeline.train_chip_sz
+            self.cell_sz = pipeline.chip_options.get_chip_sz(scene.id)
         if self.vector_source is not None:
             self.vector_source.update(pipeline, scene)

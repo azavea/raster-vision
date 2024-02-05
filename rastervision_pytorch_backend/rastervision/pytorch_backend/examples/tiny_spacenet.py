@@ -35,9 +35,9 @@ def get_config(runner) -> SemanticSegmentationConfig:
     backend = PyTorchSemanticSegmentationConfig(
         data=SemanticSegmentationGeoDataConfig(
             scene_dataset=scene_dataset,
-            window_opts=GeoDataWindowConfig(
+            sampling=WindowSamplingConfig(
                 # randomly sample training chips from scene
-                method=GeoDataWindowMethod.random,
+                method=WindowSamplingMethod.random,
                 # ... of size chip_sz x chip_sz
                 size=chip_sz,
                 # ... and at most 10 chips per scene
@@ -49,7 +49,6 @@ def get_config(runner) -> SemanticSegmentationConfig:
         root_uri=output_root_uri,
         dataset=scene_dataset,
         backend=backend,
-        train_chip_sz=chip_sz,
         predict_chip_sz=chip_sz)
 
 

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, List, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 import numpy as np
 
@@ -35,28 +35,6 @@ class SemanticSegmentationLabelSource(LabelSource):
         self.class_config = class_config
         if bbox is not None:
             self.set_bbox(bbox)
-
-    def enough_target_pixels(self, window: Box, target_count_threshold: int,
-                             target_classes: List[int]) -> bool:
-        """Check if window contains enough pixels of the given target classes.
-
-        Args:
-             window: The larger window from-which the sub-window will
-                  be clipped.
-             target_count_threshold:  Minimum number of target pixels.
-             target_classes: The classes of interest.  The given
-                  window is examined to make sure that it contains a
-                  sufficient number of target pixels.
-        Returns:
-             True (the window does contain interesting pixels) or False.
-        """
-        label_arr = self.get_label_arr(window)
-
-        target_count = 0
-        for class_id in target_classes:
-            target_count += (label_arr == class_id).sum()
-
-        return target_count >= target_count_threshold
 
     def get_labels(self,
                    window: Optional[Box] = None) -> SemanticSegmentationLabels:
