@@ -5,7 +5,8 @@ import albumentations as A
 
 from rastervision.core.rv_pipeline import (
     SemanticSegmentationConfig, SemanticSegmentationChipOptions,
-    WindowSamplingConfig, WindowSamplingMethod)
+    SemanticSegmentationPredictOptions, WindowSamplingConfig,
+    WindowSamplingMethod)
 from rastervision.core.data import (
     ClassConfig, DatasetConfig, PolygonVectorOutputConfig,
     RasterioSourceConfig, RGBClassTransformerConfig, SceneConfig,
@@ -238,11 +239,13 @@ def get_config(runner,
         run_tensorboard=False,
     )
 
+    predict_options = SemanticSegmentationPredictOptions(chip_sz=chip_sz)
+
     pipeline = SemanticSegmentationConfig(
         root_uri=root_uri,
         dataset=scene_dataset,
         backend=backend,
         chip_options=chip_options,
-        predict_chip_sz=chip_sz)
+        predict_options=predict_options)
 
     return pipeline

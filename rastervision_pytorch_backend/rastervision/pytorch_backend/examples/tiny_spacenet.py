@@ -49,7 +49,7 @@ def get_config(runner) -> SemanticSegmentationConfig:
         root_uri=output_root_uri,
         dataset=scene_dataset,
         backend=backend,
-        predict_chip_sz=chip_sz)
+        predict_options=SemanticSegmentationPredictOptions(chip_sz=chip_sz))
 
 
 def make_scene(scene_id: str, image_uri: str, label_uri: str,

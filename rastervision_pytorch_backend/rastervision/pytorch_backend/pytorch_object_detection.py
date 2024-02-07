@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Dict, Iterator, Optional
+from typing import TYPE_CHECKING, Dict, Iterator
 from os.path import join, basename
 import uuid
 
@@ -17,7 +17,8 @@ from rastervision.pytorch_learner.object_detection_learner_config import (
 
 if TYPE_CHECKING:
     from rastervision.core.data import DatasetConfig, Scene
-    from rastervision.core.rv_pipeline import ChipOptions
+    from rastervision.core.rv_pipeline import (ChipOptions,
+                                               ObjectDetectionPredictOptions)
     from rastervision.pytorch_learner.object_detection_utils import BoxList
 
 
@@ -113,12 +114,13 @@ class PyTorchObjectDetection(PyTorchLearnerBackend):
         dataloader_kw = dict(**dataloader_kw, collate_fn=chip_collate_fn_od)
         return super().chip_dataset(dataset, chip_options, dataloader_kw)
 
-    def predict_scene(self,
-                      scene: 'Scene',
-                      chip_sz: int,
-                      stride: Optional[int] = None) -> ObjectDetectionLabels:
-        if stride is None:
-            stride = chip_sz
+    def predict_scene(self, scene: 'Scene',
+                      predict_options: 'ObjectDetectionPredictOptions'
+                      ) -> ObjectDetectionLabels:
+
+        chip_sz = predict_options.chip_sz
+        stride = predict_options.stride
+        batch_sz = predict_options.batch_sz
 
         if self.learner is None:
             self.load_model()
@@ -136,12 +138,17 @@ class PyTorchObjectDetection(PyTorchLearnerBackend):
                 raw_out=True,
                 numpy_out=True,
                 predict_kw=dict(out_shape=(chip_sz, chip_sz)),
+                dataloader_kw=dict(batch_size=batch_sz),
                 progress_bar=True,
                 progress_bar_kw=dict(desc=f'Making predictions on {scene.id}'))
         )
 
         labels = ObjectDetectionLabels.from_predictions(
             ds.windows, predictions)
+        labels = ObjectDetectionLabels.prune_duplicates(
+            labels,
+            score_thresh=predict_options.score_thresh,
+            merge_thresh=predict_options.merge_thresh)
 
         return labels
 

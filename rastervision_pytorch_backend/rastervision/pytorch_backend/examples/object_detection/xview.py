@@ -107,9 +107,6 @@ def get_config(runner,
     else:
         data = ObjectDetectionImageDataConfig(img_sz=img_sz, num_workers=4)
 
-    predict_options = ObjectDetectionPredictOptions(
-        merge_thresh=0.1, score_thresh=0.5)
-
     backend = PyTorchObjectDetectionConfig(
         data=data,
         model=ObjectDetectionModelConfig(backbone=Backbone.resnet50),
@@ -123,10 +120,12 @@ def get_config(runner,
         run_tensorboard=False,
     )
 
+    predict_options = ObjectDetectionPredictOptions(
+        chip_sz=chip_sz, merge_thresh=0.1, score_thresh=0.5)
+
     return ObjectDetectionConfig(
         root_uri=root_uri,
         dataset=scene_dataset,
         backend=backend,
-        predict_chip_sz=chip_sz,
         chip_options=chip_options,
         predict_options=predict_options)

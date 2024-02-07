@@ -7,7 +7,8 @@ from rastervision.core.data import (
     RGBClassTransformerConfig)
 from rastervision.core.rv_pipeline import (
     SemanticSegmentationChipOptions, SemanticSegmentationConfig,
-    WindowSamplingConfig, WindowSamplingMethod)
+    SemanticSegmentationPredictOptions, WindowSamplingConfig,
+    WindowSamplingMethod)
 from rastervision.pytorch_backend import PyTorchSemanticSegmentationConfig
 from rastervision.pytorch_learner import (
     Backbone, SolverConfig, SemanticSegmentationModelConfig,
@@ -101,10 +102,11 @@ def get_config(runner, root_uri, data_uri=None, full_train=False,
         solver=solver,
         log_tensorboard=False,
         run_tensorboard=False)
+    predict_options = SemanticSegmentationPredictOptions(chip_sz=chip_sz)
 
     return SemanticSegmentationConfig(
         root_uri=root_uri,
         dataset=scene_dataset,
         backend=backend,
         chip_options=chip_options,
-        predict_chip_sz=chip_sz)
+        predict_options=predict_options)

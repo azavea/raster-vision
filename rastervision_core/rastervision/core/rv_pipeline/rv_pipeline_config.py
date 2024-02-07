@@ -8,9 +8,9 @@ from rastervision.core.analyzer import StatsAnalyzerConfig
 from rastervision.core.backend import BackendConfig
 from rastervision.core.evaluation import EvaluatorConfig
 from rastervision.core.analyzer import AnalyzerConfig
-from rastervision.core.rv_pipeline.chip_options import (ChipOptions,
-                                                        WindowSamplingConfig)
-from rastervision.pipeline.config import (Config, Field, register_config)
+from rastervision.core.rv_pipeline.chip_options import ChipOptions
+from rastervision.pipeline.config import (Config, Field, register_config,
+                                          validator)
 
 if TYPE_CHECKING:
     from rastervision.core.backend.backend import Backend  # noqa
@@ -18,21 +18,41 @@ if TYPE_CHECKING:
 
 @register_config('predict_options')
 class PredictOptions(Config):
-    # TODO: predict_chip_sz and predict_batch_sz should probably be moved here
-    pass
+    chip_sz: int = Field(
+        300, description='Size of predictions chips in pixels.')
+    stride: Optional[int] = Field(
+        None,
+        description='Stride of the sliding window for generating chips.'
+        'Defaults to ``chip_sz``.')
+    batch_sz: int = Field(
+        8, description='Batch size to use during prediction.')
+
+    @validator('stride', always=True)
+    def validate_stride(cls, v: Optional[int], values: dict) -> dict:
+        if v is None:
+            chip_sz: int = values['chip_sz']
+            return chip_sz
+        return v
 
 
 def rv_pipeline_config_upgrader(cfg_dict: dict, version: int) -> dict:
     if version == 10:
         train_chip_sz = cfg_dict.pop('train_chip_sz', 300)
-        nodata_threshold = cfg_dict.pop('chip_nodata_threshold')
-        if 'chip_options' not in cfg_dict:
-            cfg_dict['chip_options'] = ChipOptions(
-                sampling=WindowSamplingConfig(size=train_chip_sz),
-                nodata_threshold=nodata_threshold)
-        else:
-            cfg_dict['chip_options']['sampling']['size'] = train_chip_sz
-            cfg_dict['chip_options']['nodata_threshold'] = nodata_threshold
+        nodata_threshold = cfg_dict.pop('chip_nodata_threshold', 1.)
+        chip_options: dict = cfg_dict.get('chip_options', {})
+        method = chip_options.pop('method', 'sliding')
+        if method != 'sliding':
+            method = 'random'
+        chip_options['sampling'] = dict(size=train_chip_sz, method=method)
+        chip_options['nodata_threshold'] = nodata_threshold
+        cfg_dict['chip_options'] = chip_options
+    elif version == 11:
+        predict_chip_sz = cfg_dict.pop('predict_chip_sz', 300)
+        predict_batch_sz = cfg_dict.pop('predict_batch_sz', 8)
+        predict_options = cfg_dict.get('predict_options', {})
+        predict_options['chip_sz'] = predict_chip_sz
+        predict_options['batch_sz'] = predict_batch_sz
+        cfg_dict['predict_options'] = predict_options
     return cfg_dict
 
 
@@ -56,13 +76,6 @@ class RVPipelineConfig(PipelineConfig):
         description=
         ('Analyzers to run during analyzer command. A StatsAnalyzer will be added '
          'automatically if any scenes have a RasterTransformer.'))
-
-    chip_options: Optional[ChipOptions] = Field(
-        None, description='Config for chip stage.')
-    predict_chip_sz: int = Field(
-        300, description='Size of predictions chips in pixels.')
-    predict_batch_sz: int = Field(
-        8, description='Batch size to use during prediction.')
 
     analyze_uri: Optional[str] = Field(
         None,
@@ -90,6 +103,11 @@ class RVPipelineConfig(PipelineConfig):
         None,
         description='If provided, the model will be loaded from this bundle '
         'for the train stage. Useful for fine-tuning.')
+
+    chip_options: Optional[ChipOptions] = Field(
+        None, description='Config for chip stage.')
+    predict_options: Optional[PredictOptions] = Field(
+        None, description='Config for predict stage.')
 
     def update(self):
         super().update()

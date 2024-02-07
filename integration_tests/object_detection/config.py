@@ -93,12 +93,11 @@ def get_config(runner, root_uri, data_uri=None, full_train=False,
         run_tensorboard=False)
 
     predict_options = ObjectDetectionPredictOptions(
-        merge_thresh=0.1, score_thresh=0.5)
+        chip_sz=chip_sz, merge_thresh=0.1, score_thresh=0.5)
 
     return ObjectDetectionConfig(
         root_uri=root_uri,
         dataset=scene_dataset,
         backend=backend,
-        predict_chip_sz=chip_sz,
         chip_options=chip_options,
         predict_options=predict_options)
