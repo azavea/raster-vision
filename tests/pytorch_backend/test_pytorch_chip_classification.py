@@ -4,8 +4,8 @@ from rastervision.pipeline.file_system import get_tmp_dir
 from rastervision.pipeline.config import save_pipeline_config
 from rastervision.core.data import (ClassConfig, DatasetConfig)
 from rastervision.core.rv_pipeline import (
-    ChipOptions, ChipClassificationConfig, WindowSamplingConfig,
-    WindowSamplingMethod)
+    ChipOptions, ChipClassificationConfig, PredictOptions,
+    WindowSamplingConfig, WindowSamplingMethod)
 from rastervision.pytorch_backend import PyTorchChipClassificationConfig
 from rastervision.pytorch_learner import (ClassificationModelConfig,
                                           SolverConfig)
@@ -48,7 +48,8 @@ def make_pipeline(tmp_dir: str, num_channels: int, nochip: bool = False):
         root_uri=tmp_dir,
         dataset=dataset_cfg,
         backend=backend_cfg,
-        chip_options=chip_options)
+        chip_options=chip_options,
+        predict_options=PredictOptions(chip_sz=100))
     pipeline_cfg.update()
     save_pipeline_config(pipeline_cfg, pipeline_cfg.get_config_uri())
     pipeline = pipeline_cfg.build(tmp_dir)

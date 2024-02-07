@@ -1,6 +1,6 @@
 from typing import Optional
 
-from rastervision.pipeline.config import register_config, Field
+from rastervision.pipeline.config import Field, register_config, validator
 from rastervision.core.rv_pipeline import (
     ChipOptions, RVPipelineConfig, PredictOptions, WindowSamplingConfig)
 from rastervision.core.data.label_store import ObjectDetectionGeoJSONStoreConfig
@@ -42,6 +42,10 @@ class ObjectDetectionChipOptions(ChipOptions):
 
 @register_config('object_detection_predict_options')
 class ObjectDetectionPredictOptions(PredictOptions):
+    stride: Optional[int] = Field(
+        None,
+        description='Stride of the sliding window for generating chips. '
+        'Defaults to half of ``chip_sz``.')
     merge_thresh: float = Field(
         0.5,
         description=
@@ -55,15 +59,20 @@ class ObjectDetectionPredictOptions(PredictOptions):
         ('Predicted boxes are only output if their score is above score_thresh.'
          ))
 
+    @validator('stride', always=True)
+    def validate_stride(cls, v: Optional[int], values: dict) -> dict:
+        if v is None:
+            chip_sz: int = values['chip_sz']
+            return chip_sz // 2
+        return v
+
 
 @register_config('object_detection')
 class ObjectDetectionConfig(RVPipelineConfig):
     """Configure an :class:`.ObjectDetection` pipeline."""
 
-    chip_options: Optional[ObjectDetectionChipOptions] = Field(
-        None, description='Config for chip stage.')
-    predict_options: Optional[
-        ObjectDetectionPredictOptions] = ObjectDetectionPredictOptions()
+    chip_options: Optional[ObjectDetectionChipOptions]
+    predict_options: Optional[ObjectDetectionPredictOptions]
 
     def build(self, tmp_dir):
         from rastervision.core.rv_pipeline.object_detection import ObjectDetection

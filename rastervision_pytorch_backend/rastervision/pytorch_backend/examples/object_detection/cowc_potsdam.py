@@ -196,14 +196,13 @@ def get_config(runner,
     )
 
     predict_options = ObjectDetectionPredictOptions(
-        merge_thresh=0.5, score_thresh=0.9)
+        chip_sz=chip_sz, merge_thresh=0.5, score_thresh=0.9)
 
     pipeline = ObjectDetectionConfig(
         root_uri=root_uri,
         dataset=scene_dataset,
         backend=backend,
         chip_options=chip_options,
-        predict_chip_sz=chip_sz,
         predict_options=predict_options)
 
     return pipeline

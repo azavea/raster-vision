@@ -7,7 +7,8 @@ from abc import abstractmethod
 from rastervision.pipeline.file_system.utils import list_paths
 from rastervision.core.rv_pipeline import (
     SemanticSegmentationConfig, SemanticSegmentationChipOptions,
-    WindowSamplingConfig, WindowSamplingMethod)
+    SemanticSegmentationPredictOptions, WindowSamplingConfig,
+    WindowSamplingMethod)
 from rastervision.core.data import (
     BufferTransformerConfig, ClassConfig, ClassInferenceTransformerConfig,
     DatasetConfig, GeoJSONVectorSourceConfig, PolygonVectorOutputConfig,
@@ -222,9 +223,11 @@ def get_config(runner,
         run_tensorboard=False,
     )
 
+    predict_options = SemanticSegmentationPredictOptions(chip_sz=chip_sz)
+
     return SemanticSegmentationConfig(
         root_uri=root_uri,
         dataset=scene_dataset,
         backend=backend,
-        predict_chip_sz=chip_sz,
-        chip_options=chip_options)
+        chip_options=chip_options,
+        predict_options=predict_options)

@@ -1,7 +1,6 @@
 from typing import Callable
 import unittest
 
-from pydantic import ValidationError
 import numpy as np
 
 from rastervision.core.data import (ClassConfig, DatasetConfig)
@@ -48,27 +47,14 @@ class TestSemanticSegmentationConfig(unittest.TestCase):
 
 
 class TestSemanticSegmentationPredictOptions(unittest.TestCase):
-    def assertNoError(self, fn: Callable, msg: str = ''):
-        try:
-            fn()
-        except Exception:
-            self.fail(msg)
+    def test_crop_sz_validator(self):
+        args = dict(chip_sz=10, stride=4, crop_sz='auto')
+        cfg = SemanticSegmentationPredictOptions(**args)
+        self.assertEqual(cfg.crop_sz, 3)
 
-    def test_upgrader(self):
-        args = dict(stride=None, crop_sz=None)
-        self.assertNoError(lambda: SemanticSegmentationPredictOptions(**args))
-
-        args = dict(stride=None, crop_sz='auto')
-        self.assertRaises(ValidationError,
-                          lambda: SemanticSegmentationPredictOptions(**args))
-
-        args = dict(stride=None, crop_sz=10)
-        self.assertRaises(ValidationError,
-                          lambda: SemanticSegmentationPredictOptions(**args))
-
-        args = dict(stride=10, crop_sz=0)
-        self.assertRaises(ValidationError,
-                          lambda: SemanticSegmentationPredictOptions(**args))
+        args = dict(chip_sz=10, stride=5, crop_sz='auto')
+        cfg = SemanticSegmentationPredictOptions(**args)
+        self.assertEqual(cfg.crop_sz, 2)
 
 
 class TestSemanticSegmentationChipOptions(unittest.TestCase):

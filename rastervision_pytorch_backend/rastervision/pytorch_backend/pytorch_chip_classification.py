@@ -1,8 +1,6 @@
-from typing import TYPE_CHECKING, Iterator, Optional
+from typing import TYPE_CHECKING, Iterator
 from os.path import join
 import uuid
-
-import numpy as np
 
 from rastervision.pipeline.file_system import make_dir
 from rastervision.core.data_sample import DataSample
@@ -14,8 +12,9 @@ from rastervision.pytorch_learner import (
 from rastervision.core.data import ChipClassificationLabels
 
 if TYPE_CHECKING:
+    import numpy as np
     from rastervision.core.data import DatasetConfig, Scene
-    from rastervision.core.rv_pipeline import ChipOptions
+    from rastervision.core.rv_pipeline import ChipOptions, PredictOptions
 
 
 class PyTorchChipClassificationSampleWriter(PyTorchLearnerSampleWriter):
@@ -58,16 +57,15 @@ class PyTorchChipClassification(PyTorchLearnerBackend):
         dataloader_kw = dict(**dataloader_kw, collate_fn=chip_collate_fn_cc)
         return super().chip_dataset(dataset, chip_options, dataloader_kw)
 
-    def predict_scene(self,
-                      scene: 'Scene',
-                      chip_sz: int,
-                      stride: Optional[int] = None
+    def predict_scene(self, scene: 'Scene', predict_options: 'PredictOptions'
                       ) -> 'ChipClassificationLabels':
-        if stride is None:
-            stride = chip_sz
 
         if self.learner is None:
             self.load_model()
+
+        chip_sz = predict_options.chip_sz
+        stride = predict_options.stride
+        batch_sz = predict_options.batch_sz
 
         # Important to use self.learner.cfg.data instead of
         # self.learner_cfg.data because of the updates
@@ -80,6 +78,7 @@ class PyTorchChipClassification(PyTorchLearnerBackend):
             ds,
             raw_out=True,
             numpy_out=True,
+            dataloader_kw=dict(batch_size=batch_sz),
             progress_bar=True,
             progress_bar_kw=dict(desc=f'Making predictions on {scene.id}'))
 

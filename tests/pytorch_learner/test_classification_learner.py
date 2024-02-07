@@ -122,14 +122,6 @@ class TestClassificationLearner(unittest.TestCase):
             learner.plot_predictions(split='valid')
             learner.save_model_bundle()
 
-            learner = None
-            backend.learner = None
-            backend.load_model()
-
-            pred_scene = dataset_cfg.validation_scenes[0].build(
-                class_config, tmp_dir)
-            _ = backend.predict_scene(pred_scene, chip_sz=100)
-
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Iterator, Optional
+from typing import TYPE_CHECKING, Iterator
 from os.path import join
 import uuid
 
@@ -17,7 +17,8 @@ from rastervision.pytorch_learner import SemanticSegmentationGeoDataConfig
 if TYPE_CHECKING:
     from rastervision.core.data import (DatasetConfig, Scene,
                                         SemanticSegmentationLabelStore)
-    from rastervision.core.rv_pipeline import ChipOptions
+    from rastervision.core.rv_pipeline import (
+        ChipOptions, SemanticSegmentationPredictOptions)
 
 
 class PyTorchSemanticSegmentationSampleWriter(PyTorchLearnerSampleWriter):
@@ -67,22 +68,21 @@ class PyTorchSemanticSegmentation(PyTorchLearnerBackend):
         dataloader_kw = dict(**dataloader_kw, collate_fn=chip_collate_fn_ss)
         return super().chip_dataset(dataset, chip_options, dataloader_kw)
 
-    def predict_scene(
-            self,
-            scene: 'Scene',
-            chip_sz: int,
-            stride: Optional[int] = None,
-            crop_sz: Optional[int] = None) -> 'SemanticSegmentationLabels':
+    def predict_scene(self, scene: 'Scene',
+                      predict_options: 'SemanticSegmentationPredictOptions'
+                      ) -> 'SemanticSegmentationLabels':
 
         if scene.label_store is None:
             raise ValueError(
                 f'Scene.label_store is not set for scene {scene.id}')
 
-        if stride is None:
-            stride = chip_sz
-
         if self.learner is None:
             self.load_model()
+
+        chip_sz = predict_options.chip_sz
+        stride = predict_options.stride
+        crop_sz = predict_options.crop_sz
+        batch_sz = predict_options.batch_sz
 
         label_store: 'SemanticSegmentationLabelStore' = scene.label_store
         raw_out = label_store.smooth_output
@@ -104,6 +104,7 @@ class PyTorchSemanticSegmentation(PyTorchLearnerBackend):
             raw_out=raw_out,
             numpy_out=True,
             predict_kw=dict(out_shape=(chip_sz, chip_sz)),
+            dataloader_kw=dict(batch_size=batch_sz),
             progress_bar=True,
             progress_bar_kw=dict(desc=f'Making predictions on {scene.id}'))
 

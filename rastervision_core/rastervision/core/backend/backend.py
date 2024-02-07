@@ -5,7 +5,7 @@ from contextlib import AbstractContextManager
 if TYPE_CHECKING:
     from rastervision.core.data_sample import DataSample
     from rastervision.core.data import DatasetConfig, Labels, Scene
-    from rastervision.core.rv_pipeline import ChipOptions
+    from rastervision.core.rv_pipeline import ChipOptions, PredictOptions
 
 
 class SampleWriter(AbstractContextManager):
@@ -48,12 +48,13 @@ class Backend(ABC):
         """
 
     @abstractmethod
-    def predict_scene(self, scene: 'Scene', chip_sz: int,
-                      stride: int) -> 'Labels':
+    def predict_scene(self, scene: 'Scene',
+                      predict_options: 'PredictOptions') -> 'Labels':
         """Return predictions for an entire scene using the model.
 
         Args:
-            scene (Scene): Scene to run inference on.
+            scene: Scene to run inference on.
+            predict_options: Prediction options.
 
         Return:
             Labels object containing predictions

@@ -1,9 +1,9 @@
 import os
 from os.path import join
 
-from rastervision.core.rv_pipeline import (ChipClassificationConfig,
-                                           ChipOptions, WindowSamplingConfig,
-                                           WindowSamplingMethod)
+from rastervision.core.rv_pipeline import (
+    ChipClassificationConfig, ChipOptions, PredictOptions,
+    WindowSamplingConfig, WindowSamplingMethod)
 from rastervision.core.data import (
     ChipClassificationLabelSourceConfig, ClassConfig,
     ClassInferenceTransformerConfig, DatasetConfig, GeoJSONVectorSourceConfig,
@@ -192,6 +192,6 @@ def get_config(runner,
         dataset=scene_dataset,
         backend=backend,
         chip_options=chip_options,
-        predict_chip_sz=chip_sz)
+        predict_options=PredictOptions(chip_sz=chip_sz))
 
     return pipeline

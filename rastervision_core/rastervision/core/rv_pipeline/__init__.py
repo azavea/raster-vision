@@ -31,4 +31,5 @@ __all__ = [
     ChipOptions.__name__,
     WindowSamplingConfig.__name__,
     WindowSamplingMethod.__name__,
+    PredictOptions.__name__,
 ]

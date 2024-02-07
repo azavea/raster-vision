@@ -5,7 +5,8 @@ from rastervision.pipeline.config import save_pipeline_config
 from rastervision.core.data import (ClassConfig, DatasetConfig)
 from rastervision.core.rv_pipeline import (
     ObjectDetectionConfig, ObjectDetectionChipOptions,
-    ObjectDetectionWindowSamplingConfig, WindowSamplingMethod)
+    ObjectDetectionPredictOptions, ObjectDetectionWindowSamplingConfig,
+    WindowSamplingMethod)
 from rastervision.pytorch_backend import PyTorchObjectDetectionConfig
 from rastervision.pytorch_learner import (ObjectDetectionModelConfig,
                                           SolverConfig)
@@ -48,7 +49,8 @@ def make_pipeline(tmp_dir: str, num_channels: int, nochip: bool = False):
         root_uri=tmp_dir,
         dataset=dataset_cfg,
         backend=backend_cfg,
-        chip_options=chip_options)
+        chip_options=chip_options,
+        predict_options=ObjectDetectionPredictOptions(chip_sz=100, stride=50))
     pipeline_cfg.update()
     save_pipeline_config(pipeline_cfg, pipeline_cfg.get_config_uri())
     pipeline = pipeline_cfg.build(tmp_dir)

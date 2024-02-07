@@ -776,12 +776,10 @@ class Learner(ABC):
             'rastervision',
             'PREDICT_NUM_WORKERS',
             default=cfg.data.num_workers)
-        batch_size = rv_config.get_namespace_option(
-            'rastervision', 'PREDICT_BATCH_SIZE', default=cfg.solver.batch_sz)
 
         dl_kw = dict(
             collate_fn=self.get_collate_fn(),
-            batch_size=int(batch_size),
+            batch_size=cfg.solver.batch_sz,
             num_workers=int(num_workers),
             shuffle=False,
             pin_memory=True)

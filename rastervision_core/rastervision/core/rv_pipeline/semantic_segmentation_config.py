@@ -1,16 +1,18 @@
 from typing import (List, Literal, Optional, Union)
 from pydantic import conint
+import logging
 
 import numpy as np
 
-from rastervision.pipeline.config import (ConfigError, register_config, Field,
-                                          validator)
+from rastervision.pipeline.config import (register_config, Field, validator)
 from rastervision.core.rv_pipeline.rv_pipeline_config import (PredictOptions,
                                                               RVPipelineConfig)
 from rastervision.core.rv_pipeline.chip_options import (ChipOptions,
                                                         WindowSamplingConfig)
 from rastervision.core.data import SemanticSegmentationLabelStoreConfig
 from rastervision.core.evaluation import SemanticSegmentationEvaluatorConfig
+
+log = logging.getLogger(__name__)
 
 
 def ss_chip_options_upgrader(cfg_dict: dict, version: int) -> dict:
@@ -76,10 +78,9 @@ class SemanticSegmentationChipOptions(ChipOptions):
 class SemanticSegmentationPredictOptions(PredictOptions):
     stride: Optional[int] = Field(
         None,
-        description=
-        'Stride of windows across image. Allows aggregating multiple '
-        'predictions for each pixel if less than the chip size. '
-        'Defaults to predict_chip_sz.')
+        description='Stride of the sliding window for generating chips. '
+        'Allows aggregating multiple predictions for each pixel if less than '
+        'the chip size. Defaults to ``chip_sz``.')
     crop_sz: Optional[Union[conint(gt=0), Literal['auto']]] = Field(
         None,
         description=
@@ -93,12 +94,17 @@ class SemanticSegmentationPredictOptions(PredictOptions):
     def validate_crop_sz(cls,
                          v: Optional[Union[conint(gt=0), Literal['auto']]],
                          values: dict) -> dict:
-        stride: Optional[int] = values.get('stride')
         crop_sz = v
-
-        if stride is None and crop_sz is not None:
-            raise ConfigError('Cannot use crop_sz if stride is None.')
-
+        if crop_sz == 'auto':
+            chip_sz: int = values['chip_sz']
+            stride: int = values['stride']
+            overlap_sz = chip_sz - stride
+            if overlap_sz % 2 == 1:
+                log.warning(
+                    'Using crop_sz="auto" but overlap size (chip_sz minus '
+                    'stride) is odd. This means that one pixel row/col will '
+                    'still overlap after cropping.')
+            crop_sz = overlap_sz // 2
         return crop_sz
 
 
@@ -118,10 +124,8 @@ def ss_config_upgrader(cfg_dict: dict, version: int) -> dict:
 class SemanticSegmentationConfig(RVPipelineConfig):
     """Configure a :class:`.SemanticSegmentation` pipeline."""
 
-    chip_options: SemanticSegmentationChipOptions = Field(
-        None, description='Config for chip stage.')
-    predict_options: SemanticSegmentationPredictOptions = \
-        SemanticSegmentationPredictOptions()
+    chip_options: Optional[SemanticSegmentationChipOptions]
+    predict_options: Optional[SemanticSegmentationPredictOptions]
 
     def build(self, tmp_dir):
         from rastervision.core.rv_pipeline.semantic_segmentation import (

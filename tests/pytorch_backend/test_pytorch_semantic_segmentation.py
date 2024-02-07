@@ -5,7 +5,8 @@ from rastervision.pipeline.config import save_pipeline_config
 from rastervision.core.data import (ClassConfig, DatasetConfig)
 from rastervision.core.rv_pipeline import (
     SemanticSegmentationConfig, SemanticSegmentationChipOptions,
-    WindowSamplingConfig, WindowSamplingMethod)
+    SemanticSegmentationPredictOptions, WindowSamplingConfig,
+    WindowSamplingMethod)
 from rastervision.pytorch_backend import PyTorchSemanticSegmentationConfig
 from rastervision.pytorch_learner import (SemanticSegmentationModelConfig,
                                           SolverConfig)
@@ -34,7 +35,7 @@ def make_pipeline(tmp_dir: str, num_channels: int, nochip: bool = False):
         test_scenes=[])
     chip_options = SemanticSegmentationChipOptions(
         sampling=WindowSamplingConfig(
-            method=WindowSamplingMethod.random, size=20, max_windows=8))
+            method=WindowSamplingMethod.random, size=100, max_windows=8))
     if nochip:
         data_cfg = SemanticSegmentationGeoDataConfig(
             scene_dataset=dataset_cfg,
@@ -51,7 +52,9 @@ def make_pipeline(tmp_dir: str, num_channels: int, nochip: bool = False):
         root_uri=tmp_dir,
         dataset=dataset_cfg,
         backend=backend_cfg,
-        chip_options=chip_options)
+        chip_options=chip_options,
+        predict_options=SemanticSegmentationPredictOptions(
+            chip_sz=100, stride=50, crop_sz='auto'))
     pipeline_cfg.update()
     save_pipeline_config(pipeline_cfg, pipeline_cfg.get_config_uri())
     pipeline = pipeline_cfg.build(tmp_dir)

@@ -3,7 +3,8 @@ from typing import Tuple, Union
 
 from rastervision.core.rv_pipeline import (
     SceneConfig, DatasetConfig, SemanticSegmentationChipOptions,
-    SemanticSegmentationConfig, WindowSamplingConfig, WindowSamplingMethod)
+    SemanticSegmentationConfig, SemanticSegmentationPredictOptions,
+    WindowSamplingConfig, WindowSamplingMethod)
 
 from rastervision.core.data import (
     ClassConfig, RasterioSourceConfig, MultiRasterSourceConfig,
@@ -161,15 +162,17 @@ def get_config(runner,
         run_tensorboard=RUN_TENSORBOARD,
     )
 
+    predict_options = SemanticSegmentationPredictOptions(chip_sz=CHIP_SIZE)
+
     # -----------------------------------------------
     # Pass configurations to the pipeline config
     # -----------------------------------------------
     pipeline_config = SemanticSegmentationConfig(
         root_uri=root_uri,
-        predict_chip_sz=CHIP_SIZE,
-        chip_options=chip_options,
         dataset=dataset_config,
-        backend=backend_config)
+        backend=backend_config,
+        chip_options=chip_options,
+        predict_options=predict_options)
 
     return pipeline_config
 
