@@ -1,5 +1,5 @@
-from typing import (Any, Dict, Sequence, Tuple, Optional, Union, List,
-                    Iterable, Container)
+from typing import (TYPE_CHECKING, Any, Dict, Sequence, Tuple, Optional, Union,
+                    List, Iterable, Container)
 from os.path import basename, join, isfile
 import logging
 
@@ -14,8 +14,13 @@ import cv2
 import pandas as pd
 import onnxruntime as ort
 
-from rastervision.pipeline.file_system import get_tmp_dir
-from rastervision.pipeline.config import ConfigError
+from rastervision.pipeline.file_system.utils import (file_exists, file_to_json,
+                                                     get_tmp_dir)
+from rastervision.pipeline.config import (build_config, Config, ConfigError,
+                                          upgrade_config)
+
+if TYPE_CHECKING:
+    from rastervision.pytorch_learner import LearnerConfig
 
 log = logging.getLogger(__name__)
 
@@ -487,3 +492,23 @@ class ONNXRuntimeAdapter:
         if isinstance(out, np.ndarray):
             out = torch.from_numpy(out)
         return out
+
+
+def get_learner_config_from_bundle_dir(
+        model_bundle_dir: str) -> 'LearnerConfig':
+    config_path = join(model_bundle_dir, 'learner-config.json')
+    if file_exists(config_path):
+        cfg = Config.from_file(config_path)
+    else:
+        # backward compatibility
+        config_path = join(model_bundle_dir, 'pipeline-config.json')
+        if not file_exists(config_path):
+            raise FileNotFoundError(
+                'Could not find a valid config file in the bundle.')
+        pipeline_cfg_dict = file_to_json(config_path)
+        cfg_dict = pipeline_cfg_dict['learner']
+        cfg_dict['plugin_versions'] = pipeline_cfg_dict['plugin_versions']
+        cfg_dict = upgrade_config(cfg_dict)
+        cfg_dict.pop('plugin_versions', None)
+        cfg = build_config(cfg_dict)
+    return cfg
