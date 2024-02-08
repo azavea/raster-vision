@@ -61,6 +61,22 @@ class SemanticSegmentationLabels(Labels):
         input window.
         """
 
+    @abstractmethod
+    def get_score_arr(self, window: Box,
+                      null_class_id: int = -1) -> np.ndarray:
+        """Get (C, H, W) array of pixel scores."""
+
+    def get_class_mask(self,
+                       window: Box,
+                       class_id: int,
+                       threshold: Optional[float] = None) -> np.ndarray:
+        """Get a binary mask representing all pixels of a class."""
+        scores = self.get_score_arr(window)
+        if threshold is None:
+            threshold = (1 / self.num_classes)
+        mask = scores[class_id] >= threshold
+        return mask
+
     def get_windows(self, **kwargs) -> List[Box]:
         """Generate sliding windows over the local extent.
 

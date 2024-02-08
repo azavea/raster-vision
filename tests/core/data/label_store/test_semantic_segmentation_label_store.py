@@ -81,7 +81,9 @@ class TestSemanticSegmentationLabelStore(unittest.TestCase):
                 bbox=None,
                 smooth_output=True,
                 smooth_as_uint8=True,
-                vector_outputs=[PolygonVectorOutputConfig(class_id=1)])
+                vector_outputs=[
+                    PolygonVectorOutputConfig(class_id=1, threshold=0.3)
+                ])
             labels = SemanticSegmentationSmoothLabels(
                 extent=Box(0, 0, 10, 10), num_classes=len(class_config))
             labels.pixel_scores += make_random_scores(

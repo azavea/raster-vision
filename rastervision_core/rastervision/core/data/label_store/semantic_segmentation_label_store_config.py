@@ -41,6 +41,15 @@ class VectorOutputConfig(Config):
         'intensive (especially for large images). Larger values will remove '
         'more noise and make vectorization faster but might also remove '
         'legitimate detections.')
+    threshold: Optional[float] = Field(
+        None,
+        description='Probability threshold for creating the binary mask for '
+        'the pixels of this class. Pixels will be considered to belong to '
+        'this class if their probability for this class is >= ``threshold``. '
+        'Note that Raster Vision treats classes as mutually exclusive so the '
+        'threshold should vary with the number of total classes. '
+        '``None`` is equivalent to setting this to (1 / num_classes). '
+        'Defaults to ``None``.')
 
     def vectorize(self, mask: 'np.ndarray') -> Iterator['BaseGeometry']:
         """Vectorize binary mask representing the target class into polygons.
