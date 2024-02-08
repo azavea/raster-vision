@@ -2,6 +2,7 @@ from typing import (TYPE_CHECKING, Callable, Dict, List, Literal, Optional,
                     Type, Union)
 import inspect
 import logging
+import json
 
 from pydantic import (  # noqa
     BaseModel, create_model, Field, root_validator, validate_model,
@@ -9,7 +10,8 @@ from pydantic import (  # noqa
 
 from rastervision.pipeline import (registry_ as registry, rv_config_ as
                                    rv_config)
-from rastervision.pipeline.file_system import str_to_file
+from rastervision.pipeline.file_system import (str_to_file, json_to_file,
+                                               file_to_json)
 
 if TYPE_CHECKING:
     from rastervision.pipeline.pipeline_config import PipelineConfig
@@ -112,6 +114,35 @@ class Config(BaseModel):
             if val not in valid_options:
                 raise ConfigError(f'{val} is not a valid option for {field}')
 
+    def to_file(self, uri: str, with_rv_metadata: bool = True) -> None:
+        """Save a Config to a JSON file, optionally with RV metadata.
+
+        Args:
+            uri: URI to save to.
+            with_rv_metadata: If True, inject Raster Vision metadata such as
+                ``plugin_versions``, so that the config can be upgraded when
+                loaded.
+        """
+        cfg_json = self.json()
+        if with_rv_metadata:
+            # self.dict() --> json_to_file() would be simpler but runs into
+            # JSON serialization problems
+            cfg_dict = json.loads(cfg_json)
+            cfg_dict['plugin_versions'] = registry.plugin_versions
+            cfg_json = json.dumps(cfg_dict)
+        json_to_file(cfg_dict, uri)
+
+    @classmethod
+    def from_file(self, uri: str) -> 'Config':
+        """Deserialize a Config from a JSON file, upgrading if possible.
+
+        Args:
+            uri: URI to load from.
+        """
+        cfg_dict = load_config_dict(uri)
+        cfg = build_config(cfg_dict)
+        return cfg
+
     def __repr_args__(self):
         """Override to delete 'type_hint' field."""
         args = dict(super().__repr_args__())
@@ -131,6 +162,15 @@ def save_pipeline_config(cfg: 'PipelineConfig', output_uri: str) -> None:
     cfg.plugin_versions = registry.plugin_versions
     cfg_json = cfg.json()
     str_to_file(cfg_json, output_uri)
+
+
+def load_config_dict(uri: str) -> dict:
+    """Load a serialized Config from a JSON file as a dict and upgrade it."""
+    cfg_dict = file_to_json(uri)
+    if 'plugin_versions' in cfg_dict:
+        cfg_dict = upgrade_config(cfg_dict)
+        cfg_dict.pop('plugin_versions', None)
+    return cfg_dict
 
 
 def build_config(x: Union[dict, List[Union[dict, Config]], Config]
