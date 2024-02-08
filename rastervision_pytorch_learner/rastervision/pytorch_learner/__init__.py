@@ -13,8 +13,6 @@ def register_plugin(registry: 'Registry'):
 import rastervision.pipeline
 from rastervision.pytorch_learner.learner_config import *
 from rastervision.pytorch_learner.learner import *
-from rastervision.pytorch_learner.learner_pipeline_config import *
-from rastervision.pytorch_learner.learner_pipeline import *
 from rastervision.pytorch_learner.classification_learner_config import *
 from rastervision.pytorch_learner.classification_learner import *
 from rastervision.pytorch_learner.regression_learner_config import *
@@ -26,9 +24,6 @@ from rastervision.pytorch_learner.object_detection_learner import *
 from rastervision.pytorch_learner.dataset import *
 
 __all__ = [
-    # LearnerPipeline
-    LearnerPipeline.__name__,
-    LearnerPipelineConfig.__name__,
     # Learner
     Learner.__name__,
     SemanticSegmentationLearner.__name__,

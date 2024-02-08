@@ -11,13 +11,17 @@ from moto import mock_s3
 import pandas as pd
 
 from rastervision.pipeline.file_system.utils import get_tmp_dir
+from rastervision.pipeline.pipeline_config import PipelineConfig
+from rastervision.pytorch_learner import (DataConfig, LearnerConfig,
+                                          SolverConfig)
 from rastervision.pytorch_learner.utils import (
     compute_conf_mat, compute_conf_mat_metrics, MinMaxNormalize,
     adjust_conv_channels, Parallel, SplitTensor, AddTensors,
     validate_albumentation_transform, A, color_to_triple,
     channel_groups_to_imgs, plot_channel_groups,
     serialize_albumentation_transform, deserialize_albumentation_transform,
-    aggregate_metrics, log_metrics_to_csv, log_system_details)
+    aggregate_metrics, log_metrics_to_csv, log_system_details,
+    get_learner_config_from_bundle_dir)
 from tests.data_files.lambda_transforms import lambda_transforms
 from tests import data_file_path
 
@@ -383,6 +387,27 @@ class TestOtherUtils(unittest.TestCase):
 
     def test_log_system_details(self):
         self.assertNoError(log_system_details)
+
+    def test_get_learner_config_from_bundle_dir(self):
+        learner_cfg = LearnerConfig(solver=SolverConfig(), data=DataConfig())
+        with get_tmp_dir() as tmp_dir:
+            learner_cfg.to_file(join(tmp_dir, 'learner-config.json'))
+            cfg = get_learner_config_from_bundle_dir(tmp_dir)
+        self.assertIsInstance(cfg, LearnerConfig)
+
+    def test_get_learner_config_from_bundle_dir_backward_compatibility(self):
+        class MockLearnerPipelineConfig(PipelineConfig):
+            learner: LearnerConfig
+
+        learner_cfg = LearnerConfig(solver=SolverConfig(), data=DataConfig())
+        learner_pipeline_cfg = MockLearnerPipelineConfig(learner=learner_cfg)
+        with get_tmp_dir() as tmp_dir:
+            self.assertRaises(
+                FileNotFoundError,
+                lambda: get_learner_config_from_bundle_dir(tmp_dir))
+            learner_pipeline_cfg.to_file(join(tmp_dir, 'pipeline-config.json'))
+            cfg = get_learner_config_from_bundle_dir(tmp_dir)
+        self.assertIsInstance(cfg, LearnerConfig)
 
 
 if __name__ == '__main__':

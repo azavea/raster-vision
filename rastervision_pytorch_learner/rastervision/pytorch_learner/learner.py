@@ -27,16 +27,16 @@ import torch.multiprocessing as mp
 from rastervision.pipeline import rv_config_ as rv_config
 from rastervision.pipeline.utils import get_env_var
 from rastervision.pipeline.file_system import (
-    sync_to_dir, json_to_file, file_to_json, make_dir, zipdir,
-    download_if_needed, download_or_copy, sync_from_dir, get_local_path, unzip,
-    str_to_file, is_local, get_tmp_dir)
+    sync_to_dir, json_to_file, make_dir, zipdir, download_if_needed,
+    download_or_copy, sync_from_dir, get_local_path, unzip, is_local,
+    get_tmp_dir)
 from rastervision.pipeline.file_system.utils import file_exists
 from rastervision.pipeline.utils import terminate_at_exit
-from rastervision.pipeline.config import (build_config, upgrade_config,
-                                          save_pipeline_config)
+from rastervision.pipeline.config import build_config
 from rastervision.pytorch_learner.utils import (
-    get_hubconf_dir_from_cfg, aggregate_metrics, log_metrics_to_csv,
-    log_system_details, ONNXRuntimeAdapter, DDPContextManager)
+    aggregate_metrics, DDPContextManager, get_hubconf_dir_from_cfg,
+    get_learner_config_from_bundle_dir, log_metrics_to_csv, log_system_details,
+    ONNXRuntimeAdapter)
 from rastervision.pytorch_learner.dataset.visualizer import Visualizer
 
 if TYPE_CHECKING:
@@ -44,8 +44,7 @@ if TYPE_CHECKING:
     from torch.optim.lr_scheduler import _LRScheduler
     from torch.utils.data import Dataset, Sampler
 
-    from rastervision.pytorch_learner import (LearnerConfig,
-                                              LearnerPipelineConfig)
+    from rastervision.pytorch_learner import LearnerConfig
 
 warnings.filterwarnings('ignore')
 
@@ -305,14 +304,7 @@ class Learner(ABC):
         unzip(model_bundle_path, model_bundle_dir)
 
         if cfg is None:
-            config_path = join(model_bundle_dir, 'pipeline-config.json')
-
-            config_dict = file_to_json(config_path)
-            config_dict = upgrade_config(config_dict)
-
-            learner_pipeline_cfg: 'LearnerPipelineConfig' = build_config(
-                config_dict)
-            cfg = learner_pipeline_cfg.learner
+            cfg = get_learner_config_from_bundle_dir(model_bundle_dir)
 
         hub_dir = join(model_bundle_dir, MODULES_DIRNAME)
         model_def_path = None
@@ -1024,8 +1016,8 @@ class Learner(ABC):
         """
         cfg = self.cfg
 
-        self.config_path = join(self.output_dir, 'learner-config.json')
-        str_to_file(cfg.json(), self.config_path)
+        self.config_path = join(self.output_dir_local, 'learner-config.json')
+        cfg.to_file(self.config_path)
         self.log_path = join(self.output_dir_local, 'log.csv')
         self.last_model_weights_path = join(self.output_dir_local,
                                             'last-model.pth')
@@ -1399,9 +1391,6 @@ class Learner(ABC):
         This is a zip file with the model weights in .pth format and a serialized
         copy of the LearningConfig, which allows for making predictions in the future.
         """
-        from rastervision.pytorch_learner.learner_pipeline_config import (
-            LearnerPipelineConfig)
-
         if self.cfg.model is None:
             log.warning(
                 'Model was not configured via ModelConfig, and therefore, '
@@ -1417,9 +1406,8 @@ class Learner(ABC):
         self._bundle_modules(model_bundle_dir)
         self._bundle_transforms(model_bundle_dir)
 
-        pipeline_cfg = LearnerPipelineConfig(learner=self.cfg)
-        save_pipeline_config(pipeline_cfg,
-                             join(model_bundle_dir, 'pipeline-config.json'))
+        cfg_uri = join(model_bundle_dir, 'learner-config.json')
+        shutil.copy(self.config_path, cfg_uri)
 
         zip_path = join(self.output_dir_local, basename(self.model_bundle_uri))
         log.info(f'Saving bundle to {zip_path}.')
