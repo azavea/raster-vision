@@ -311,13 +311,13 @@ class SemanticSegmentationLabelStore(LabelStore):
 
         log.info('Writing vector outputs to disk.')
 
-        label_arr = labels.get_label_arr(labels.extent,
-                                         self.class_config.null_class_id)
-
+        extent = labels.extent
         with tqdm(self.vector_outputs, desc='Vectorizing predictions') as bar:
             for vo in bar:
                 bar.set_postfix(vo.dict())
-                class_mask = (label_arr == vo.class_id).astype(np.uint8)
+                class_mask = labels.get_class_mask(extent, vo.class_id,
+                                                   vo.threshold)
+                class_mask = class_mask.astype(np.uint8)
                 polys = vo.vectorize(class_mask)
                 polys = [
                     self.crs_transformer.pixel_to_map(p, bbox=self.bbox)
