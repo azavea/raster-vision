@@ -135,21 +135,21 @@ class XarraySource(RasterSource):
 
         window_within_bbox = window.intersection(self.bbox)
 
-        yslice, xsclice = window_within_bbox.to_slices()
+        yslice, xslice = window_within_bbox.to_slices()
         if self.temporal:
             chip = self.data_array.isel(
-                x=xsclice, y=yslice, band=bands, time=time).to_numpy()
+                x=xslice, y=yslice, band=bands, time=time).to_numpy()
         else:
             chip = self.data_array.isel(
-                x=xsclice, y=yslice, band=bands).to_numpy()
+                x=xslice, y=yslice, band=bands).to_numpy()
 
         if window != window_within_bbox:
             *batch_dims, h, w, c = chip.shape
             # coords of window_within_bbox within window
-            yslice, xsclice = window_within_bbox.to_local_coords(
+            yslice, xslice = window_within_bbox.to_local_coords(
                 window).to_slices()
             tmp = np.zeros((*batch_dims, *window.size, c))
-            tmp[..., yslice, xsclice, :] = chip
+            tmp[..., yslice, xslice, :] = chip
             chip = tmp
 
         chip = fill_overflow(self.bbox, window, chip)
