@@ -101,6 +101,29 @@ class TestXarraySource(unittest.TestCase):
         chip_expected = np.array([[[0, 1, 2, 3]]], dtype=arr.dtype)
         np.testing.assert_array_equal(chip, chip_expected)
 
+    def test_get_raw_chip_overflowing_window(self):
+        arr = np.arange(100).reshape(10, 10, 1)
+        da = DataArray(arr, dims=['y', 'x', 'band'])
+        rs = XarraySource(da, IdentityCRSTransformer(), bbox=Box(2, 2, 7, 7))
+
+        chip = rs.get_raw_chip(Box(3, 3, 7, 7))
+        chip_expected = np.zeros((4, 4, 1))
+        chip_expected[:2, :2] = arr[5:7, 5:7]
+        np.testing.assert_array_equal(chip, chip_expected)
+
+        chip = rs.get_raw_chip(Box(-2, -2, 2, 2))
+        chip_expected = np.zeros((4, 4, 1))
+        chip_expected[2:, 2:] = arr[2:4, 2:4]
+        np.testing.assert_array_equal(chip, chip_expected)
+
+        chip = rs.get_raw_chip(Box(-5, -5, 0, 0))
+        chip_expected = np.zeros((5, 5, 1))
+        np.testing.assert_array_equal(chip, chip_expected)
+
+        chip = rs.get_raw_chip(Box(6, 6, 9, 9))
+        chip_expected = np.zeros((3, 3, 1))
+        np.testing.assert_array_equal(chip, chip_expected)
+
     def test_get_chip(self):
         arr = np.ones((5, 5, 4), dtype=np.uint8)
         arr *= np.arange(4, dtype=np.uint8)

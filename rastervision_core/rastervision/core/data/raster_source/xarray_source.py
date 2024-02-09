@@ -133,7 +133,9 @@ class XarraySource(RasterSource):
                   out_shape: Optional[Tuple[int, ...]] = None) -> np.ndarray:
         window = window.to_global_coords(self.bbox)
 
-        yslice, xsclice = window.to_slices()
+        window_within_bbox = window.intersection(self.bbox)
+
+        yslice, xsclice = window_within_bbox.to_slices()
         if self.temporal:
             chip = self.data_array.isel(
                 x=xsclice, y=yslice, band=bands, time=time).to_numpy()
@@ -141,10 +143,11 @@ class XarraySource(RasterSource):
             chip = self.data_array.isel(
                 x=xsclice, y=yslice, band=bands).to_numpy()
 
-        *batch_dims, h, w, c = chip.shape
-        if window.size != (h, w):
-            window_actual = window.intersection(self.full_extent)
-            yslice, xsclice = window_actual.to_local_coords(window).to_slices()
+        if window != window_within_bbox:
+            *batch_dims, h, w, c = chip.shape
+            # coords of window_within_bbox within window
+            yslice, xsclice = window_within_bbox.to_local_coords(
+                window).to_slices()
             tmp = np.zeros((*batch_dims, *window.size, c))
             tmp[..., yslice, xsclice, :] = chip
             chip = tmp
