@@ -124,6 +124,12 @@ class TestXarraySource(unittest.TestCase):
         chip_expected = np.zeros((3, 3, 1))
         np.testing.assert_array_equal(chip, chip_expected)
 
+    def test_get_bbox_overflows_full_extent(self):
+        arr = np.empty((5, 5, 1))
+        da = DataArray(arr, dims=['y', 'x', 'band'])
+        rs = XarraySource(da, IdentityCRSTransformer(), bbox=Box(2, 2, 5, 7))
+        self.assertEqual(rs.bbox, Box(2, 2, 5, 5))
+
     def test_get_chip(self):
         arr = np.ones((5, 5, 4), dtype=np.uint8)
         arr *= np.arange(4, dtype=np.uint8)

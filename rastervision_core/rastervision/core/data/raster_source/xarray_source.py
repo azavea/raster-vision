@@ -79,6 +79,13 @@ class XarraySource(RasterSource):
         self.full_extent = Box(0, 0, height, width)
         if bbox is None:
             bbox = self.full_extent
+        else:
+            if bbox not in self.full_extent:
+                new_bbox = bbox.intersection(self.full_extent)
+                log.warning(f'Clipping ({bbox}) to the DataArray\'s '
+                            f'full extent ({self.full_extent}). '
+                            f'New bbox={new_bbox}')
+                bbox = new_bbox
 
         super().__init__(
             channel_order,
