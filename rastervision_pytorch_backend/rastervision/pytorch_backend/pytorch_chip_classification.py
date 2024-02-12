@@ -7,14 +7,15 @@ from rastervision.core.data_sample import DataSample
 from rastervision.pytorch_backend.pytorch_learner_backend import (
     PyTorchLearnerSampleWriter, PyTorchLearnerBackend)
 from rastervision.pytorch_backend.utils import chip_collate_fn_cc
-from rastervision.pytorch_learner import (
-    ClassificationGeoDataConfig, ClassificationSlidingWindowGeoDataset)
+from rastervision.pytorch_learner.dataset import (
+    ClassificationSlidingWindowGeoDataset)
 from rastervision.core.data import ChipClassificationLabels
 
 if TYPE_CHECKING:
     import numpy as np
     from rastervision.core.data import DatasetConfig, Scene
     from rastervision.core.rv_pipeline import ChipOptions, PredictOptions
+    from rastervision.pytorch_learner import ClassificationGeoDataConfig
 
 
 class PyTorchChipClassificationSampleWriter(PyTorchLearnerSampleWriter):
@@ -89,7 +90,8 @@ class PyTorchChipClassification(PyTorchLearnerBackend):
 
     def _make_chip_data_config(
             self, dataset: 'DatasetConfig',
-            chip_options: 'ChipOptions') -> ClassificationGeoDataConfig:
+            chip_options: 'ChipOptions') -> 'ClassificationGeoDataConfig':
+        from rastervision.pytorch_learner import (ClassificationGeoDataConfig)
         data_config = ClassificationGeoDataConfig(
             scene_dataset=dataset, sampling=chip_options.sampling)
         return data_config

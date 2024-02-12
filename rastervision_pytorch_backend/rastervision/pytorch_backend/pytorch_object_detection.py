@@ -12,14 +12,14 @@ from rastervision.pytorch_backend.pytorch_learner_backend import (
 from rastervision.pytorch_backend.utils import chip_collate_fn_od
 from rastervision.pytorch_learner.dataset import (
     ObjectDetectionSlidingWindowGeoDataset)
-from rastervision.pytorch_learner.object_detection_learner_config import (
-    ObjectDetectionGeoDataConfig)
 
 if TYPE_CHECKING:
     from rastervision.core.data import DatasetConfig, Scene
     from rastervision.core.rv_pipeline import (ChipOptions,
                                                ObjectDetectionPredictOptions)
     from rastervision.pytorch_learner.object_detection_utils import BoxList
+    from rastervision.pytorch_learner.object_detection_learner_config import (
+        ObjectDetectionGeoDataConfig)
 
 
 class PyTorchObjectDetectionSampleWriter(PyTorchLearnerSampleWriter):
@@ -154,7 +154,8 @@ class PyTorchObjectDetection(PyTorchLearnerBackend):
 
     def _make_chip_data_config(
             self, dataset: 'DatasetConfig',
-            chip_options: 'ChipOptions') -> ObjectDetectionGeoDataConfig:
+            chip_options: 'ChipOptions') -> 'ObjectDetectionGeoDataConfig':
+        from rastervision.pytorch_learner import (ObjectDetectionGeoDataConfig)
         data_config = ObjectDetectionGeoDataConfig(
             scene_dataset=dataset, sampling=chip_options.sampling)
         return data_config
