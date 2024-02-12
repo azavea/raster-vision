@@ -12,13 +12,12 @@ from rastervision.core.backend import Backend, SampleWriter
 from rastervision.core.data.utils.misc import save_img
 from rastervision.core.data_sample import DataSample
 from rastervision.pytorch_learner.learner import Learner
-from rastervision.pytorch_learner.learner_config import DataConfig
 
 if TYPE_CHECKING:
     from torch.utils.data import Dataset
     from rastervision.core.data import ClassConfig, DatasetConfig, Scene
     from rastervision.core.rv_pipeline import RVPipelineConfig, ChipOptions
-    from rastervision.pytorch_learner.learner_config import LearnerConfig
+    from rastervision.pytorch_learner import DataConfig, LearnerConfig
 
 SPLITS = ['train', 'valid', 'test']
 

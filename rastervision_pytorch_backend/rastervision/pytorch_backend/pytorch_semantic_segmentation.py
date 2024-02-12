@@ -12,13 +12,13 @@ from rastervision.pytorch_backend.pytorch_learner_backend import (
 from rastervision.pytorch_backend.utils import chip_collate_fn_ss
 from rastervision.pytorch_learner.dataset import (
     SemanticSegmentationSlidingWindowGeoDataset)
-from rastervision.pytorch_learner import SemanticSegmentationGeoDataConfig
 
 if TYPE_CHECKING:
     from rastervision.core.data import (DatasetConfig, Scene,
                                         SemanticSegmentationLabelStore)
     from rastervision.core.rv_pipeline import (
         ChipOptions, SemanticSegmentationPredictOptions)
+    from rastervision.pytorch_learner import SemanticSegmentationGeoDataConfig
 
 
 class PyTorchSemanticSegmentationSampleWriter(PyTorchLearnerSampleWriter):
@@ -118,9 +118,11 @@ class PyTorchSemanticSegmentation(PyTorchLearnerBackend):
 
         return labels
 
-    def _make_chip_data_config(
-            self, dataset: 'DatasetConfig',
-            chip_options: 'ChipOptions') -> SemanticSegmentationGeoDataConfig:
+    def _make_chip_data_config(self, dataset: 'DatasetConfig',
+                               chip_options: 'ChipOptions'
+                               ) -> 'SemanticSegmentationGeoDataConfig':
+        from rastervision.pytorch_learner import (
+            SemanticSegmentationGeoDataConfig)
         data_config = SemanticSegmentationGeoDataConfig(
             scene_dataset=dataset, sampling=chip_options.sampling)
         return data_config
