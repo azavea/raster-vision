@@ -79,6 +79,13 @@ class XarraySource(RasterSource):
         self.full_extent = Box(0, 0, height, width)
         if bbox is None:
             bbox = self.full_extent
+        else:
+            if bbox not in self.full_extent:
+                new_bbox = bbox.intersection(self.full_extent)
+                log.warning(f'Clipping ({bbox}) to the DataArray\'s '
+                            f'full extent ({self.full_extent}). '
+                            f'New bbox={new_bbox}')
+                bbox = new_bbox
 
         super().__init__(
             channel_order,
@@ -133,20 +140,23 @@ class XarraySource(RasterSource):
                   out_shape: Optional[Tuple[int, ...]] = None) -> np.ndarray:
         window = window.to_global_coords(self.bbox)
 
-        yslice, xsclice = window.to_slices()
+        window_within_bbox = window.intersection(self.bbox)
+
+        yslice, xslice = window_within_bbox.to_slices()
         if self.temporal:
             chip = self.data_array.isel(
-                x=xsclice, y=yslice, band=bands, time=time).to_numpy()
+                x=xslice, y=yslice, band=bands, time=time).to_numpy()
         else:
             chip = self.data_array.isel(
-                x=xsclice, y=yslice, band=bands).to_numpy()
+                x=xslice, y=yslice, band=bands).to_numpy()
 
-        *batch_dims, h, w, c = chip.shape
-        if window.size != (h, w):
-            window_actual = window.intersection(self.full_extent)
-            yslice, xsclice = window_actual.to_local_coords(window).to_slices()
+        if window != window_within_bbox:
+            *batch_dims, h, w, c = chip.shape
+            # coords of window_within_bbox within window
+            yslice, xslice = window_within_bbox.to_local_coords(
+                window).to_slices()
             tmp = np.zeros((*batch_dims, *window.size, c))
-            tmp[..., yslice, xsclice, :] = chip
+            tmp[..., yslice, xslice, :] = chip
             chip = tmp
 
         chip = fill_overflow(self.bbox, window, chip)
