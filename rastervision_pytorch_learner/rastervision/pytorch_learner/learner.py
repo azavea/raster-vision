@@ -774,7 +774,7 @@ class Learner(ABC):
 
         dl_kw = dict(
             collate_fn=self.get_collate_fn(),
-            batch_size=cfg.solver.batch_sz,
+            batch_size=cfg.solver.batch_sz if cfg.solver else 1,
             num_workers=int(num_workers),
             shuffle=False,
             pin_memory=True)
