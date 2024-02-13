@@ -1717,7 +1717,8 @@ class Learner(ABC):
 
     def load_onnx_model(self, model_path: str) -> ONNXRuntimeAdapter:
         log.info(f'Loading ONNX model from {model_path}')
-        onnx_model = ONNXRuntimeAdapter.from_file(model_path)
+        path = download_if_needed(model_path)
+        onnx_model = ONNXRuntimeAdapter.from_file(path)
         return onnx_model
 
     def log_data_stats(self):
