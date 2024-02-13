@@ -26,7 +26,6 @@ class XarraySource(RasterSource):
                  crs_transformer: 'CRSTransformer',
                  raster_transformers: List['RasterTransformer'] = [],
                  channel_order: Optional[Sequence[int]] = None,
-                 num_channels_raw: Optional[int] = None,
                  bbox: Optional[Box] = None,
                  temporal: bool = False):
         """Constructor.
@@ -63,8 +62,7 @@ class XarraySource(RasterSource):
         self.ndim = data_array.ndim
         self._crs_transformer = crs_transformer
 
-        if num_channels_raw is None:
-            num_channels_raw = len(data_array.band)
+        num_channels_raw = len(data_array.band)
         if channel_order is None:
             channel_order = np.arange(num_channels_raw, dtype=int)
         else:
