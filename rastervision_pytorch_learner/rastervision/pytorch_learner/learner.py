@@ -151,10 +151,14 @@ class Learner(ABC):
                 training mode. Defaults to True.
         """
         self.cfg = cfg
-
-        if model is None and cfg.model is None:
+        self._onnx_mode = (model_weights_path is not None
+                           and model_weights_path.lower().endswith('.onnx'))
+        if self.onnx_mode and training:
+            raise ValueError('Training mode is not supported for ONNX models.')
+        if model is None and cfg.model is None and not self.onnx_mode:
             raise ValueError(
-                'cfg.model can only be None if a custom model is specified.')
+                'cfg.model can only be None if a custom model is specified '
+                'or if model_weights_path is an .onnx file.')
 
         if tmp_dir is None:
             self._tmp_dir = get_tmp_dir()
@@ -229,7 +233,6 @@ class Learner(ABC):
         make_dir(self.checkpoints_dir_local)
 
         # ---------------------------
-        self._onnx_mode = False
         self.init_model_weights_path = model_weights_path
         self.init_model_def_path = model_def_path
         self.init_loss_def_path = loss_def_path
@@ -1101,9 +1104,7 @@ class Learner(ABC):
             model_def_path (Optional[str], optional): Path to model definition.
                 Will be available when loading from a bundle. Defaults to None.
         """
-        self._onnx_mode = (model_weights_path is not None
-                           and model_weights_path.lower().endswith('.onnx'))
-        if self._onnx_mode:
+        if self.onnx_mode:
             self.model = self.load_onnx_model(model_weights_path)
             return
         if self.model is None:
