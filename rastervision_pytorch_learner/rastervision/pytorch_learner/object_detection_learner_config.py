@@ -201,7 +201,6 @@ class ObjectDetectionModelConfig(ModelConfig):
 class ObjectDetectionLearnerConfig(LearnerConfig):
     """Configure an :class:`.ObjectDetectionLearner`."""
 
-    data: Union[ObjectDetectionImageDataConfig, ObjectDetectionGeoDataConfig]
     model: Optional[ObjectDetectionModelConfig]
 
     def build(self,

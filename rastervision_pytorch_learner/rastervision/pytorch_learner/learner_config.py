@@ -1373,8 +1373,8 @@ def learner_config_upgrader(cfg_dict: dict, version: int) -> dict:
 @register_config('learner', upgrader=learner_config_upgrader)
 class LearnerConfig(Config):
     """Config for Learner."""
-    model: Optional[ModelConfig]
-    solver: SolverConfig
+    model: Optional[ModelConfig] = None
+    solver: Optional[SolverConfig] = None
     data: DataConfig
 
     eval_train: bool = Field(
@@ -1411,7 +1411,9 @@ class LearnerConfig(Config):
 
     @root_validator(skip_on_failure=True)
     def validate_class_loss_weights(cls, values: dict) -> dict:
-        solver: SolverConfig = values.get('solver')
+        solver: Optional[SolverConfig] = values.get('solver')
+        if solver is None:
+            return values
         class_loss_weights = solver.class_loss_weights
         if class_loss_weights is not None:
             data: DataConfig = values.get('data')

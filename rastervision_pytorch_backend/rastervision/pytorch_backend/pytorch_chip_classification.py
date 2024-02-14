@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Iterator
+from typing import TYPE_CHECKING
 from os.path import join
 import uuid
 
@@ -7,12 +7,10 @@ from rastervision.core.data_sample import DataSample
 from rastervision.pytorch_backend.pytorch_learner_backend import (
     PyTorchLearnerSampleWriter, PyTorchLearnerBackend)
 from rastervision.pytorch_backend.utils import chip_collate_fn_cc
-from rastervision.pytorch_learner.dataset import (
-    ClassificationSlidingWindowGeoDataset)
 from rastervision.core.data import ChipClassificationLabels
+from rastervision.pytorch_learner.utils import predict_scene_cc
 
 if TYPE_CHECKING:
-    import numpy as np
     from rastervision.core.data import DatasetConfig, Scene
     from rastervision.core.rv_pipeline import ChipOptions, PredictOptions
     from rastervision.pytorch_learner import ClassificationGeoDataConfig
@@ -60,32 +58,9 @@ class PyTorchChipClassification(PyTorchLearnerBackend):
 
     def predict_scene(self, scene: 'Scene', predict_options: 'PredictOptions'
                       ) -> 'ChipClassificationLabels':
-
         if self.learner is None:
             self.load_model()
-
-        chip_sz = predict_options.chip_sz
-        stride = predict_options.stride
-        batch_sz = predict_options.batch_sz
-
-        # Important to use self.learner.cfg.data instead of
-        # self.learner_cfg.data because of the updates
-        # Learner.from_model_bundle() makes to the custom transforms.
-        base_tf, _ = self.learner.cfg.data.get_data_transforms()
-        ds = ClassificationSlidingWindowGeoDataset(
-            scene, size=chip_sz, stride=stride, transform=base_tf)
-
-        predictions: Iterator['np.array'] = self.learner.predict_dataset(
-            ds,
-            raw_out=True,
-            numpy_out=True,
-            dataloader_kw=dict(batch_size=batch_sz),
-            progress_bar=True,
-            progress_bar_kw=dict(desc=f'Making predictions on {scene.id}'))
-
-        labels = ChipClassificationLabels.from_predictions(
-            ds.windows, predictions)
-
+        labels = predict_scene_cc(self.learner, scene, predict_options)
         return labels
 
     def _make_chip_data_config(

@@ -153,7 +153,6 @@ class ClassificationModelConfig(ModelConfig):
 class ClassificationLearnerConfig(LearnerConfig):
     """Configure a :class:`.ClassificationLearner`."""
 
-    data: Union[ClassificationImageDataConfig, ClassificationGeoDataConfig]
     model: Optional[ClassificationModelConfig]
 
     def build(self,

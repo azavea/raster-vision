@@ -1,8 +1,6 @@
-from typing import TYPE_CHECKING, Dict, Iterator
+from typing import TYPE_CHECKING
 from os.path import join, basename
 import uuid
-
-import numpy as np
 
 from rastervision.pipeline.file_system import json_to_file
 from rastervision.core.data_sample import DataSample
@@ -10,8 +8,7 @@ from rastervision.core.data.label import ObjectDetectionLabels
 from rastervision.pytorch_backend.pytorch_learner_backend import (
     PyTorchLearnerSampleWriter, PyTorchLearnerBackend)
 from rastervision.pytorch_backend.utils import chip_collate_fn_od
-from rastervision.pytorch_learner.dataset import (
-    ObjectDetectionSlidingWindowGeoDataset)
+from rastervision.pytorch_learner.utils import predict_scene_od
 
 if TYPE_CHECKING:
     from rastervision.core.data import DatasetConfig, Scene
@@ -117,39 +114,9 @@ class PyTorchObjectDetection(PyTorchLearnerBackend):
     def predict_scene(self, scene: 'Scene',
                       predict_options: 'ObjectDetectionPredictOptions'
                       ) -> ObjectDetectionLabels:
-
-        chip_sz = predict_options.chip_sz
-        stride = predict_options.stride
-        batch_sz = predict_options.batch_sz
-
         if self.learner is None:
             self.load_model()
-
-        # Important to use self.learner.cfg.data instead of
-        # self.learner_cfg.data because of the updates
-        # Learner.from_model_bundle() makes to the custom transforms.
-        base_tf, _ = self.learner.cfg.data.get_data_transforms()
-        ds = ObjectDetectionSlidingWindowGeoDataset(
-            scene, size=chip_sz, stride=stride, transform=base_tf)
-
-        predictions: Iterator[Dict[str, 'np.ndarray']] = (
-            self.learner.predict_dataset(
-                ds,
-                raw_out=True,
-                numpy_out=True,
-                predict_kw=dict(out_shape=(chip_sz, chip_sz)),
-                dataloader_kw=dict(batch_size=batch_sz),
-                progress_bar=True,
-                progress_bar_kw=dict(desc=f'Making predictions on {scene.id}'))
-        )
-
-        labels = ObjectDetectionLabels.from_predictions(
-            ds.windows, predictions)
-        labels = ObjectDetectionLabels.prune_duplicates(
-            labels,
-            score_thresh=predict_options.score_thresh,
-            merge_thresh=predict_options.merge_thresh)
-
+        labels = predict_scene_od(self.learner, scene, predict_options)
         return labels
 
     def _make_chip_data_config(
