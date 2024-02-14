@@ -3,6 +3,7 @@
 from rastervision.pytorch_learner.utils.utils import *
 from rastervision.pytorch_learner.utils.torch_hub import *
 from rastervision.pytorch_learner.utils.distributed import *
+from rastervision.pytorch_learner.utils.prediction import *
 
 __all__ = [
     SplitTensor.__name__,
@@ -24,4 +25,7 @@ __all__ = [
     torch_hub_load_local.__name__,
     DDPContextManager.__name__,
     'DDP_BACKEND',
+    predict_scene_cc.__name__,
+    predict_scene_od.__name__,
+    predict_scene_ss.__name__,
 ]

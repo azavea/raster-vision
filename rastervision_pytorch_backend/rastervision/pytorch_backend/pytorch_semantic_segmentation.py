@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Iterator
+from typing import TYPE_CHECKING
 from os.path import join
 import uuid
 
@@ -10,12 +10,10 @@ from rastervision.core.data_sample import DataSample
 from rastervision.pytorch_backend.pytorch_learner_backend import (
     PyTorchLearnerSampleWriter, PyTorchLearnerBackend)
 from rastervision.pytorch_backend.utils import chip_collate_fn_ss
-from rastervision.pytorch_learner.dataset import (
-    SemanticSegmentationSlidingWindowGeoDataset)
+from rastervision.pytorch_learner.utils import predict_scene_ss
 
 if TYPE_CHECKING:
-    from rastervision.core.data import (DatasetConfig, Scene,
-                                        SemanticSegmentationLabelStore)
+    from rastervision.core.data import DatasetConfig, Scene
     from rastervision.core.rv_pipeline import (
         ChipOptions, SemanticSegmentationPredictOptions)
     from rastervision.pytorch_learner import SemanticSegmentationGeoDataConfig
@@ -71,51 +69,9 @@ class PyTorchSemanticSegmentation(PyTorchLearnerBackend):
     def predict_scene(self, scene: 'Scene',
                       predict_options: 'SemanticSegmentationPredictOptions'
                       ) -> 'SemanticSegmentationLabels':
-
-        if scene.label_store is None:
-            raise ValueError(
-                f'Scene.label_store is not set for scene {scene.id}')
-
         if self.learner is None:
             self.load_model()
-
-        chip_sz = predict_options.chip_sz
-        stride = predict_options.stride
-        crop_sz = predict_options.crop_sz
-        batch_sz = predict_options.batch_sz
-
-        label_store: 'SemanticSegmentationLabelStore' = scene.label_store
-        raw_out = label_store.smooth_output
-
-        # Important to use self.learner.cfg.data instead of
-        # self.learner_cfg.data because of the updates
-        # Learner.from_model_bundle() makes to the custom transforms.
-        base_tf, _ = self.learner.cfg.data.get_data_transforms()
-        pad_direction = 'end' if crop_sz is None else 'both'
-        ds = SemanticSegmentationSlidingWindowGeoDataset(
-            scene,
-            size=chip_sz,
-            stride=stride,
-            pad_direction=pad_direction,
-            transform=base_tf)
-
-        predictions: Iterator[np.ndarray] = self.learner.predict_dataset(
-            ds,
-            raw_out=raw_out,
-            numpy_out=True,
-            predict_kw=dict(out_shape=(chip_sz, chip_sz)),
-            dataloader_kw=dict(batch_size=batch_sz),
-            progress_bar=True,
-            progress_bar_kw=dict(desc=f'Making predictions on {scene.id}'))
-
-        labels = SemanticSegmentationLabels.from_predictions(
-            ds.windows,
-            predictions,
-            smooth=raw_out,
-            extent=scene.extent,
-            num_classes=len(label_store.class_config),
-            crop_sz=crop_sz)
-
+        labels = predict_scene_ss(self.learner, scene, predict_options)
         return labels
 
     def _make_chip_data_config(self, dataset: 'DatasetConfig',
