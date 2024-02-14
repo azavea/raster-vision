@@ -10,6 +10,7 @@ from rastervision.core.data.raster_source import RasterSource
 from rastervision.core.data.utils import parse_array_slices_Nd, fill_overflow
 
 if TYPE_CHECKING:
+    from pystac import Item, ItemCollection
     from rastervision.core.data import RasterTransformer, CRSTransformer
 
 log = logging.getLogger(__name__)
@@ -90,6 +91,78 @@ class XarraySource(RasterSource):
             num_channels_raw,
             raster_transformers=raster_transformers,
             bbox=bbox)
+
+    @classmethod
+    def from_stac(
+            cls,
+            item_or_item_collection: Union['Item', 'ItemCollection'],
+            raster_transformers: List['RasterTransformer'] = [],
+            channel_order: Optional[Sequence[int]] = None,
+            bbox: Optional[Box] = None,
+            bbox_map_coords: Optional[Box] = None,
+            temporal: bool = False,
+            allow_streaming: bool = False,
+            stackstac_args: dict = dict(rescale=False)) -> 'XarraySource':
+        """Construct an ``XarraySource`` from a STAC Item or ItemCollection.
+
+        Args:
+            item_or_item_collection: STAC Item or ItemCollection.
+            raster_transformers: RasterTransformers to use to transform chips
+                after they are read.
+            channel_order: List of indices of channels to extract from raw
+                imagery. Can be a subset of the available channels. If None,
+                all channels available in the image will be read.
+                Defaults to None.
+            bbox: User-specified crop of the extent. If None, the full extent
+                available in the source file is used. Mutually exclusive with
+                ``bbox_map_coords``. Defaults to ``None``.
+            bbox_map_coords: User-specified bbox in EPSG:4326 coords of the 
+                form (ymin, xmin, ymax, xmax). Useful for cropping the raster
+                source so that only part of the raster is read from. Mutually
+                exclusive with ``bbox``. Defaults to ``None``.
+            temporal: If True, data_array is expected to have a "time"
+                dimension and the chips returned will be of shape (T, H, W, C).
+            allow_streaming: If False, load the entire DataArray into memory.
+                Defaults to True.
+            stackstac_args: Optional arguments to pass to stackstac.stack().
+        """
+        import stackstac
+
+        data_array = stackstac.stack(item_or_item_collection, **stackstac_args)
+
+        if not temporal and 'time' in data_array.dims:
+            if len(data_array.time) > 1:
+                raise ValueError('temporal=False but len(data_array.time) > 1')
+            data_array = data_array.isel(time=0)
+
+        if not allow_streaming:
+            from humanize import naturalsize
+            log.info('Loading the full DataArray into memory '
+                     f'({naturalsize(data_array.nbytes)}).')
+            data_array.load()
+
+        crs_transformer = RasterioCRSTransformer(
+            transform=data_array.transform, image_crs=data_array.crs)
+
+        if bbox is not None:
+            if bbox_map_coords is not None:
+                raise ValueError('Specify either bbox or bbox_map_coords, '
+                                 'but not both.')
+            bbox = Box(*bbox)
+        elif bbox_map_coords is not None:
+            bbox_map_coords = Box(*bbox_map_coords)
+            bbox = crs_transformer.map_to_pixel(bbox_map_coords).normalize()
+        else:
+            bbox = None
+
+        raster_source = XarraySource(
+            data_array,
+            crs_transformer=crs_transformer,
+            raster_transformers=raster_transformers,
+            channel_order=channel_order,
+            bbox=bbox,
+            temporal=temporal)
+        return raster_source
 
     @property
     def shape(self) -> Tuple[int, int, int]:
