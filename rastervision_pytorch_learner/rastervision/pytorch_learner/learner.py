@@ -151,9 +151,10 @@ class Learner(ABC):
                 training mode. Defaults to True.
         """
         self.cfg = cfg
+        self.training = training
         self._onnx_mode = (model_weights_path is not None
                            and model_weights_path.lower().endswith('.onnx'))
-        if self.onnx_mode and training:
+        if self.onnx_mode and self.training:
             raise ValueError('Training mode is not supported for ONNX models.')
         if model is None and cfg.model is None and not self.onnx_mode:
             raise ValueError(
@@ -164,8 +165,6 @@ class Learner(ABC):
             self._tmp_dir = get_tmp_dir()
             tmp_dir = self._tmp_dir.name
         self.tmp_dir = tmp_dir
-
-        self.training = training
 
         self.train_ds = train_ds
         self.valid_ds = valid_ds
@@ -202,35 +201,44 @@ class Learner(ABC):
         # ---------------------------
         # Set URIs
         # ---------------------------
-        if output_dir is None and cfg.output_uri is None:
-            raise ValueError('output_dir or LearnerConfig.output_uri must '
-                             'be specified.')
-        if output_dir is not None and cfg.output_uri is not None:
-            log.warning(
-                'Both output_dir and LearnerConfig.output_uri specified. '
-                'LearnerConfig.output_uri will be ignored.')
-        if output_dir is None:
-            assert cfg.output_uri is not None
-            self.output_dir = cfg.output_uri
-            self.model_bundle_uri = cfg.get_model_bundle_uri()
-        else:
-            self.output_dir = output_dir
-            self.model_bundle_uri = join(self.output_dir, 'model-bundle.zip')
-        if is_local(self.output_dir):
-            self.output_dir_local = self.output_dir
-            make_dir(self.output_dir_local)
-        else:
-            self.output_dir_local = get_local_path(self.output_dir, tmp_dir)
-            make_dir(self.output_dir_local, force_empty=True)
-            if self.training:
-                self.sync_from_cloud()
-            log.info(f'Local output dir: {self.output_dir_local}')
-            log.info(f'Remote output dir: {self.output_dir}')
+        self.output_dir = None
+        self.output_dir_local = None
+        self.model_bundle_uri = None
+        self.modules_dir = None
+        self.checkpoints_dir_local = None
 
-        self.modules_dir = join(self.output_dir, MODULES_DIRNAME)
-        self.checkpoints_dir_local = join(self.output_dir_local,
-                                          CHECKPOINTS_DIRNAME)
-        make_dir(self.checkpoints_dir_local)
+        if self.training:
+            if output_dir is None and cfg.output_uri is None:
+                raise ValueError('output_dir or LearnerConfig.output_uri must '
+                                 'be specified in training mode.')
+            if output_dir is not None and cfg.output_uri is not None:
+                log.warning(
+                    'Both output_dir and LearnerConfig.output_uri specified. '
+                    'LearnerConfig.output_uri will be ignored.')
+            if output_dir is None:
+                assert cfg.output_uri is not None
+                self.output_dir = cfg.output_uri
+                self.model_bundle_uri = cfg.get_model_bundle_uri()
+            else:
+                self.output_dir = output_dir
+                self.model_bundle_uri = join(self.output_dir,
+                                             'model-bundle.zip')
+            if is_local(self.output_dir):
+                self.output_dir_local = self.output_dir
+                make_dir(self.output_dir_local)
+            else:
+                self.output_dir_local = get_local_path(self.output_dir,
+                                                       tmp_dir)
+                make_dir(self.output_dir_local, force_empty=True)
+                if self.training:
+                    self.sync_from_cloud()
+                log.info(f'Local output dir: {self.output_dir_local}')
+                log.info(f'Remote output dir: {self.output_dir}')
+
+            self.modules_dir = join(self.output_dir, MODULES_DIRNAME)
+            self.checkpoints_dir_local = join(self.output_dir_local,
+                                              CHECKPOINTS_DIRNAME)
+            make_dir(self.checkpoints_dir_local)
 
         # ---------------------------
         self.init_model_weights_path = model_weights_path
