@@ -215,7 +215,6 @@ class RegressionLearnerConfig(LearnerConfig):
     """Configure a :class:`.RegressionLearner`."""
 
     model: Optional[RegressionModelConfig]
-    data: Union[RegressionImageDataConfig, RegressionGeoDataConfig]
 
     def build(self,
               tmp_dir,

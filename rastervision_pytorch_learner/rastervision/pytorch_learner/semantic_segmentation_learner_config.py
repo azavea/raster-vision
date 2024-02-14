@@ -1,4 +1,4 @@
-from typing import Callable, Optional, Union
+from typing import Callable, Optional
 from os.path import join
 from enum import Enum
 import logging
@@ -209,8 +209,6 @@ class SemanticSegmentationModelConfig(ModelConfig):
 class SemanticSegmentationLearnerConfig(LearnerConfig):
     """Configure a :class:`.SemanticSegmentationLearner`."""
 
-    data: Union[SemanticSegmentationImageDataConfig,
-                SemanticSegmentationGeoDataConfig]
     model: Optional[SemanticSegmentationModelConfig]
 
     def build(self,
