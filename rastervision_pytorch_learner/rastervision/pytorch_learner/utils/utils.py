@@ -463,6 +463,10 @@ class ONNXRuntimeAdapter:
             ort_session (ort.InferenceSession): ONNX-runtime InferenceSession.
         """
         self.ort_session = ort_session
+        inputs = ort_session.get_inputs()
+        if len(inputs) > 1:
+            return ValueError('ONNX model must only take one input.')
+        self.input_key = inputs[0].name
 
     @classmethod
     def from_file(cls, path: str, providers: Optional[List[str]] = None
@@ -487,7 +491,7 @@ class ONNXRuntimeAdapter:
 
     def __call__(self, x: Union[torch.Tensor, np.ndarray]) -> torch.Tensor:
         x = x.numpy()
-        outputs = self.ort_session.run(None, dict(x=x))
+        outputs = self.ort_session.run(None, {self.input_key: x})
         out = outputs[0]
         if isinstance(out, np.ndarray):
             out = torch.from_numpy(out)
