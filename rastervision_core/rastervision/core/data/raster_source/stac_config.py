@@ -48,7 +48,8 @@ class STACItemCollectionConfig(Config):
 
 
 def subset_assets(item: 'Item', assets: List[str]) -> 'Item':
-    """Subset the assets in a STAC Item."""
+    """Return a copy of the Item with assets subsetted."""
+    item = item.clone()
     src_assets = item.assets
     item.assets = {k: src_assets[k] for k in assets}
     return item
