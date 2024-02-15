@@ -13,4 +13,4 @@ opencv-python-headless==4.9.0.80
 matplotlib==3.8.2
 tqdm==4.66.1
 onnx==1.15.0
-onnxruntime-gpu==1.16.3
+onnxruntime-gpu==1.17
