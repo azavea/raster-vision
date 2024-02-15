@@ -24,3 +24,4 @@ The following tutorials highlight many of the things you can do with Raster Visi
     prechipped_datasets
     stac_plus_osm
     temporal
+    onnx_inference

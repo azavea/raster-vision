@@ -140,6 +140,7 @@ nbsphinx_thumbnails = {
     # more natural img/tensorboard.png path does not work.
     'usage/tutorials/train': '_images/tensorboard.png',
     'usage/tutorials/lightning_workflow': '_images/lightning-logo.png',
+    'usage/tutorials/onnx_inference': '_images/ONNX_Runtime_logo_dark.png',
 }
 nbsphinx_prolog = r"""
 {% set docpath = env.doc2path(env.docname, base=False) %}
