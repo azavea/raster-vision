@@ -12,7 +12,6 @@ import albumentations as A
 from albumentations.core.transforms_interface import ImageOnlyTransform
 import cv2
 import pandas as pd
-import onnxruntime as ort
 
 from rastervision.pipeline.file_system.utils import (file_exists, file_to_json,
                                                      get_tmp_dir)
@@ -20,6 +19,7 @@ from rastervision.pipeline.config import (build_config, Config, ConfigError,
                                           upgrade_config)
 
 if TYPE_CHECKING:
+    import onnxruntime as ort
     from rastervision.pytorch_learner import LearnerConfig
 
 log = logging.getLogger(__name__)
@@ -456,7 +456,7 @@ class ONNXRuntimeAdapter:
     also outputs PyTorch Tensors.
     """
 
-    def __init__(self, ort_session: ort.InferenceSession) -> None:
+    def __init__(self, ort_session: 'ort.InferenceSession') -> None:
         """Constructor.
 
         Args:
@@ -482,6 +482,8 @@ class ONNXRuntimeAdapter:
         Returns:
             ONNXRuntimeAdapter: An ONNXRuntimeAdapter instance.
         """
+        import onnxruntime as ort
+
         if providers is None:
             providers = ort.get_available_providers()
             log.info(f'Using ONNX execution providers: {providers}')
