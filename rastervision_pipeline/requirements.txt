@@ -4,3 +4,4 @@ everett==3.3.0
 everett[ini]==3.3.0
 six==1.16.*
 tqdm==4.66.1
+requests==2.31.0
