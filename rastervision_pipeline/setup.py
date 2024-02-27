@@ -1,17 +1,36 @@
 # flake8: noqa
 
-from os import path as op
-import io
-from setuptools import (setup, find_namespace_packages)
-
-here = op.abspath(op.dirname(__file__))
-with io.open(op.join(here, 'requirements.txt'), encoding='utf-8') as f:
-    all_reqs = f.read().split('\n')
-install_requires = [x.strip() for x in all_reqs if 'git+' not in x]
+from os.path import abspath, dirname, join
+from setuptools import setup, find_namespace_packages
+import re
 
 name = 'rastervision_pipeline'
 version = '0.21.4-dev'
 description = 'The main rastervision package for configuring, defining, and running pipelines'
+requirement_constraints = {
+    'pydantic': '<2',
+}
+
+here = abspath(dirname(__file__))
+
+
+def parse_requirements(requirements_path: str) -> list[str]:
+    requirements = []
+    with open(requirements_path, 'r', encoding='utf-8') as f:
+        for line in f:
+            if 'git+' in line:
+                continue
+            # match package name, ignoring version constraints
+            match = re.match(r'^\s*([^\s<=>]+)', line)
+            if not match:
+                continue
+            package_name = match.group(1)
+            if package_name in requirement_constraints:
+                constraint = requirement_constraints[package_name]
+                package_name = f'{package_name}{constraint}'
+            requirements.append(package_name)
+    return requirements
+
 
 setup(
     name=name,
@@ -30,7 +49,7 @@ setup(
     keywords=
     'raster deep-learning ml computer-vision earth-observation geospatial geospatial-processing',
     packages=find_namespace_packages(exclude=['integration_tests*', 'tests*']),
-    install_requires=install_requires,
+    install_requires=parse_requirements(join(here, 'requirements.txt')),
     zip_safe=False,
     entry_points='''
         [console_scripts]

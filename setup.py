@@ -1,41 +1,41 @@
 # flake8: noqa
 
-from os import path as op
-import os
-import json
-import io
+from os.path import abspath, dirname, join
+from setuptools import setup, find_namespace_packages
 import re
-from setuptools import (setup, find_namespace_packages)
-from imp import load_source
 
-here = op.abspath(op.dirname(__file__))
 __version__ = '0.21.4-dev'
+requirement_constraints = {}
 
-# get the dependencies and installs
-with io.open(op.join(here, 'requirements.txt'), encoding='utf-8') as f:
-    all_reqs = f.read().split('\n')
-
-# The RTD build environment fails with the reqs in bad_reqs.
-if 'READTHEDOCS' in os.environ:
-    bad_reqs = ['pyproj', 'h5py']
-    all_reqs = list(
-        filter(lambda r: r.split('==')[0] not in bad_reqs, all_reqs))
-
-install_requires = [x.strip() for x in all_reqs if 'git+' not in x]
+here = abspath(dirname(__file__))
 
 
-def replace_images(readme):
+def parse_requirements(requirements_path: str) -> list[str]:
+    requirements = []
+    with open(requirements_path, 'r', encoding='utf-8') as f:
+        for line in f:
+            if 'git+' in line:
+                continue
+            # match package name, ignoring version constraints
+            match = re.match(r'^\s*([^\s<=>]+)', line)
+            if not match:
+                continue
+            package_name = match.group(1)
+            if package_name in requirement_constraints:
+                constraint = requirement_constraints[package_name]
+                package_name = f'{package_name}{constraint}'
+            requirements.append(package_name)
+    return requirements
+
+
+def replace_images(readme) -> str:
     """Replaces image links in the README with static links to
     the GitHub release branch."""
     release_branch = '.'.join(__version__.split('.')[:2])
     r = r'\((docs/)(.*\.png)'
-    rep = (r'(https://raw.githubusercontent.com/azavea/raster-vision/'
-           '{}/docs/\g<2>'.format(release_branch))
-
+    rep = rf'(https://raw.githubusercontent.com/azavea/raster-vision/{release_branch}/docs/\g<2>'
     return re.sub(r, rep, readme)
 
-
-# del extras_require['feature-extraction']
 
 setup(
     name='rastervision',
@@ -58,4 +58,4 @@ setup(
     'raster deep-learning ml computer-vision earth-observation geospatial geospatial-processing',
     packages=[],
     include_package_data=True,
-    install_requires=install_requires)
+    install_requires=parse_requirements(join(here, 'requirements.txt')))
