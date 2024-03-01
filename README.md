@@ -82,3 +82,9 @@ Azavea CLA, which is based off of the Apache CLA.
   - Faxing a copy to +1-215-925-2600.
   - Mailing a hardcopy to:
     Azavea, 990 Spring Garden Street, 5th Floor, Philadelphia, PA 19107 USA
+
+## Licenses
+
+Raster Vision is licensed under the Apache 2 license. See license [here](./LICENSE).
+
+3rd party licenses for all dependecies used by Raster Vision can be found [here](./THIRD_PARTY_LICENSES.txt).

@@ -1,0 +1,14 @@
+# Overrides for third-party-license-file-generator.
+# This file should be passed to third-party-license-file-generator via the -l option.
+
+filelock:
+  license_name: "The Unlicense"
+  license_file: "https://raw.githubusercontent.com/tox-dev/filelock/main/LICENSE"
+
+pillow:
+  license_name: "HPND"
+  license_file: "https://raw.githubusercontent.com/python-pillow/Pillow/main/LICENSE"
+
+docutils:
+  license_name: "BSD-2-clause" # https://snyk.io/advisor/python/docutils
+  license_file: "https://docutils.sourceforge.io/COPYING.txt"
