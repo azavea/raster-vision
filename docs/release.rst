@@ -9,6 +9,18 @@ Minor or Major Version Release
 ------------------------------
 
 #.  It's a good idea to update any major dependencies before the release.
+#.  Update THIRD_PARTY_LICENSES.txt:
+
+    #. Use ``third_party_license_file_generator`` (``pip install third_party_license_file_generator``) to auto generate the file. Update ``third_party_license_file_generator_overrides.yml``, if necessary.
+
+       .. code-block:: console
+
+           python -m third_party_license_file_generator \
+            -r requirements-all.txt \
+            -p `which python` \
+            -o THIRD_PARTY_LICENSES2.txt \
+            -l third_party_license_file_generator_overrides.yml
+
 #.  Test examples:
 
     #.  Checkout the ``master`` branch, re-build the docker image (``docker/build``), and push it to ECR (``docker/ecr_publish``).
