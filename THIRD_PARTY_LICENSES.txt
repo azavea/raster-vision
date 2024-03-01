@@ -2493,7 +2493,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ----------------------------------------
 
 Package: docutils
-License: GPL-2.0
+License: BSD 2-Clause
 Requires: n/a
 Author: David Goodger <goodger@python.org>
 Home page: http://docutils.sourceforge.net/
