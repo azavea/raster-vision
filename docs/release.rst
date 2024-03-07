@@ -15,11 +15,13 @@ Minor or Major Version Release
 
        .. code-block:: console
 
+           cat `find **/requirements.txt` requirements.txt requirements-dev.txt > requirements-all.txt;
+
            python -m third_party_license_file_generator \
             -r requirements-all.txt \
             -p `which python` \
-            -o THIRD_PARTY_LICENSES2.txt \
-            -l third_party_license_file_generator_overrides.yml
+            -o THIRD_PARTY_LICENSES.txt \
+            -l third_party_license_file_generator_overrides.yml;
 
 #.  Test examples:
 
