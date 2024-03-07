@@ -37,7 +37,7 @@ You can directly install the library using ``pip`` (or ``pip3`` if you also have
 This has been shown to work in the following environment. Variations on this environment may or may not work.
 
 * Ubuntu Linux 22.04
-* Python 3.10
+* Python 3.11
 * CUDA 12 and NVIDIA Driver 535 (for GPU support)
 
 .. warning::

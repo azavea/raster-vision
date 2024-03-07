@@ -1,12 +1,12 @@
 ARG BUILD_TYPE
 ARG CUDA_VERSION
 ARG UBUNTU_VERSION
+ARG PYTHON_VERSION=3.11
 
 ########################################################################
 
 FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu${UBUNTU_VERSION} as thinbuild
 
-ARG PYTHON_VERSION=3.10
 
 # build-essential: installs gcc which is needed to install some deps like rasterio
 # libGL1: needed to avoid following error when using cv2
@@ -24,7 +24,6 @@ RUN --mount=type=cache,target=/var/cache/apt apt update && \
 
 FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu${UBUNTU_VERSION} as fullbuild
 
-ARG PYTHON_VERSION=3.10
 ARG TARGETPLATFORM
 
 # wget: needed below to install conda
@@ -46,7 +45,7 @@ RUN curl -fsSL https://deb.nodesource.com/node_16.x | bash - && \
     apt-get install -y nodejs
 
 # Install Python and conda/mamba (mamba installs conda as well)
-RUN wget -q -O ~/micromamba.sh https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge-pypy3-Linux-$(cat /root/linux_arch).sh && \
+RUN wget -q -O ~/micromamba.sh https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-$(cat /root/linux_arch).sh && \
     chmod +x ~/micromamba.sh && \
     bash ~/micromamba.sh -b -p /opt/conda && \
     rm ~/micromamba.sh
@@ -54,7 +53,8 @@ ENV PATH /opt/conda/bin:$PATH
 ENV LD_LIBRARY_PATH /opt/conda/lib/:$LD_LIBRARY_PATH
 # for some reason, mamba install python does not work here even though it works
 # fine outside docker
-RUN conda install -y python=${PYTHON_VERSION}
+RUN mamba init && exec bash
+RUN mamba install -y python=${PYTHON_VERSION}
 RUN python -m pip install --upgrade pip
 
 # We need to install GDAL first to install Rasterio on non-AMD64 architectures.
