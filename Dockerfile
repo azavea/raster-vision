@@ -135,8 +135,8 @@ COPY ./docs/requirements.txt /opt/src/docs/pandoc-requirements.txt
 # Install pandoc, needed for rendering notebooks
 # Get latest release link from here: https://github.com/jgm/pandoc/releases
 RUN --mount=type=cache,target=/root/.cache/pip pip install -r docs/pandoc-requirements.txt && \
-    wget https://github.com/jgm/pandoc/releases/download/2.19.2/pandoc-2.19.2-1-${TARGETARCH}.deb && \
-    dpkg -i pandoc-2.19.2-1-${TARGETARCH}.deb && rm pandoc-2.19.2-1-${TARGETARCH}.deb
+    wget https://github.com/jgm/pandoc/releases/download/3.1.12.2/pandoc-3.1.12.2-1-${TARGETARCH}.deb && \
+    dpkg -i pandoc-3.1.12.2-1-${TARGETARCH}.deb && rm pandoc-3.1.12.2-1-${TARGETARCH}.deb
 
 #------------------------------------------------------------------------
 
