@@ -27,12 +27,11 @@ You can directly install the library using ``pip`` (or ``pip3`` if you also have
 
 .. note::
 
-    You will also need to set a couple of environment variables required by ``rasterio``. You can do it like so:
+    You might also need to set an environment variable required by ``rasterio`` like so:
 
     .. code-block:: console
 
         > export GDAL_DATA=$(pip show rasterio | grep Location | awk '{print $NF"/rasterio/gdal_data/"}')
-        > export AWS_NO_SIGN_REQUEST=YES
 
 
 This has been shown to work in the following environment. Variations on this environment may or may not work.
@@ -41,7 +40,9 @@ This has been shown to work in the following environment. Variations on this env
 * Python 3.10
 * CUDA 12 and NVIDIA Driver 535 (for GPU support)
 
-Raster Vision also runs on macOS version 12.1, except that the ``num_workers`` for the :class:`.DataLoader` will need to be set to 0 due to an issue with mulitprocessing on Macs with Python >= 3.8. It will also be necessary to install GDAL (check `here <{{ repo }}/rastervision_gdal_vsi/requirements.txt>`__ for the exact version) prior to installing Raster Vision, which isn't necessary on Linux.
+.. warning::
+
+    Raster Vision also runs on macOS version 12.1, except that the ``num_workers`` for the :class:`.DataLoader` will need to be set to 0 due to an issue with mulitprocessing on Macs with Python >= 3.8. It will also be necessary to install GDAL (check `here <{{ repo }}/rastervision_gdal_vsi/requirements.txt>`__ for the exact version) prior to installing Raster Vision, which isn't necessary on Linux.
 
 .. warning::
 
