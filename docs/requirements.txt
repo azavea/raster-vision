@@ -2,7 +2,7 @@ sphinx==5.3.0
 furo==2022.9.29
 myst-parser==0.18.1
 autodoc-pydantic==1.8.0
-nbsphinx==0.8.9
+nbsphinx==0.9.3
 sphinx-copybutton==0.5.*
 
 # update when this is resolved: https://github.com/spatialaudio/nbsphinx/issues/655
