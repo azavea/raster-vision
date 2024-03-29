@@ -73,7 +73,7 @@ RUN rm /opt/conda/lib/libtinfo.so.6 && \
 # We cannot use the ENV directive since it cannot be used conditionally.
 # See https://github.com/opencv/opencv/issues/14884
 # ImportError: /lib/aarch64-linux-gnu/libGLdispatch.so.0: cannot allocate memory in static TLS block
-RUN if [${TARGETARCH} == "arm64"]; \
+RUN if [ "${TARGETARCH}" = "arm64" ]; \
     then echo "export LD_PRELOAD=/lib/$(cat /root/linux_arch)-linux-gnu/libGLdispatch.so.0:$LD_PRELOAD" >> /root/.bashrc; fi
 
 ########################################################################
