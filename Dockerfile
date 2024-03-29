@@ -117,6 +117,12 @@ RUN --mount=type=cache,target=/root/.cache/pip cat pytorch-requirements.txt | so
 COPY ./rastervision_aws_batch/requirements.txt /opt/src/batch-requirements.txt
 COPY ./rastervision_aws_s3/requirements.txt /opt/src/s3-requirements.txt
 COPY ./rastervision_core/requirements.txt /opt/src/core-requirements.txt
+
+# Pip wheels for triangle are missing for ARM64 architectures and building
+# from source fails, so we skip it.
+RUN if [ "${TARGETARCH}" = "arm64" ]; \
+    then sed -i '/^triangle.*$/d' /opt/src/core-requirements.txt; fi
+
 COPY ./rastervision_gdal_vsi/requirements.txt /opt/src/gdal-requirements.txt
 COPY ./rastervision_pipeline/requirements.txt /opt/src/pipeline-requirements.txt
 COPY ./rastervision_aws_sagemaker/requirements.txt /opt/src/sagemaker-requirements.txt

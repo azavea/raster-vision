@@ -385,7 +385,11 @@ class RandomWindowGeoDataset(GeoDataset):
                 p.intersection(extent_polygon) for p in self.aoi_polygons
             ]
             if efficient_aoi_sampling:
-                self.aoi_sampler = AoiSampler(self.aoi_polygons)
+                try:
+                    self.aoi_sampler = AoiSampler(self.aoi_polygons)
+                except ModuleNotFoundError:
+                    log.info('Ignoring efficient_aoi_sampling since triangle '
+                             'is not installed.')
 
     def get_resize_transform(
             self, transform: Optional[A.BasicTransform],
