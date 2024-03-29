@@ -108,10 +108,15 @@ def geojson_to_geoms(geojson: dict) -> Iterator['BaseGeometry']:
 def geoms_to_geojson(geoms: Iterable['BaseGeometry'],
                      properties: Optional[Iterable[dict]] = None) -> dict:
     """Serialize shapely geometries to GeoJSON."""
-    if properties is None:
-        features = [geom_to_feature(g) for g in geoms]
-    else:
-        features = [geom_to_feature(g, p) for g, p in zip(geoms, properties)]
+    with tqdm(
+            geoms,
+            delay=PROGRESSBAR_DELAY_SEC,
+            mininterval=0.5,
+            desc='Serializing geoms') as bar:
+        if properties is None:
+            features = [geom_to_feature(g) for g in bar]
+        else:
+            features = [geom_to_feature(g, p) for g, p in zip(bar, properties)]
     geojson = features_to_geojson(features)
     return geojson
 
