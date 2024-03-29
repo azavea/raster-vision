@@ -184,9 +184,9 @@ RUN pip install sagemaker_pytorch_training==2.8.1
 ENV SAGEMAKER_TRAINING_MODULE=sagemaker_pytorch_container.training:main
 
 # Install a onnxruntime-gpu version compatible with CUDA 12. Specifying
-# --extra-index-url in requirements.txt seems to cause problems witht the
+# --extra-index-url in requirements.txt seems to cause problems with the
 # RTD build.
-RUN pip uninstall onnxruntime-gpu -y && \
-    pip install --upgrade onnxruntime-gpu==1.17 --extra-index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/
+RUN if [ "${TARGETARCH}" != "arm64" ]; then \
+    pip install --upgrade onnxruntime-gpu==1.17 --extra-index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/; fi
 
 CMD ["bash"]
