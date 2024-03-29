@@ -1,12 +1,12 @@
 ARG BUILD_TYPE
 ARG CUDA_VERSION
 ARG UBUNTU_VERSION
-ARG PYTHON_VERSION=3.11
 
 ########################################################################
 
 FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu${UBUNTU_VERSION} as thinbuild
 
+ARG PYTHON_VERSION=3.11
 
 # build-essential: installs gcc which is needed to install some deps like rasterio
 # libGL1: needed to avoid following error when using cv2
@@ -25,6 +25,7 @@ RUN --mount=type=cache,target=/var/cache/apt apt update && \
 FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu${UBUNTU_VERSION} as fullbuild
 
 ARG TARGETPLATFORM
+ARG PYTHON_VERSION=3.11
 
 # wget: needed below to install conda
 # build-essential: installs gcc which is needed to install some deps like rasterio
