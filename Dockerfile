@@ -121,7 +121,15 @@ COPY ./rastervision_gdal_vsi/requirements.txt /opt/src/gdal-requirements.txt
 COPY ./rastervision_pipeline/requirements.txt /opt/src/pipeline-requirements.txt
 COPY ./rastervision_aws_sagemaker/requirements.txt /opt/src/sagemaker-requirements.txt
 COPY ./requirements-dev.txt /opt/src/requirements-dev.txt
-RUN --mount=type=cache,target=/root/.cache/pip cat batch-requirements.txt s3-requirements.txt core-requirements.txt gdal-requirements.txt pipeline-requirements.txt sagemaker-requirements.txt requirements-dev.txt | sort | uniq > all-requirements.txt && \
+RUN --mount=type=cache,target=/root/.cache/pip cat \
+    /opt/src/batch-requirements.txt \
+    /opt/src/s3-requirements.txt \
+    /opt/src/core-requirements.txt \
+    /opt/src/gdal-requirements.txt \
+    /opt/src/pipeline-requirements.txt \
+    /opt/src/sagemaker-requirements.txt \
+    /opt/src/requirements-dev.txt \
+    | sort | uniq > all-requirements.txt && \
     pip install $(grep -ivE "^\s*$|^#|rastervision_*" all-requirements.txt) && \
     rm all-requirements.txt
 
