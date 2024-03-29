@@ -153,7 +153,7 @@ class RasterSource(ABC):
             out_shape: Optional[Tuple[int, int]] = None) -> 'np.ndarray':
         """Same as get_chip(), but input is a window in map coords. """
         window_pixel_coords = self.crs_transformer.map_to_pixel(
-            window_map_coords, bbox=self.bbox)
+            window_map_coords, bbox=self.bbox).normalize()
         chip = self.get_chip(window_pixel_coords, out_shape=out_shape)
         return chip
 
