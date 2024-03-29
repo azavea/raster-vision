@@ -19,7 +19,7 @@ Installing via pip
 
 .. currentmodule:: rastervision
 
-You can directly install the library using ``pip`` (or ``pip3`` if you also have Python 2 installed).
+You can directly install the library using ``pip``.
 
 .. code-block:: console
 
@@ -101,15 +101,15 @@ The command above will attempt to install GDAL via ``pip``. If that fails, you c
 Docker Images
 -------------
 
-Using the Docker images published for Raster Vision makes it easy to use a fully set up environment. We have tested this with Docker 20, although you may be able to use a lower version.
+Using the Docker images published for Raster Vision makes it easy to use a fully set up environment.
 
-The images we publish include all plugins and dependencies for using Raster Vision with PyTorch and AWS. These are published to `quay.io/azavea/raster-vision <https://quay.io/repository/azavea/raster-vision>`_.  To run the container for the latest release, run:
+The images we publish include all plugins and dependencies for using Raster Vision with PyTorch and AWS. These are published to `quay.io/azavea/raster-vision <https://quay.io/repository/azavea/raster-vision>`_ (see the *tags* tab).  To run the container for the latest release, run:
 
 .. code-block:: console
 
    > docker run --rm -it quay.io/azavea/raster-vision:pytorch-{{ version }} /bin/bash
 
-There are also images with the `-latest` suffix for the latest commits on the ``master`` branch. You'll likely need to mount volumes and expose ports to make this container fully useful; see the `docker/run <{{ repo }}/docker/run>`_ script for an example usage.
+There are also images with the ``-latest`` suffix for the latest commits on the ``master`` branch. You'll likely need to mount volumes and expose ports to make this container fully useful; see the `docker/run <{{ repo }}/docker/run>`_ script for an example usage.
 
 You can also base your own Dockerfiles off the Raster Vision image to use with your own codebase. See :ref:`bootstrap` for more information.
 
@@ -140,15 +140,15 @@ To run a Bash console in the PyTorch Docker container use:
 
 This will mount the ``$RASTER_VISION_DATA_DIR`` local directory to to ``/opt/data/`` inside the container.
 
+.. note::
+
+    If you have built an ARM64 image, you should pass the ``--arm64`` flag to ``docker/run``.
+
 .. warning::
 
     Users running under WSL2 in Windows will need to unset the ``NAME`` environment variable. For example, instead of
     ``docker/run``, you would run ``NAME='' docker/run``. By default, WSL2 sets a ``NAME`` variable that matches the network
     name of your computer. This environment variable collides with a variable in the ``docker/run`` script.
-
-.. warning::
-
-    If you have built an ARM64 image, you should pass the ``--arm64`` flag to ``docker/run``.
 
 This script also has options for forwarding AWS credentials, and running Jupyter notebooks which can be seen below.
 
