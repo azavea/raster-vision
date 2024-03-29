@@ -3,7 +3,6 @@ from typing import Sequence, Tuple, Union
 import numpy as np
 from shapely.geometry import Polygon, MultiPolygon, LinearRing
 from shapely.ops import unary_union
-from triangle import triangulate
 
 
 class AoiSampler():
@@ -67,6 +66,8 @@ class AoiSampler():
         """Extract vertices and edges from the polygon (and its holes, if any)
         and pass them to the Triangle library for triangulation.
         """
+        from triangle import triangulate
+
         vertices, edges = self.polygon_to_graph(polygon)
 
         holes = polygon.interiors
