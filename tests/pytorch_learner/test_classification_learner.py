@@ -106,7 +106,8 @@ class TestClassificationLearner(unittest.TestCase):
             backend_cfg = PyTorchChipClassificationConfig(
                 data=data_cfg,
                 model=ClassificationModelConfig(pretrained=False),
-                solver=SolverConfig(batch_sz=4, num_epochs=1),
+                solver=SolverConfig(
+                    batch_sz=4, num_epochs=1, ignore_class_index=-1),
                 log_tensorboard=False)
             pipeline_cfg = ChipClassificationConfig(
                 root_uri=tmp_dir,
