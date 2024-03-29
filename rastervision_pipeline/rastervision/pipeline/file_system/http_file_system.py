@@ -15,7 +15,8 @@ from rastervision.pipeline.file_system import (FileSystem, NotReadableError,
                                                NotWritableError)
 
 
-def get_file_obj(uri: str, with_progress: bool = True) -> ContextManager:
+def get_file_obj(uri: str, with_progress: bool = True,
+                 **kwargs) -> ContextManager:
     """Returns a context manager for a file-like object that supports buffered
     reads. If with_progress is True, wraps the read() method of the object in
     a function that updates a tqdm progress bar.
@@ -29,7 +30,7 @@ def get_file_obj(uri: str, with_progress: bool = True) -> ContextManager:
 
     Adapted from https://stackoverflow.com/a/63831344/5908685.
     """
-    r = requests.get(uri, stream=True, allow_redirects=True)
+    r = requests.get(uri, stream=True, allow_redirects=True, **kwargs)
     if r.status_code != 200:
         r.raise_for_status()  # Will only raise for 4xx codes, so...
         raise RuntimeError(
@@ -104,10 +105,10 @@ class HttpFileSystem(FileSystem):
         raise NotWritableError('Could not write {}'.format(dst_uri))
 
     @staticmethod
-    def copy_from(src_uri: str, dst_path: str) -> None:
-        with get_file_obj(src_uri) as in_file, open(dst_path,
-                                                    'wb') as out_file:
-            shutil.copyfileobj(in_file, out_file)
+    def copy_from(src_uri: str, dst_path: str, **kwargs) -> None:
+        with get_file_obj(src_uri, **kwargs) as in_file:
+            with open(dst_path, 'wb') as out_file:
+                shutil.copyfileobj(in_file, out_file)
 
     @staticmethod
     def local_path(uri: str, download_dir: str) -> None:
