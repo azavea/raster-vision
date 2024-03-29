@@ -52,8 +52,14 @@ class SemanticSegmentationLearner(Learner):
             if not self.is_ddp_master:
                 return metrics
 
-        conf_mat_metrics = compute_conf_mat_metrics(conf_mat,
-                                                    self.cfg.data.class_names)
+        ignored_idx = self.cfg.solver.ignore_class_index
+        if ignored_idx is not None and ignored_idx < 0:
+            ignored_idx += self.cfg.data.num_classes
+
+        class_names = self.cfg.data.class_names
+        conf_mat_metrics = compute_conf_mat_metrics(
+            conf_mat, class_names, ignore_idx=ignored_idx)
+
         metrics.update(conf_mat_metrics)
         return metrics
 

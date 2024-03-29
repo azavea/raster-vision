@@ -47,16 +47,29 @@ def color_to_triple(color: Optional[str] = None) -> Tuple[int, int, int]:
         return ImageColor.getrgb(color)
 
 
-def compute_conf_mat(out, y, num_labels):
+def compute_conf_mat(out: torch.Tensor, y: torch.Tensor,
+                     num_labels: int) -> torch.Tensor:
     labels = torch.arange(0, num_labels).to(out.device)
-    return ((out == labels[:, None]) & (y == labels[:, None, None])).sum(
+    conf_mat = ((out == labels[:, None]) & (y == labels[:, None, None])).sum(
         dim=2, dtype=torch.float32)
+    return conf_mat
 
 
-def compute_conf_mat_metrics(conf_mat, label_names, eps=1e-6):
+def compute_conf_mat_metrics(conf_mat: torch.Tensor,
+                             label_names: list[str],
+                             ignore_idx: Optional[int] = None,
+                             eps: float = 1e-6):
     # eps is to avoid dividing by zero.
     eps = torch.tensor(eps)
     conf_mat = conf_mat.cpu()
+
+    if ignore_idx is not None:
+        keep_mask = torch.arange(len(conf_mat)) != ignore_idx
+        conf_mat = conf_mat[keep_mask, :]
+        conf_mat = conf_mat[:, keep_mask]
+        label_names = (
+            label_names[:ignore_idx] + label_names[(ignore_idx + 1):])
+
     gt_count = conf_mat.sum(dim=1)
     pred_count = conf_mat.sum(dim=0)
     total = conf_mat.sum()
@@ -76,11 +89,11 @@ def compute_conf_mat_metrics(conf_mat, label_names, eps=1e-6):
         'avg_recall': weighted_recall.item(),
         'avg_f1': weighted_f1.item()
     }
-    for ind, label in enumerate(label_names):
+    for i, label in enumerate(label_names):
         metrics.update({
-            '{}_precision'.format(label): precision[ind].item(),
-            '{}_recall'.format(label): recall[ind].item(),
-            '{}_f1'.format(label): f1[ind].item(),
+            f'{label}_precision': precision[i].item(),
+            f'{label}_recall': recall[i].item(),
+            f'{label}_f1': f1[i].item(),
         })
     return metrics
 

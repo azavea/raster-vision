@@ -116,6 +116,23 @@ class TestComputeConfMatMetrics(unittest.TestCase):
         }
         self.assertDictEqual(round_dict(metrics), round_dict(exp_metrics))
 
+    def test_ignored_class(self):
+        label_names = ['a', 'b', 'c']
+        conf_mat = torch.tensor([[2., 0, 0], [0, 2, 0], [1, 1, 0]])
+        metrics = compute_conf_mat_metrics(conf_mat, label_names, ignore_idx=2)
+        exp_metrics = {
+            'avg_precision': 1.0,
+            'avg_recall': 1.0,
+            'avg_f1': 1.0,
+            'a_precision': 1.0,
+            'a_recall': 1.0,
+            'a_f1': 1.0,
+            'b_precision': 1.0,
+            'b_recall': 1.0,
+            'b_f1': 1.0
+        }
+        self.assertDictEqual(metrics, exp_metrics)
+
 
 class TestMinMaxNormalize(unittest.TestCase):
     def test_tiny_floats(self):

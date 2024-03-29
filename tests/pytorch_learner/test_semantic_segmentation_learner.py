@@ -113,7 +113,8 @@ class TestSemanticSegmentationLearner(unittest.TestCase):
             backend_cfg = PyTorchSemanticSegmentationConfig(
                 data=data_cfg,
                 model=SemanticSegmentationModelConfig(pretrained=False),
-                solver=SolverConfig(batch_sz=4, num_epochs=1),
+                solver=SolverConfig(
+                    batch_sz=4, num_epochs=1, ignore_class_index=-1),
                 log_tensorboard=False)
             pipeline_cfg = SemanticSegmentationConfig(
                 root_uri=tmp_dir, dataset=dataset_cfg, backend=backend_cfg)
