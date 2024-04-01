@@ -89,7 +89,7 @@ class SemanticSegmentationVisualizer(Visualizer):
     def get_plot_ncols(self, **kwargs) -> int:
         x = kwargs['x']
         nb_img_channels = x.shape[1]
-        ncols = len(self.get_channel_display_groups(nb_img_channels)) + 1
+        ncols = len(self.get_channel_display_groups(nb_img_channels))
         if kwargs.get('y') is not None:
             ncols += 1
         if kwargs.get('z') is not None:
