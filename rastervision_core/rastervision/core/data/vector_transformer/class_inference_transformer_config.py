@@ -14,22 +14,32 @@ class ClassInferenceTransformerConfig(VectorTransformerConfig):
 
     default_class_id: Optional[int] = Field(
         None,
-        description='The default class_id to use if class cannot be inferred '
-        'using other mechanisms. If a feature has an inferred class_id of '
-        'None, then it will be deleted.')
+        description='The default ``class_id`` to use if class cannot be '
+        'inferred using other mechanisms. If a feature has an inferred '
+        '``class_id`` of ``None``, then it will be deleted. '
+        'Defaults to ``None``.')
     class_id_to_filter: Optional[Dict[int, list]] = Field(
         None,
-        description='Map from class_id to JSON filter used to infer missing '
-        'class_ids. Each key should be a class id, and its value should be a '
-        'boolean expression which is run against the property field for each '
-        'feature. This allows matching different features to different '
-        'class IDs based on its properties. The expression schema is that '
-        'described by '
-        'https://docs.mapbox.com/mapbox-gl-js/style-spec/other/#other-filter')
+        description='Map from ``class_id`` to JSON filter used to infer '
+        'missing class IDs. Each key should be a class ID, and its value '
+        'should be a boolean expression which is run against the property '
+        'field for each feature. This allows matching different features to '
+        'different class IDs based on its properties. The expression schema '
+        'is that described by '
+        'https://docs.mapbox.com/mapbox-gl-js/style-spec/other/#other-filter. '
+        'Defaults to ``None``.')
+    class_name_mapping: dict[str, str] = Field(
+        None,
+        description='``old_name --> new_name`` mapping for values in the '
+        '``class_name`` or ``label`` property of the GeoJSON features. The '
+        '``new_name`` must be a valid class name in the ``ClassConfig``. This '
+        'can also be used to merge multiple classes into one e.g.: '
+        '``dict(car="vehicle", truck="vehicle")``. Defaults to None.')
 
     def build(self, class_config: Optional['ClassConfig'] = None
               ) -> ClassInferenceTransformer:
         return ClassInferenceTransformer(
             self.default_class_id,
             class_config=class_config,
-            class_id_to_filter=self.class_id_to_filter)
+            class_id_to_filter=self.class_id_to_filter,
+            class_name_mapping=self.class_name_mapping)

@@ -14,25 +14,56 @@ log = logging.getLogger(__name__)
 
 
 class ClassInferenceTransformer(VectorTransformer):
-    """Infers missing class_ids from GeoJSON features.
+    """Infers missing class IDs from GeoJSON features.
 
         Rules:
-            1) If class_id is in feature['properties'], use it.
-            2) If class_config is set and class_name or label are in
-                feature['properties'] and in class_config, use corresponding
-                class_id.
-            3) If class_id_to_filter is set and filter is true when applied to
-                feature, use corresponding class_id.
-            4) Otherwise, return the default_class_id
+            1) If ``class_id`` is in ``feature['properties']``, use it.
+            2) If ``class_config`` is set and ``"class_name"`` or ``"label"``
+               are in ``feature['properties']`` and in ``class_config``, use
+               corresponding ``class_id``.
+            3) If ``class_id_to_filter`` is set and filter is true when applied
+               to feature, use corresponding ``class_id``.
+            4) Otherwise, return the ``default_class_id``.
     """
 
     def __init__(self,
                  default_class_id: Optional[int],
                  class_config: Optional['ClassConfig'] = None,
-                 class_id_to_filter: Optional[Dict[int, list]] = None):
+                 class_id_to_filter: Optional[Dict[int, list]] = None,
+                 class_name_mapping: Optional[dict[str, str]] = None):
+        """Constructor.
+
+        Args:
+            default_class_id: The default ``class_id`` to use if class cannot
+                be inferred using other mechanisms. If a feature has an
+                inferred ``class_id`` of None, then it will be deleted.
+                Defaults to ``None``.
+            class_config: ``ClassConfig`` to match the class names in the
+                GeoJSON features to. Required if using ``class_name_mapping``.
+                Defaults to None.
+            class_id_to_filter: Map from ``class_id`` to JSON filter used to
+                infer missing class IDs. Each key should be a class ID, and its
+                value should be a boolean expression which is run against the
+                property field for each feature. This allows matching different
+                features to different class IDs based on its properties. The
+                expression schema is that described by
+                https://docs.mapbox.com/mapbox-gl-js/style-spec/other/#other-filter.
+                Defaults to ``None``.
+            class_name_mapping: ``old_name --> new_name`` mapping for values in
+                the ``class_name`` or ``label`` property of the GeoJSON
+                features. The ``new_name`` must be a valid class name in the
+                ``ClassConfig``. This can also be used to merge multiple
+                classes into one e.g.:
+                ``dict(car="vehicle", truck="vehicle")``. Defaults to ``None``.
+        """
+        if class_name_mapping is not None and class_config is None:
+            raise ValueError(
+                'class_config must be specified if class_name_mapping is.')
+
         self.class_config = class_config
         self.class_id_to_filter = class_id_to_filter
         self.default_class_id = default_class_id
+        self.class_name_mapping = class_name_mapping
 
         if self.class_id_to_filter is not None:
             self.class_id_to_filter = {}
@@ -45,37 +76,66 @@ class ClassInferenceTransformer(VectorTransformer):
             feature: dict,
             default_class_id: Optional[int],
             class_config: Optional['ClassConfig'] = None,
-            class_id_to_filter: Optional[Dict[int, list]] = None
+            class_id_to_filter: Optional[Dict[int, list]] = None,
+            class_name_mapping: Optional[dict[str, str]] = None
     ) -> Optional[int]:
-        """Infer the class_id for a GeoJSON feature.
+        """Infer the class ID for a GeoJSON feature.
 
         Rules:
-            1) If class_id is in feature['properties'], use it.
-            2) If class_config is set and class_name or label are in
-                feature['properties'] and in class_config, use corresponding
-                class_id.
-            3) If class_id_to_filter is set and filter is true when applied to
-                feature, use corresponding class_id.
-            4) Otherwise, return the default_class_id.
+            1) If ``class_id`` is in ``feature['properties']``, use it.
+            2) If ``class_config`` is set and ``"class_name"`` or ``"label"``
+               are in ``feature['properties']`` and in ``class_config``, use
+               corresponding ``class_id``.
+            3) If ``class_id_to_filter`` is set and filter is true when applied
+               to feature, use corresponding ``class_id``.
+            4) Otherwise, return the ``default_class_id``.
 
         Args:
-            feature (dict): GeoJSON feature.
+            feature: GeoJSON feature.
+            default_class_id: The default ``class_id`` to use if class cannot
+                be inferred using other mechanisms. If a feature has an
+                inferred ``class_id`` of None, then it will be deleted.
+                Defaults to ``None``.
+            class_config: ``ClassConfig`` to match the class names in the
+                GeoJSON features to. Required if using ``class_name_mapping``.
+                Defaults to None.
+            class_id_to_filter: Map from ``class_id`` to JSON filter used to
+                infer missing class IDs. Each key should be a class ID, and its
+                value should be a boolean expression which is run against the
+                property field for each feature. This allows matching different
+                features to different class IDs based on its properties. The
+                expression schema is that described by
+                https://docs.mapbox.com/mapbox-gl-js/style-spec/other/#other-filter.
+                Defaults to ``None``.
+            class_name_mapping: ``old_name --> new_name`` mapping for values in
+                the ``class_name`` or ``label`` property of the GeoJSON
+                features. The ``new_name`` must be a valid class name in the
+                ``ClassConfig``. This can also be used to merge multiple
+                classes into one e.g.:
+                ``dict(car="vehicle", truck="vehicle")``. Defaults to ``None``.
 
         Returns:
             Optional[int]: Inferred class ID.
         """
-        class_id = feature.get('properties', {}).get('class_id')
+        if class_name_mapping is not None and class_config is None:
+            raise ValueError(
+                'class_config must be specified if class_name_mapping is.')
+
+        properties: dict = feature.get('properties', {})
+
+        class_id = properties.get('class_id')
         if class_id is not None:
             return class_id
 
         if class_config is not None:
-            class_name = feature.get('properties', {}).get('class_name')
+            if class_name_mapping is None:
+                class_name_mapping = {}
+            class_name = properties.get('class_name')
+            if class_name is None:
+                class_name = properties.get('label')
+            class_name = class_name_mapping.get(class_name, class_name)
             if class_name in class_config.names:
                 return class_config.names.index(class_name)
-
-            label = feature.get('properties', {}).get('label')
-            if label in class_config.names:
-                return class_config.names.index(label)
 
         if class_id_to_filter is not None:
             for class_id, filter_fn in class_id_to_filter.items():
@@ -100,7 +160,8 @@ class ClassInferenceTransformer(VectorTransformer):
                 feature,
                 default_class_id=self.default_class_id,
                 class_config=self.class_config,
-                class_id_to_filter=self.class_id_to_filter)
+                class_id_to_filter=self.class_id_to_filter,
+                class_name_mapping=self.class_name_mapping)
             if class_id is not None:
                 feature = deepcopy(feature)
                 properties = feature.get('properties', {})

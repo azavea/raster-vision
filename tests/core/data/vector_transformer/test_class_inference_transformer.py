@@ -22,6 +22,13 @@ class TestClassInferenceTransformerConfig(unittest.TestCase):
 
 
 class TestClassInferenceTransformer(unittest.TestCase):
+    def test_init(self):
+        args = dict(
+            default_class_id=None,
+            class_name_mapping=dict(old_name='new_name'))
+        self.assertRaises(ValueError,
+                          lambda: ClassInferenceTransformer(**args))
+
     def test_inference_with_class_id(self):
         feat = make_feature(class_id=1)
         class_id = ClassInferenceTransformer.infer_feature_class_id(
@@ -43,6 +50,32 @@ class TestClassInferenceTransformer(unittest.TestCase):
             default_class_id=None,
             class_config=ClassConfig(names=['bg', 'fg']))
         self.assertEqual(class_id, 0)
+
+    def test_inference_with_class_name_mapping(self):
+        feat = make_feature(class_name='old_name')
+        args = dict(
+            feature=feat,
+            default_class_id=None,
+            class_name_mapping=dict(old_name='new_name'))
+        self.assertRaises(
+            ValueError,
+            lambda: ClassInferenceTransformer.infer_feature_class_id(**args))
+
+        feat = make_feature(class_name='old_name')
+        class_id = ClassInferenceTransformer.infer_feature_class_id(
+            feat,
+            default_class_id=None,
+            class_config=ClassConfig(names=['bg', 'new_name']),
+            class_name_mapping=dict(old_name='new_name'))
+        self.assertEqual(class_id, 1)
+
+        feat = make_feature(label='old_name')
+        class_id = ClassInferenceTransformer.infer_feature_class_id(
+            feat,
+            default_class_id=None,
+            class_config=ClassConfig(names=['bg', 'new_name']),
+            class_name_mapping=dict(old_name='new_name'))
+        self.assertEqual(class_id, 1)
 
     def test_inference_with_filter(self):
         class_id_to_filter = {
