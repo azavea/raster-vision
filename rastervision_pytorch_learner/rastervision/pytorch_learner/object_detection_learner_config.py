@@ -92,6 +92,7 @@ class ObjectDetectionGeoDataConfig(ObjectDetectionDataConfig, GeoDataConfig):
                 stride=opts.stride,
                 padding=opts.padding,
                 pad_direction=opts.pad_direction,
+                within_aoi=opts.within_aoi,
                 transform=transform,
                 **extra_args,
             )
@@ -111,6 +112,7 @@ class ObjectDetectionGeoDataConfig(ObjectDetectionDataConfig, GeoDataConfig):
                 neg_ratio=opts.neg_ratio,
                 neg_ioa_thresh=opts.neg_ioa_thresh,
                 efficient_aoi_sampling=opts.efficient_aoi_sampling,
+                within_aoi=opts.within_aoi,
                 transform=transform,
                 **extra_args,
             )

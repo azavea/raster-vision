@@ -87,6 +87,7 @@ class ClassificationGeoDataConfig(ClassificationDataConfig, GeoDataConfig):
                 stride=opts.stride,
                 padding=opts.padding,
                 pad_direction=opts.pad_direction,
+                within_aoi=opts.within_aoi,
                 transform=transform,
                 **extra_args,
             )
@@ -101,6 +102,7 @@ class ClassificationGeoDataConfig(ClassificationDataConfig, GeoDataConfig):
                 max_windows=opts.max_windows,
                 max_sample_attempts=opts.max_sample_attempts,
                 efficient_aoi_sampling=opts.efficient_aoi_sampling,
+                within_aoi=opts.within_aoi,
                 transform=transform,
                 **extra_args,
             )

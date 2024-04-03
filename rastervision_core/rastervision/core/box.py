@@ -478,10 +478,15 @@ class Box():
     def within_aoi(window: 'Box', aoi_polygons: List[Polygon]) -> bool:
         """Check if window is within a list of AOI polygons."""
         w = window.to_shapely()
-        for polygon in aoi_polygons:
-            if w.within(polygon):
-                return True
-        return False
+        out = any(w.within(p) for p in aoi_polygons)
+        return out
+
+    @staticmethod
+    def intersects_aoi(window: 'Box', aoi_polygons: List[Polygon]) -> bool:
+        """Check if window is within a list of AOI polygons."""
+        w = window.to_shapely()
+        out = any(w.intersects(p) for p in aoi_polygons)
+        return out
 
     def __contains__(self, query: Union['Box', Sequence]) -> bool:
         """Check if box or point is contained within this box.

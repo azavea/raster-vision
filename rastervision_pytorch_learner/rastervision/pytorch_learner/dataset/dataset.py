@@ -104,6 +104,7 @@ class GeoDataset(AlbumentationsDataset):
 
     def __init__(self,
                  scene: Scene,
+                 within_aoi: bool = True,
                  transform: Optional[A.BasicTransform] = None,
                  transform_type: Optional[TransformType] = None,
                  normalize: bool = True,
@@ -113,6 +114,10 @@ class GeoDataset(AlbumentationsDataset):
 
         Args:
             scene (Scene): A Scene object.
+            within_aoi: If True and if the scene has an AOI, only sample
+                windows that lie fully within the AOI. If False, windows only
+                partially intersecting the AOI will also be allowed.
+                Defaults to True.
             transform (Optional[A.BasicTransform], optional): Albumentations
                 transform to apply to the windows. Defaults to None.
                 Each transform in Albumentations takes images of type uint8, and
@@ -132,6 +137,8 @@ class GeoDataset(AlbumentationsDataset):
                 coordinates used to generate the image. Defaults to False.
         """
         self.scene = scene
+        self.within_aoi = within_aoi
+        self.return_window = return_window
 
         super().__init__(
             orig_dataset=scene,
@@ -139,7 +146,6 @@ class GeoDataset(AlbumentationsDataset):
             transform_type=transform_type,
             normalize=normalize,
             to_pytorch=to_pytorch)
-        self.return_window = return_window
 
     def __len__(self):
         raise NotImplementedError()
@@ -172,6 +178,7 @@ class SlidingWindowGeoDataset(GeoDataset):
                  padding: Optional[Union[NonNegInt, Tuple[NonNegInt,
                                                           NonNegInt]]] = None,
                  pad_direction: Literal['both', 'start', 'end'] = 'end',
+                 within_aoi: bool = True,
                  transform: Optional[A.BasicTransform] = None,
                  transform_type: Optional[TransformType] = None,
                  normalize: bool = True,
@@ -192,6 +199,10 @@ class SlidingWindowGeoDataset(GeoDataset):
                 ymax and xmax (bottom and right). If 'start', only pad ymin and
                 xmin (top and left). If 'both', pad all sides. Has no effect if
                 paddiong is zero. Defaults to 'end'.
+            within_aoi: If True and if the scene has an AOI, only sample
+                windows that lie fully within the AOI. If False, windows only
+                partially intersecting the AOI will also be allowed.
+                Defaults to True.
             transform (Optional[A.BasicTransform], optional): Albumentations
                 transform to apply to the windows. Defaults to None.
                 Each transform in Albumentations takes images of type uint8, and
@@ -212,6 +223,7 @@ class SlidingWindowGeoDataset(GeoDataset):
         """
         super().__init__(
             scene=scene,
+            within_aoi=within_aoi,
             transform=transform,
             transform_type=transform_type,
             normalize=normalize,
@@ -225,14 +237,16 @@ class SlidingWindowGeoDataset(GeoDataset):
 
     def init_windows(self) -> None:
         """Pre-compute windows."""
-        windows = self.scene.raster_source.extent.get_windows(
+        windows = self.scene.extent.get_windows(
             self.size,
             stride=self.stride,
             padding=self.padding,
             pad_direction=self.pad_direction)
         if len(self.scene.aoi_polygons_bbox_coords) > 0:
-            windows = Box.filter_by_aoi(windows,
-                                        self.scene.aoi_polygons_bbox_coords)
+            windows = Box.filter_by_aoi(
+                windows,
+                self.scene.aoi_polygons_bbox_coords,
+                within=self.within_aoi)
         self.windows = windows
 
     def __getitem__(self, idx: int):
@@ -263,6 +277,7 @@ class RandomWindowGeoDataset(GeoDataset):
                  max_windows: Optional[NonNegInt] = None,
                  max_sample_attempts: PosInt = 100,
                  efficient_aoi_sampling: bool = True,
+                 within_aoi: bool = True,
                  transform: Optional[A.BasicTransform] = None,
                  transform_type: Optional[TransformType] = None,
                  normalize: bool = True,
@@ -315,6 +330,10 @@ class RandomWindowGeoDataset(GeoDataset):
                 inefficient. This flag enables the use of an alternate
                 algorithm that only samples window locations inside the AOIs.
                 Defaults to True.
+            within_aoi: If True and if the scene has an AOI, only sample
+                windows that lie fully within the AOI. If False, windows only
+                partially intersecting the AOI will also be allowed.
+                Defaults to True.
             transform (Optional[A.BasicTransform], optional): Albumentations
                 transform to apply to the windows. Defaults to None.
             transform_type (Optional[TransformType], optional): Type of
@@ -344,6 +363,7 @@ class RandomWindowGeoDataset(GeoDataset):
 
         super().__init__(
             scene=scene,
+            within_aoi=within_aoi,
             transform=transform,
             transform_type=transform_type,
             normalize=normalize,
@@ -351,7 +371,7 @@ class RandomWindowGeoDataset(GeoDataset):
             return_window=return_window)
 
         if padding is None:
-            if size_lims is not None:
+            if has_size_lims:
                 max_size = size_lims[1]
                 padding = (max_size // 2, max_size // 2)
             else:
@@ -370,7 +390,7 @@ class RandomWindowGeoDataset(GeoDataset):
         self.max_sample_attempts = max_sample_attempts
 
         # include padding in the extent
-        ymin, xmin, ymax, xmax = scene.raster_source.extent
+        ymin, xmin, ymax, xmax = scene.extent
         h_padding, w_padding = self.padding
         self.extent = Box(ymin - h_padding, xmin - w_padding, ymax + h_padding,
                           xmax + w_padding)
@@ -447,7 +467,9 @@ class RandomWindowGeoDataset(GeoDataset):
         return window
 
     def sample_window(self) -> Box:
-        """If scene has AOI polygons, try to find a random window that is
+        """Sample a window with random size and location within the AOI.
+
+        If the scene has AOI polygons, try to find a random window that is
         within the AOI. Otherwise, just return the first sampled window.
 
         Raises:
@@ -463,9 +485,14 @@ class RandomWindowGeoDataset(GeoDataset):
 
         for _ in range(self.max_sample_attempts):
             window = self._sample_window()
-            if Box.within_aoi(window, self.aoi_polygons):
-                return window
-        raise StopIteration('Failed to find random window within scene AOI.')
+            if self.within_aoi:
+                if Box.within_aoi(window, self.aoi_polygons):
+                    return window
+            else:
+                if Box.intersects_aoi(window, self.aoi_polygons):
+                    return window
+        raise StopIteration('Failed to find valid window within scene AOI in '
+                            f'{self.max_sample_attempts} attempts.')
 
     def __getitem__(self, idx: int):
         if idx >= len(self):
