@@ -81,8 +81,12 @@ class WindowSamplingConfig(Config):
         'the AOIs can be very inefficient. This flag enables the use of an '
         'alternate algorithm that only samples window locations inside the '
         'AOIs. Only used if method = random and the scene has aoi_polygons '
-        'specified. Defaults to True',
-    )
+        'specified. Defaults to True')
+    within_aoi: bool = Field(
+        True,
+        description='If True and if the scene has an AOI, only sample windows '
+        'that lie fully within the AOI. If False, windows only partially '
+        'intersecting the AOI will also be allowed.')
 
     @root_validator(skip_on_failure=True)
     def validate_options(cls, values: dict) -> dict:

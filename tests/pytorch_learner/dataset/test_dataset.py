@@ -1,3 +1,4 @@
+from typing import Callable
 from os.path import join
 import unittest
 
@@ -6,15 +7,24 @@ import numpy as np
 from shapely.geometry import Polygon, mapping
 
 from rastervision.pipeline.file_system import json_to_file, get_tmp_dir
+from rastervision.core.box import Box
 from rastervision.core.data import ClassConfig, RasterioCRSTransformer
 from rastervision.core.data.utils.geojson import (geometry_to_feature,
                                                   features_to_geojson)
 from rastervision.pytorch_learner.dataset import (
     SemanticSegmentationSlidingWindowGeoDataset,
     ClassificationSlidingWindowGeoDataset,
-    ObjectDetectionSlidingWindowGeoDataset)
+    ObjectDetectionSlidingWindowGeoDataset, RandomWindowGeoDataset,
+    SlidingWindowGeoDataset, TransformType)
 
 from tests import data_file_path
+
+
+class MockScene:
+    aoi_polygons_bbox_coords: list['Polygon'] = [
+        Box(0, 0, 10, 10).to_shapely()
+    ]
+    extent = Box(0, 0, 10, 10)
 
 
 def make_overlapping_geojson(uri: str) -> str:
@@ -137,6 +147,56 @@ class TestGeoDatasetFromURIs(unittest.TestCase):
         class_ids = y.get_field('class_ids')
         self.assertTupleEqual(bboxes.shape, (0, 4))
         self.assertTupleEqual(class_ids.shape, (0, ))
+
+
+class TestSlidingWindowGeoDataset(unittest.TestCase):
+    def test_sample_window_within_aoi(self):
+        scene = MockScene()
+        ds = SlidingWindowGeoDataset(
+            scene,
+            10,
+            5,
+            within_aoi=True,
+            transform_type=TransformType.noop,
+        )
+        self.assertEqual(len(ds.windows), 1)
+
+        ds = SlidingWindowGeoDataset(
+            scene,
+            10,
+            5,
+            within_aoi=False,
+            transform_type=TransformType.noop,
+        )
+        self.assertEqual(len(ds.windows), 4)
+
+
+class TestRandomWindowGeoDataset(unittest.TestCase):
+    def assertNoError(self, fn: Callable, msg: str = ''):
+        try:
+            fn()
+        except Exception:
+            self.fail(msg)
+
+    def test_sample_window_within_aoi(self):
+        scene = MockScene()
+        ds = RandomWindowGeoDataset(
+            scene,
+            10,
+            (12, 13),
+            within_aoi=True,
+            transform_type=TransformType.noop,
+        )
+        self.assertRaises(StopIteration, lambda: ds.sample_window())
+
+        ds = RandomWindowGeoDataset(
+            scene,
+            10,
+            (12, 13),
+            within_aoi=False,
+            transform_type=TransformType.noop,
+        )
+        self.assertNoError(StopIteration, lambda: ds.sample_window())
 
 
 if __name__ == '__main__':
