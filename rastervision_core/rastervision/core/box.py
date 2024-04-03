@@ -460,8 +460,8 @@ class Box():
 
         Args:
             within: if True, windows are only kept if they lie fully within an
-                AOI polygon. Otherwise, windows are kept if they intersect an AOI
-                polygon.
+                AOI polygon. Otherwise, windows are kept if they intersect an
+                AOI polygon.
         """
         # merge overlapping polygons, if any
         aoi_polygons: Polygon | MultiPolygon = unary_union(aoi_polygons)
@@ -475,17 +475,21 @@ class Box():
         return out
 
     @staticmethod
-    def within_aoi(window: 'Box', aoi_polygons: List[Polygon]) -> bool:
-        """Check if window is within a list of AOI polygons."""
+    def within_aoi(window: 'Box',
+                   aoi_polygons: Polygon | List[Polygon]) -> bool:
+        """Check if window is within the union of given AOI polygons."""
+        aoi_polygons: Polygon | MultiPolygon = unary_union(aoi_polygons)
         w = window.to_shapely()
-        out = any(w.within(p) for p in aoi_polygons)
+        out = aoi_polygons.contains(w)
         return out
 
     @staticmethod
-    def intersects_aoi(window: 'Box', aoi_polygons: List[Polygon]) -> bool:
-        """Check if window is within a list of AOI polygons."""
+    def intersects_aoi(window: 'Box',
+                       aoi_polygons: Polygon | List[Polygon]) -> bool:
+        """Check if window intersects with the union of given AOI polygons."""
+        aoi_polygons: Polygon | MultiPolygon = unary_union(aoi_polygons)
         w = window.to_shapely()
-        out = any(w.intersects(p) for p in aoi_polygons)
+        out = aoi_polygons.intersects(w)
         return out
 
     def __contains__(self, query: Union['Box', Sequence]) -> bool:
