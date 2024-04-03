@@ -56,6 +56,10 @@ RUN mamba init
 RUN mamba install -y python=${PYTHON_VERSION}
 RUN python -m pip install --upgrade pip
 
+# env variable required by uv
+ENV CONDA_PREFIX=/opt/conda
+RUN pip install uv
+
 # We need to install GDAL first to install Rasterio on non-AMD64 architectures.
 # The Rasterio wheels contain GDAL in them, but they are only built for AMD64 now.
 RUN mamba update mamba -y && mamba install -y -c conda-forge gdal=3.6.3
@@ -111,7 +115,7 @@ WORKDIR /opt/src/
 
 COPY ./rastervision_pytorch_learner/requirements.txt /opt/src/pytorch-requirements.txt
 RUN --mount=type=cache,target=/root/.cache/pip cat pytorch-requirements.txt | sort | uniq > all-requirements.txt && \
-    pip install $(grep -ivE "^\s*$|^#|rastervision_*" all-requirements.txt) && \
+    uv pip install $(grep -ivE "^\s*$|^#|rastervision_*" all-requirements.txt) && \
     rm all-requirements.txt
 
 COPY ./rastervision_aws_batch/requirements.txt /opt/src/batch-requirements.txt
@@ -136,7 +140,7 @@ RUN --mount=type=cache,target=/root/.cache/pip cat \
     /opt/src/sagemaker-requirements.txt \
     /opt/src/requirements-dev.txt \
     | sort | uniq > all-requirements.txt && \
-    pip install $(grep -ivE "^\s*$|^#|rastervision_*" all-requirements.txt) && \
+    uv pip install $(grep -ivE "^\s*$|^#|rastervision_*" all-requirements.txt) && \
     rm all-requirements.txt
 
 #########################
@@ -147,7 +151,7 @@ COPY ./docs/requirements.txt /opt/src/docs/pandoc-requirements.txt
 
 # Install pandoc, needed for rendering notebooks
 # Get latest release link from here: https://github.com/jgm/pandoc/releases
-RUN --mount=type=cache,target=/root/.cache/pip pip install -r docs/pandoc-requirements.txt && \
+RUN --mount=type=cache,target=/root/.cache/pip uv pip install -r docs/pandoc-requirements.txt && \
     wget https://github.com/jgm/pandoc/releases/download/3.1.12.2/pandoc-3.1.12.2-1-${TARGETARCH}.deb && \
     dpkg -i pandoc-3.1.12.2-1-${TARGETARCH}.deb && rm pandoc-3.1.12.2-1-${TARGETARCH}.deb
 
@@ -180,13 +184,13 @@ COPY ./rastervision_pytorch_backend/ /opt/src/rastervision_pytorch_backend/
 COPY ./rastervision_pytorch_learner/ /opt/src/rastervision_pytorch_learner/
 
 # needed for this image to be used by the AWS SageMaker PyTorch Estimator
-RUN pip install sagemaker_pytorch_training==2.8.1
+RUN uv pip install sagemaker_pytorch_training==2.8.1
 ENV SAGEMAKER_TRAINING_MODULE=sagemaker_pytorch_container.training:main
 
 # Install a onnxruntime-gpu version compatible with CUDA 12. Specifying
 # --extra-index-url in requirements.txt seems to cause problems with the
 # RTD build.
 RUN if [ "${TARGETARCH}" != "arm64" ]; then \
-    pip install --upgrade onnxruntime-gpu==1.17 --extra-index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/; fi
+    uv pip install --upgrade onnxruntime-gpu==1.17 --extra-index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/; fi
 
 CMD ["bash"]
