@@ -233,7 +233,7 @@ def semantic_segmentation_transformer(
 
 
 TF_TYPE_TO_TF_FUNC: Dict[TransformType, Callable] = {
-    TransformType.noop: lambda x: x,
+    TransformType.noop: lambda x, tf: x,
     TransformType.classification: classification_transformer,
     TransformType.regression: regression_transformer,
     TransformType.object_detection: object_detection_transformer,
