@@ -6,6 +6,7 @@ import random
 
 import numpy as np
 from shapely.geometry import Polygon
+from shapely.ops import unary_union
 from rasterio.windows import Window as RioWindow
 
 from rastervision.pipeline.utils import repr_with_args
@@ -13,7 +14,7 @@ from rastervision.pipeline.utils import repr_with_args
 NonNegInt = conint(ge=0)
 
 if TYPE_CHECKING:
-    pass
+    from shapely.geometry import MultiPolygon
 
 
 class BoxSizeError(ValueError):
@@ -462,16 +463,16 @@ class Box():
                 AOI polygon. Otherwise, windows are kept if they intersect an AOI
                 polygon.
         """
-        result = []
-        for window in windows:
-            w = window.to_shapely()
-            for polygon in aoi_polygons:
-                if ((within and w.within(polygon))
-                        or ((not within) and w.intersects(polygon))):
-                    result.append(window)
-                    break
+        # merge overlapping polygons, if any
+        aoi_polygons: Polygon | MultiPolygon = unary_union(aoi_polygons)
 
-        return result
+        if within:
+            keep_window = aoi_polygons.contains
+        else:
+            keep_window = aoi_polygons.intersects
+
+        out = [w for w in windows if keep_window(w.to_shapely())]
+        return out
 
     @staticmethod
     def within_aoi(window: 'Box', aoi_polygons: List[Polygon]) -> bool:
