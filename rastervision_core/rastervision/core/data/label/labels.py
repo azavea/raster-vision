@@ -1,7 +1,7 @@
 """Defines the abstract Labels class."""
 
 from typing import TYPE_CHECKING, Any, Iterable, List
-from abc import (ABC, abstractclassmethod, abstractmethod)
+from abc import ABC, abstractmethod
 
 if TYPE_CHECKING:
     from typing import Self
@@ -40,7 +40,8 @@ class Labels(ABC):
     def __setitem__(self, key, value):
         pass
 
-    @abstractclassmethod
+    @classmethod
+    @abstractmethod
     def make_empty(cls) -> 'Self':
         """Instantiate an empty instance of this class.
 
