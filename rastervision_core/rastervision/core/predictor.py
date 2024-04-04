@@ -7,14 +7,15 @@ from rastervision.pipeline.config import (build_config, upgrade_config)
 from rastervision.pipeline.file_system.utils import (
     download_if_needed, file_to_json, get_tmp_dir, unzip)
 from rastervision.core.data.raster_source import ChannelOrderError
-from rastervision.core.data import (SemanticSegmentationLabelStoreConfig,
-                                    PolygonVectorOutputConfig,
-                                    StatsTransformerConfig)
+from rastervision.core.data import (
+    SceneConfig, SemanticSegmentationLabelStoreConfig,
+    PolygonVectorOutputConfig, StatsTransformerConfig)
+from rastervision.core.rv_pipeline import PredictOptions
 from rastervision.core.analyzer import StatsAnalyzerConfig
 
 if TYPE_CHECKING:
     from rastervision.core.rv_pipeline import RVPipeline, RVPipelineConfig
-    from rastervision.core.data import SceneConfig
+    from rastervision.core.data import Scene
 
 log = logging.getLogger(__name__)
 
@@ -140,13 +141,17 @@ class ScenePredictor:
 
     def __init__(self,
                  model_bundle_uri: str,
-                 predict_options_uri: Optional[str] = None,
+                 predict_options: 'str | dict | PredictOptions | None' = None,
                  tmp_dir: Optional[str] = None):
         """Creates a new Predictor.
 
         Args:
             model_bundle_uri: URI of the model bundle to use. Can be any
                 type of URI that Raster Vision can read.
+            predict_options: Either a URI to a serialized
+                :class:`.PredictOptions` or a dict representing a serialized
+                :class:`.PredictOptions` or a :class:`.PredictOptions`
+                instance.
             tmp_dir: Temporary directory in which to store files that are used
                 by the Predictor.
         """
@@ -162,28 +167,39 @@ class ScenePredictor:
         pipeline_config_path = join(bundle_dir, 'pipeline-config.json')
         pipeline_config_dict = file_to_json(pipeline_config_path)
 
-        if predict_options_uri is not None:
-            pred_opts_config_dict = file_to_json(predict_options_uri)
-            pipeline_config_dict['predict_options'] = pred_opts_config_dict
-
         rv_config.set_everett_config(
             config_overrides=pipeline_config_dict.get('rv_config'))
         pipeline_config_dict = upgrade_config(pipeline_config_dict)
         self.pipeline_config: 'RVPipelineConfig' = build_config(
             pipeline_config_dict)
 
+        if predict_options is not None:
+            self.pipeline_config.predict_options = PredictOptions.deserialize(
+                predict_options)
+
         self.pipeline: 'RVPipeline' = self.pipeline_config.build(self.tmp_dir)
         self.pipeline.build_backend(join(bundle_dir, 'model-bundle.zip'))
+        self.class_config = self.pipeline_config.dataset.class_config
 
-    def predict(self, scene_config_uri: str) -> None:
+    def predict(self, scene_config: 'str | dict | SceneConfig') -> None:
         """Generate predictions for the given image.
 
         Args:
             scene_config_uri: URI to a serialized :class:`.ScenConfig`.
         """
-        scene_config_dict = file_to_json(scene_config_uri)
-        scene_config: 'SceneConfig' = build_config(scene_config_dict)
-        class_config = self.pipeline_config.dataset.class_config
-        scene = scene_config.build(class_config, self.tmp_dir)
+        scene = self.build_scene(scene_config)
+        self.predict_scene(scene)
+
+    def predict_scene(self, scene: 'Scene') -> None:
+        """Generate predictions for the given scene.
+
+        Args:
+            scene: Scene to predict on.
+        """
         labels = self.pipeline.predict_scene(scene)
         scene.label_store.save(labels)
+
+    def build_scene(self, scene_config: 'str | dict | SceneConfig') -> 'Scene':
+        scene_config = SceneConfig.deserialize(scene_config)
+        scene = scene_config.build(self.class_config, self.tmp_dir)
+        return scene
