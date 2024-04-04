@@ -1,5 +1,5 @@
 from typing import (TYPE_CHECKING, Callable, Dict, List, Literal, Optional,
-                    Type, Union)
+                    Self, Type, Union)
 import inspect
 import logging
 import json
@@ -133,13 +133,40 @@ class Config(BaseModel):
         json_to_file(cfg_dict, uri)
 
     @classmethod
-    def from_file(self, uri: str) -> 'Config':
-        """Deserialize a Config from a JSON file, upgrading if possible.
+    def deserialize(cls, inp: 'str | dict | Config') -> Self:
+        """Deserialize Config from a JSON file or dict, upgrading if possible.
+
+        If ``inp`` is already a :class:`.Config`, it is returned as is.
+
+        Args:
+            inp: a URI to a JSON file or a dict.
+        """
+        if isinstance(inp, Config):
+            return inp
+        if isinstance(inp, dict):
+            return cls.from_dict(inp)
+        if isinstance(inp, str):
+            return cls.from_file(inp)
+        raise TypeError(f'Cannot deserialize Config from type: {type(inp)}.')
+
+    @classmethod
+    def from_file(cls, uri: str) -> Self:
+        """Deserialize Config from a JSON file, upgrading if possible.
 
         Args:
             uri: URI to load from.
         """
         cfg_dict = load_config_dict(uri)
+        cfg = cls.from_dict(cfg_dict)
+        return cfg
+
+    @classmethod
+    def from_dict(cls, cfg_dict: dict) -> Self:
+        """Deserialize Config from a dict.
+
+        Args:
+            cfg_dict: Dict to deserialize.
+        """
         cfg = build_config(cfg_dict)
         return cfg
 
