@@ -116,7 +116,7 @@ class XarraySource(RasterSource):
             bbox: User-specified crop of the extent. If None, the full extent
                 available in the source file is used. Mutually exclusive with
                 ``bbox_map_coords``. Defaults to ``None``.
-            bbox_map_coords: User-specified bbox in EPSG:4326 coords of the 
+            bbox_map_coords: User-specified bbox in EPSG:4326 coords of the
                 form (ymin, xmin, ymax, xmax). Useful for cropping the raster
                 source so that only part of the raster is read from. Mutually
                 exclusive with ``bbox``. Defaults to ``None``.
