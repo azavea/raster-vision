@@ -83,10 +83,6 @@ class SemanticSegmentationLabelStore(LabelStore):
                 blockysize to. Defaults to 512.
         """
         self.root_uri = uri
-        self.label_uri = join(uri, 'labels.tif')
-        self.score_uri = join(uri, 'scores.tif')
-        self.hits_uri = join(uri, 'pixel_hits.npy')
-        self.vector_output_uri = join(uri, 'vector_output')
 
         self.tmp_dir = tmp_dir
         if self.tmp_dir is None:
@@ -205,9 +201,34 @@ class SemanticSegmentationLabelStore(LabelStore):
         Args:
             labels - (SemanticSegmentationLabels) labels to be saved
         """
-        local_root = get_local_path(self.root_uri, self.tmp_dir)
-        make_dir(local_root)
+        make_dir(self.root_uri_local)
 
+        out_profile = self.build_rasterio_gtiff_profile(labels)
+        if profile is not None:
+            out_profile.update(profile)
+
+        if self.discrete_output:
+            labels_path = get_local_path(self.label_uri, self.tmp_dir)
+            self.write_discrete_raster_output(out_profile, labels_path, labels)
+
+        if self.smooth_output:
+            # if old scores exist, combine them with the new ones
+            if self.score_source is not None:
+                log.info('Old scores found. '
+                         'Attempting to merge with current scores.')
+                labels = self.merge_with_old_scores(labels)
+            scores_path = get_local_path(self.score_uri, self.tmp_dir)
+            hits_path = get_local_path(self.hits_uri, self.tmp_dir)
+            self.write_smooth_raster_output(out_profile, scores_path,
+                                            hits_path, labels)
+
+        if self.vector_outputs:
+            self.write_vector_outputs(labels, self.vector_output_dir_local)
+
+        sync_to_dir(self.root_uri_local, self.root_uri)
+
+    def build_rasterio_gtiff_profile(
+            self, labels: SemanticSegmentationLabels) -> dict:
         height, width = labels.extent.size
         if self.bbox is not None:
             bbox_rio_window = self.bbox.rasterio_format()
@@ -223,39 +244,20 @@ class SemanticSegmentationLabelStore(LabelStore):
             crs=self.crs_transformer.image_crs,
             blockxsize=min(self.rasterio_block_size, width),
             blockysize=min(self.rasterio_block_size, height))
-        if profile is not None:
-            out_profile.update(profile)
+        return out_profile
 
-        if self.discrete_output:
-            labels_path = get_local_path(self.label_uri, self.tmp_dir)
-            self.write_discrete_raster_output(out_profile, labels_path, labels)
-
-        if self.smooth_output:
-            # if old scores exist, combine them with the new ones
-            if self.score_source is not None:
-                log.info('Old scores found. '
-                         'Attempting to merge with current scores.')
-                old_extent = self.score_source.extent
-                new_extent = labels.extent
-                if old_extent != new_extent:
-                    raise ValueError('Cannot merge with old sores. '
-                                     'Non-identical extents:\n'
-                                     f'old extent: {old_extent}\n'
-                                     f'new extent: {new_extent}')
-                old_labels = self.get_scores()
-                labels += old_labels
-
-            scores_path = get_local_path(self.score_uri, self.tmp_dir)
-            hits_path = get_local_path(self.hits_uri, self.tmp_dir)
-            self.write_smooth_raster_output(out_profile, scores_path,
-                                            hits_path, labels)
-
-        if self.vector_outputs:
-            vector_output_dir = get_local_path(self.vector_output_uri,
-                                               self.tmp_dir)
-            self.write_vector_outputs(labels, vector_output_dir)
-
-        sync_to_dir(local_root, self.root_uri)
+    def merge_with_old_scores(self, labels: SemanticSegmentationSmoothLabels
+                              ) -> SemanticSegmentationSmoothLabels:
+        old_extent = self.score_source.extent
+        new_extent = labels.extent
+        if old_extent != new_extent:
+            raise ValueError('Cannot merge with old sores. '
+                             'Non-identical extents:\n'
+                             f'old extent: {old_extent}\n'
+                             f'new extent: {new_extent}')
+        old_labels = self.get_scores()
+        labels += old_labels
+        return labels
 
     def write_smooth_raster_output(
             self, out_profile: dict, scores_path: str, hits_path: str,
@@ -307,25 +309,28 @@ class SemanticSegmentationLabelStore(LabelStore):
     def write_vector_outputs(self, labels: SemanticSegmentationLabels,
                              vector_output_dir: str) -> None:
         """Write vectorized outputs for all configs in self.vector_outputs."""
-        from rastervision.core.data.utils import geoms_to_geojson
-
         log.info('Writing vector outputs to disk.')
 
-        extent = labels.extent
         with tqdm(self.vector_outputs, desc='Vectorizing predictions') as bar:
             for vo in bar:
                 bar.set_postfix(vo.dict())
-                class_mask = labels.get_class_mask(extent, vo.class_id,
+                class_mask = labels.get_class_mask(labels.extent, vo.class_id,
                                                    vo.threshold)
-                class_mask = class_mask.astype(np.uint8)
-                polys = vo.vectorize(class_mask)
-                polys = [
-                    self.crs_transformer.pixel_to_map(p, bbox=self.bbox)
-                    for p in polys
-                ]
-                geojson = geoms_to_geojson(polys)
-                out_uri = vo.get_uri(vector_output_dir, self.class_config)
-                json_to_file(geojson, out_uri)
+                self.write_vector_output(vo, class_mask, vector_output_dir)
+
+    def write_vector_output(self, vo: 'VectorOutputConfig', mask: np.ndarray,
+                            vector_output_dir: str) -> None:
+        """Write vector output for a single ``VectorOutputConfig``."""
+        from rastervision.core.data.utils import geoms_to_geojson
+
+        mask = mask.astype(np.uint8)
+        polys = vo.vectorize(mask)
+        polys = [
+            self.crs_transformer.pixel_to_map(p, bbox=self.bbox) for p in polys
+        ]
+        geojson = geoms_to_geojson(polys)
+        out_uri = vo.get_uri(vector_output_dir, self.class_config)
+        json_to_file(geojson, out_uri)
 
     def _clip_to_extent(self,
                         extent: Box,
@@ -352,6 +357,30 @@ class SemanticSegmentationLabelStore(LabelStore):
     @property
     def crs_transformer(self) -> 'CRSTransformer':
         return self._crs_transformer
+
+    @property
+    def label_uri(self) -> str:
+        return join(self.root_uri, 'labels.tif')
+
+    @property
+    def score_uri(self) -> str:
+        return join(self.root_uri, 'scores.tif')
+
+    @property
+    def hits_uri(self) -> str:
+        return join(self.root_uri, 'pixel_hits.npy')
+
+    @property
+    def vector_output_uri(self) -> str:
+        return join(self.root_uri, 'vector_output')
+
+    @property
+    def root_uri_local(self) -> str:
+        return get_local_path(self.root_uri, self.tmp_dir)
+
+    @property
+    def vector_output_dir_local(self) -> str:
+        return get_local_path(self.vector_output_uri, self.tmp_dir)
 
     def set_bbox(self, bbox: 'Box') -> None:
         self._bbox = bbox
