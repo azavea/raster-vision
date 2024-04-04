@@ -1,5 +1,5 @@
 from typing import (TYPE_CHECKING, Callable, Dict, List, Literal, Optional,
-                    Self, Type, Union)
+                    Type, Union)
 import inspect
 import logging
 import json
@@ -14,6 +14,7 @@ from rastervision.pipeline.file_system import (str_to_file, json_to_file,
                                                file_to_json)
 
 if TYPE_CHECKING:
+    from typing import Self
     from rastervision.pipeline.pipeline_config import PipelineConfig
 
 log = logging.getLogger(__name__)
@@ -133,7 +134,7 @@ class Config(BaseModel):
         json_to_file(cfg_dict, uri)
 
     @classmethod
-    def deserialize(cls, inp: 'str | dict | Config') -> Self:
+    def deserialize(cls, inp: 'str | dict | Config') -> 'Self':
         """Deserialize Config from a JSON file or dict, upgrading if possible.
 
         If ``inp`` is already a :class:`.Config`, it is returned as is.
@@ -150,7 +151,7 @@ class Config(BaseModel):
         raise TypeError(f'Cannot deserialize Config from type: {type(inp)}.')
 
     @classmethod
-    def from_file(cls, uri: str) -> Self:
+    def from_file(cls, uri: str) -> 'Self':
         """Deserialize Config from a JSON file, upgrading if possible.
 
         Args:
@@ -161,7 +162,7 @@ class Config(BaseModel):
         return cfg
 
     @classmethod
-    def from_dict(cls, cfg_dict: dict) -> Self:
+    def from_dict(cls, cfg_dict: dict) -> 'Self':
         """Deserialize Config from a dict.
 
         Args:

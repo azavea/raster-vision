@@ -62,7 +62,7 @@ class ChipClassificationLabels(Labels):
 
     @classmethod
     def from_predictions(cls, windows: Iterable['Box'],
-                         predictions: Iterable[Any]) -> 'Labels':
+                         predictions: Iterable[Any]):
         """Overrid to convert predictions to (class_id, scores) pairs."""
         predictions = ((np.argmax(p), p) for p in predictions)
         return super().from_predictions(windows, predictions)

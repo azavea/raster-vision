@@ -40,10 +40,10 @@ from rastervision.pytorch_learner.utils import (
 from rastervision.pytorch_learner.dataset.visualizer import Visualizer
 
 if TYPE_CHECKING:
+    from typing import Self
     from torch.optim import Optimizer
     from torch.optim.lr_scheduler import _LRScheduler
     from torch.utils.data import Dataset, Sampler
-
     from rastervision.pytorch_learner import LearnerConfig
 
 warnings.filterwarnings('ignore')
@@ -270,7 +270,7 @@ class Learner(ABC):
                           cfg: Optional['LearnerConfig'] = None,
                           training: bool = False,
                           use_onnx_model: Optional[bool] = None,
-                          **kwargs) -> 'Learner':
+                          **kwargs) -> 'Self':
         """Create a Learner from a model bundle.
 
         .. note::
