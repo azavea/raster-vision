@@ -10,8 +10,10 @@ if TYPE_CHECKING:
 def geojson_vector_source_config_upgrader(cfg_dict: dict,
                                           version: int) -> dict:
     if version == 7:
-        cfg_dict['uris'] = cfg_dict['uri']
-        del cfg_dict['uri']
+        cfg_dict['uris'] = cfg_dict.pop('uri', [])
+    if version == 12:
+        # removed in version 13
+        cfg_dict.pop('ignore_crs_field', None)
     return cfg_dict
 
 
@@ -22,7 +24,6 @@ class GeoJSONVectorSourceConfig(VectorSourceConfig):
 
     uris: Union[str, List[str]] = Field(
         ..., description='URI(s) of GeoJSON file(s).')
-    ignore_crs_field: bool = False
 
     def build(self,
               class_config: 'ClassConfig',
@@ -37,6 +38,5 @@ class GeoJSONVectorSourceConfig(VectorSourceConfig):
 
         return GeoJSONVectorSource(
             uris=self.uris,
-            ignore_crs_field=self.ignore_crs_field,
             crs_transformer=crs_transformer,
             vector_transformers=transformers)

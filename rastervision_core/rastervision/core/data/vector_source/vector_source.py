@@ -140,6 +140,10 @@ class VectorSource(ABC):
             self._bbox = self.extent
         return self._bbox
 
+    @property
+    def __geo_interface__(self):
+        return self.get_geojson()
+
 
 def sanitize_geojson(geojson: dict,
                      crs_transformer: 'CRSTransformer',

@@ -348,10 +348,7 @@ def get_polygons_from_uris(uris: Union[str, List[str]],
     from rastervision.core.data import GeoJSONVectorSource
 
     source = GeoJSONVectorSource(
-        uris=uris,
-        ignore_crs_field=True,
-        crs_transformer=crs_transformer,
-        bbox=bbox)
+        uris=uris, crs_transformer=crs_transformer, bbox=bbox)
     polygons = source.get_geoms(to_map_coords=map_coords)
     return polygons
 

@@ -55,8 +55,7 @@ class TestRasterioUtils(unittest.TestCase):
                 geotiff_path, arr, geojson_path, crs=None)
             rs = RasterioSource(geotiff_path)
             geotiff_bbox = rs.crs_transformer.pixel_to_map(rs.extent)
-            vs = GeoJSONVectorSource(
-                geojson_path, rs.crs_transformer, ignore_crs_field=True)
+            vs = GeoJSONVectorSource(geojson_path, rs.crs_transformer)
             geojson_bbox = rs.crs_transformer.pixel_to_map(vs.extent)
             np.testing.assert_array_almost_equal(
                 np.array(list(geotiff_bbox)),

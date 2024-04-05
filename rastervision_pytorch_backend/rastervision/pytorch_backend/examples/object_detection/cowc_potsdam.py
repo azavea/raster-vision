@@ -100,7 +100,6 @@ def get_config(runner,
 
         vector_source = GeoJSONVectorSourceConfig(
             uris=label_uri,
-            ignore_crs_field=True,
             transformers=[ClassInferenceTransformerConfig(default_class_id=0)])
         label_source = ObjectDetectionLabelSourceConfig(
             vector_source=vector_source)
