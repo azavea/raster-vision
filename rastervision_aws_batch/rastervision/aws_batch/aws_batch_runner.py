@@ -79,13 +79,7 @@ class AWSBatchRunner(Runner):
             job_name = f'{pipeline_run_name}-{command}-{uuid.uuid4()}'
 
             cmd = ['python', '-m', 'rastervision.pipeline.cli']
-
-            if rv_config.get_verbosity() > 1:
-                num_vs = rv_config.get_verbosity() - 1
-                # produces a string like "-vvv..."
-                verbosity_opt_str = f'-{"v" * num_vs}'
-                cmd += [verbosity_opt_str]
-
+            cmd += [rv_config.get_verbosity_cli_opt()]
             cmd += [
                 'run_command', cfg_json_uri, command, '--runner', AWS_BATCH
             ]
@@ -100,7 +94,8 @@ class AWSBatchRunner(Runner):
                 num_array_jobs=num_array_jobs,
                 use_gpu=use_gpu,
                 job_queue=job_queue,
-                job_def=job_def)
+                job_def=job_def,
+            )
 
             return cmd, args
 

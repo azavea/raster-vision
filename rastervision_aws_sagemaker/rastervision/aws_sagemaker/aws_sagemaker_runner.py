@@ -132,6 +132,11 @@ class AWSSageMakerRunner(Runner):
         steps = []
 
         for command in commands:
+            job_name = f'{pipeline_run_name}-{command}'
+            cmd = cmd_prefix[:]
+            cmd += [rv_config.get_verbosity_cli_opt()]
+            cmd.extend(['run_command', cfg_json_uri, command])
+
             if command.lower() == 'train':
                 use_gpu = True
                 instance_type = train_instance_type
@@ -144,18 +149,6 @@ class AWSSageMakerRunner(Runner):
                                  if use_gpu else cpu_instance_type)
                 instance_count = 1
                 use_spot_instances = False
-
-            job_name = f'{pipeline_run_name}-{command}'
-
-            cmd = cmd_prefix[:]
-
-            if rv_config.get_verbosity() > 1:
-                num_vs = rv_config.get_verbosity() - 1
-                # produces a string like "-vvv..."
-                verbosity_opt_str = f'-{"v" * num_vs}'
-                cmd += [verbosity_opt_str]
-
-            cmd.extend(['run_command', cfg_json_uri, command])
 
             if command in pipeline.split_commands and num_splits > 1:
                 # If the step can be split, then split it into parts
@@ -205,7 +198,6 @@ class AWSSageMakerRunner(Runner):
                 step.add_depends_on(steps)
                 steps.append(step)
 
-        # Submit the pipeline to SageMaker
         pipeline_definition_config = PipelineDefinitionConfig(
             use_custom_job_prefix=True)
         sagemaker_pipeline = SageMakerPipeline(
@@ -229,7 +221,10 @@ class AWSSageMakerRunner(Runner):
                    max_wait: int = DEFAULT_MAX_RUN_TIME,
                    max_run: int = DEFAULT_MAX_RUN_TIME,
                    **kwargs) -> Union['TrainingStep', 'ProcessingStep']:
-        """Build an TrainingStep if use_gpu=True, otherwise a ProcessingStep.
+        """Build appropriate SageMaker pipeline step.
+
+        If ``step_name=='train'``, builds a :class:`.TrainingStep`. Otherwise,
+        a :class:`.ProcessingStep`.
         """
         if not use_spot_instances:
             max_wait = None

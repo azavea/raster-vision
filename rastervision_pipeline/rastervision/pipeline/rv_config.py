@@ -67,6 +67,17 @@ class RVConfig:
         """Returns verbosity level for logging."""
         return self.verbosity
 
+    def get_verbosity_cli_opt(self) -> str:
+        """Returns verbosity in a form that can be passed to RV CLI cmds.
+
+        Returns:
+            str: string like "-vvv...".
+        """
+        num_vs = max(0, self.get_verbosity() - 1)
+        if num_vs == 0:
+            return ''
+        return f'-{"v" * num_vs}'
+
     def get_tmp_dir(self) -> TemporaryDirectory:
         """Return a new TemporaryDirectory object."""
         return TemporaryDirectory(dir=self.tmp_dir_root)
