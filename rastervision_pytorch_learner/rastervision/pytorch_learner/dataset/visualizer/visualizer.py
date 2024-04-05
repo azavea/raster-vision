@@ -10,13 +10,13 @@ import albumentations as A
 import matplotlib.pyplot as plt
 
 from rastervision.pipeline.file_system import make_dir
+from rastervision.core.data import ClassConfig
 from rastervision.pytorch_learner.utils import (
     deserialize_albumentation_transform, validate_albumentation_transform,
     MinMaxNormalize)
 from rastervision.pytorch_learner.learner_config import (
     RGBTuple,
     ChannelInds,
-    ensure_class_colors,
     validate_channel_display_groups,
     get_default_channel_display_groups,
 )
@@ -60,13 +60,20 @@ class Visualizer(ABC):
                 title is a string that will be used as the title of the subplot
                 for that group.
         """
-        self.class_names = class_names
-        self.class_colors = ensure_class_colors(self.class_names, class_colors)
+        self.class_config = ClassConfig(names=class_names, colors=class_colors)
         if transform is None:
             transform = A.to_dict(MinMaxNormalize())
         self.transform = validate_albumentation_transform(transform)
         self._channel_display_groups = validate_channel_display_groups(
             channel_display_groups)
+
+    @property
+    def class_names(self):
+        return self.class_config.names
+
+    @property
+    def class_colors(self):
+        return self.class_config.colors
 
     @abstractmethod
     def plot_xyz(self,
