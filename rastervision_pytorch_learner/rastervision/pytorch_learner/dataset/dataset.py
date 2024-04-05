@@ -19,6 +19,17 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(__name__)
 
+T = TypeVar('T')
+
+
+def _to_tuple(x: T, n: int = 2) -> Tuple[T, ...]:
+    """Convert to n-tuple if not already an n-tuple."""
+    if isinstance(x, tuple):
+        if len(x) != n:
+            raise ValueError()
+        return x
+    return tuple([x] * n)
+
 
 class AlbumentationsDataset(Dataset):
     """An adapter to use arbitrary datasets with albumentations transforms."""
@@ -106,18 +117,21 @@ class GeoDataset(AlbumentationsDataset):
         (i.e. a raster source and a label source).
     """
 
-    def __init__(self,
-                 scene: Scene,
-                 within_aoi: bool = True,
-                 transform: Optional[A.BasicTransform] = None,
-                 transform_type: Optional[TransformType] = None,
-                 normalize: bool = True,
-                 to_pytorch: bool = True,
-                 return_window: bool = False):
+    def __init__(
+            self,
+            scene: Scene,
+            out_size: Optional[Union[PosInt, Tuple[PosInt, PosInt]]] = None,
+            within_aoi: bool = True,
+            transform: Optional[A.BasicTransform] = None,
+            transform_type: Optional[TransformType] = None,
+            normalize: bool = True,
+            to_pytorch: bool = True,
+            return_window: bool = False):
         """Constructor.
 
         Args:
             scene (Scene): A Scene object.
+            out_size: Resize chips to this size before returning.
             within_aoi: If True and if the scene has an AOI, only sample
                 windows that lie fully within the AOI. If False, windows only
                 partially intersecting the AOI will also be allowed.
@@ -143,6 +157,11 @@ class GeoDataset(AlbumentationsDataset):
         self.scene = scene
         self.within_aoi = within_aoi
         self.return_window = return_window
+        self.out_size = None
+
+        if out_size is not None:
+            self.out_size = _to_tuple(out_size)
+            transform = self.append_resize_transform(transform, self.out_size)
 
         super().__init__(
             orig_dataset=scene,
@@ -150,6 +169,17 @@ class GeoDataset(AlbumentationsDataset):
             transform_type=transform_type,
             normalize=normalize,
             to_pytorch=to_pytorch)
+
+    def append_resize_transform(
+            self, transform: A.BasicTransform | None,
+            out_size: tuple[PosInt, PosInt]) -> A.Resize | A.Compose:
+        """Get transform to use for resizing windows to out_size."""
+        resize_tf = A.Resize(*out_size, always_apply=True)
+        if transform is None:
+            transform = resize_tf
+        else:
+            transform = A.Compose([transform, resize_tf])
+        return transform
 
     def __len__(self):
         raise NotImplementedError()
@@ -159,35 +189,25 @@ class GeoDataset(AlbumentationsDataset):
         raise NotImplementedError()
 
 
-T = TypeVar('T')
-
-
-def _to_tuple(x: T, n: int = 2) -> Tuple[T, ...]:
-    """Convert to n-tuple if not already an n-tuple."""
-    if isinstance(x, tuple):
-        if len(x) != n:
-            raise ValueError()
-        return x
-    return tuple([x] * n)
-
-
 class SlidingWindowGeoDataset(GeoDataset):
     """Read the scene left-to-right, top-to-bottom, using a sliding window.
     """
 
-    def __init__(self,
-                 scene: Scene,
-                 size: Union[PosInt, Tuple[PosInt, PosInt]],
-                 stride: Union[PosInt, Tuple[PosInt, PosInt]],
-                 padding: Optional[Union[NonNegInt, Tuple[NonNegInt,
-                                                          NonNegInt]]] = None,
-                 pad_direction: Literal['both', 'start', 'end'] = 'end',
-                 within_aoi: bool = True,
-                 transform: Optional[A.BasicTransform] = None,
-                 transform_type: Optional[TransformType] = None,
-                 normalize: bool = True,
-                 to_pytorch: bool = True,
-                 return_window: bool = False):
+    def __init__(
+            self,
+            scene: Scene,
+            size: Union[PosInt, Tuple[PosInt, PosInt]],
+            stride: Union[PosInt, Tuple[PosInt, PosInt]],
+            out_size: Optional[Union[PosInt, Tuple[PosInt, PosInt]]] = None,
+            padding: Optional[Union[NonNegInt, Tuple[NonNegInt,
+                                                     NonNegInt]]] = None,
+            pad_direction: Literal['both', 'start', 'end'] = 'end',
+            within_aoi: bool = True,
+            transform: Optional[A.BasicTransform] = None,
+            transform_type: Optional[TransformType] = None,
+            normalize: bool = True,
+            to_pytorch: bool = True,
+            return_window: bool = False):
         """Constructor.
 
         Args:
@@ -195,6 +215,8 @@ class SlidingWindowGeoDataset(GeoDataset):
             size (Union[PosInt, Tuple[PosInt, PosInt]]): Window size.
             stride (Union[PosInt, Tuple[PosInt, PosInt]]): Step size between
                 windows.
+            out_size: Resize chips to this size before returning. Defaults to
+                ``None``.
             padding (Optional[Union[NonNegInt, Tuple[NonNegInt, NonNegInt]]]):
                 How many pixels the windows are allowed to overflow the sides
                 of the raster source. If None, padding is set to size // 2.
@@ -227,6 +249,7 @@ class SlidingWindowGeoDataset(GeoDataset):
         """
         super().__init__(
             scene=scene,
+            out_size=out_size,
             within_aoi=within_aoi,
             transform=transform,
             transform_type=transform_type,
@@ -357,16 +380,14 @@ class RandomWindowGeoDataset(GeoDataset):
         if has_h_lims != has_w_lims:
             raise ValueError('h_lims and w_lims must both be specified')
 
-        if out_size is not None:
-            out_size = _to_tuple(out_size)
-            transform = self.get_resize_transform(transform, out_size)
-        else:
+        if out_size is None:
             log.warning(f'out_size is None, chips will not be normalized or '
                         'converted to PyTorch Tensors.')
             normalize, to_pytorch = False, False
 
         super().__init__(
             scene=scene,
+            out_size=out_size,
             within_aoi=within_aoi,
             transform=transform,
             transform_type=transform_type,
@@ -413,17 +434,6 @@ class RandomWindowGeoDataset(GeoDataset):
                 except ModuleNotFoundError:
                     log.info('Ignoring efficient_aoi_sampling since triangle '
                              'is not installed.')
-
-    def get_resize_transform(
-            self, transform: Optional[A.BasicTransform],
-            out_size: Tuple[PosInt, PosInt]) -> Union[A.Resize, A.Compose]:
-        """Get transform to use for resizing windows to out_size."""
-        resize_tf = A.Resize(*out_size, always_apply=True)
-        if transform is None:
-            transform = resize_tf
-        else:
-            transform = A.Compose([transform, resize_tf])
-        return transform
 
     @property
     def min_size(self):
