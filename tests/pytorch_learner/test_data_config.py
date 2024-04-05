@@ -72,10 +72,23 @@ class TestDataConfig(unittest.TestCase):
         except Exception:
             self.fail(msg)
 
-    def test_upgrader(self):
+    def test_upgrader_v2(self):
         old_cfg_dict = DataConfig().dict()
         del old_cfg_dict['img_channels']
         new_cfg_dict = data_config_upgrader(old_cfg_dict, version=2)
+        self.assertNoError(lambda: build_config(new_cfg_dict))
+
+    def test_upgrader_v6(self):
+        class_names = ['bg', 'fg']
+        class_colors = ['black', 'white']
+        old_cfg_dict = DataConfig().dict()
+        old_cfg_dict['class_names'] = class_names
+        old_cfg_dict['class_colors'] = class_colors
+        del old_cfg_dict['class_config']
+        new_cfg_dict = data_config_upgrader(old_cfg_dict, version=6)
+        self.assertIn('class_config', new_cfg_dict)
+        self.assertListEqual(new_cfg_dict['class_config'].names, class_names)
+        self.assertListEqual(new_cfg_dict['class_config'].colors, class_colors)
         self.assertNoError(lambda: build_config(new_cfg_dict))
 
 
@@ -182,6 +195,7 @@ class TestImageDataConfig(unittest.TestCase):
 
         nclasses = 2
         class_names = [f'class_{i}' for i in range(nclasses)]
+        class_config = ClassConfig(names=class_names)
         chip_sz = 100
         img_sz = 200
         nchannels = 3
@@ -191,7 +205,7 @@ class TestImageDataConfig(unittest.TestCase):
             data_dir = join(tmp_dir, 'data')
             for split in ['train', 'valid']:
                 os.makedirs(join(data_dir, split))
-                for c in class_names:
+                for c in class_config.names:
                     class_dir = join(data_dir, split, c)
                     os.makedirs(class_dir)
                     for i in range(nchips):
@@ -207,7 +221,7 @@ class TestImageDataConfig(unittest.TestCase):
             # data config -- unzipped
             data_cfg = ClassificationImageDataConfig(
                 uri=data_dir,
-                class_names=class_names,
+                class_config=class_config,
                 img_channels=nchannels,
                 img_sz=img_sz)
             train_ds, val_ds, test_ds = data_cfg.build(tmp_dir)
@@ -229,7 +243,7 @@ class TestImageDataConfig(unittest.TestCase):
             zipdir(data_dir, zip_path)
             data_cfg = ClassificationImageDataConfig(
                 uri=zip_path,
-                class_names=class_names,
+                class_config=class_config,
                 img_channels=nchannels,
                 img_sz=img_sz)
             train_ds, val_ds, test_ds = data_cfg.build(tmp_dir)
@@ -255,6 +269,7 @@ class TestImageDataConfig(unittest.TestCase):
 
         nclasses = 2
         class_names = [f'class_{i}' for i in range(nclasses)]
+        class_config = ClassConfig(names=class_names)
         chip_sz = 100
         img_sz = 200
         nchannels = 3
@@ -283,7 +298,7 @@ class TestImageDataConfig(unittest.TestCase):
             # data config -- unzipped
             data_cfg = SemanticSegmentationImageDataConfig(
                 uri=data_dir,
-                class_names=class_names,
+                class_config=class_config,
                 img_channels=nchannels,
                 img_sz=img_sz)
             train_ds, val_ds, test_ds = data_cfg.build(tmp_dir)
@@ -356,7 +371,7 @@ class TestGeoDataConfig(unittest.TestCase):
         self.assertRaises(ValidationError,
                           lambda: WindowSamplingConfig(**args))
 
-    def test_get_class_info_from_class_config_if_needed(self):
+    def test_get_class_config_from_dataset_if_needed(self):
         class_config = ClassConfig(names=['bg', 'fg'])
         scene_dataset = DatasetConfig(
             class_config=class_config, train_scenes=[], validation_scenes=[])
@@ -423,8 +438,7 @@ class TestGeoDataConfig(unittest.TestCase):
             scene_dataset=dataset_cfg,
             sampling=WindowSamplingConfig(
                 size=chip_sz, stride=chip_sz, padding=0),
-            class_names=class_config.names,
-            class_colors=class_config.colors,
+            class_config=class_config,
             img_sz=img_sz,
             num_workers=0)
         with get_tmp_dir() as tmp_dir:
