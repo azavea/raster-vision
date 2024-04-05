@@ -174,6 +174,19 @@ class TestSlidingWindowGeoDataset(unittest.TestCase):
         )
         self.assertEqual(len(ds.windows), 4)
 
+    def test_out_size(self):
+        scene = MockScene()
+        ds = SlidingWindowGeoDataset(
+            scene,
+            size=5,
+            stride=5,
+            out_size=10,
+            transform_type=TransformType.semantic_segmentation,
+        )
+        x, y = ds[0]
+        self.assertTupleEqual(x.shape, (3, 10, 10))
+        self.assertTupleEqual(y.shape, (10, 10))
+
     def test_return_window(self):
         scene = MockScene()
         ds = SlidingWindowGeoDataset(
