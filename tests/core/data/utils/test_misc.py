@@ -40,7 +40,7 @@ class TestMatchBboxes(unittest.TestCase):
         uri = join(self.tmp_dir, 'labels.json')
         json_to_file(geojson, uri)
         self.vector_source = GeoJSONVectorSource(
-            uri, self.raster_source.crs_transformer, ignore_crs_field=True)
+            uri, self.raster_source.crs_transformer)
 
     def tearDown(self) -> None:
         self._tmp_dir.cleanup()

@@ -21,7 +21,6 @@ class TestSemanticSegmentationLabelSourceConfig(unittest.TestCase):
         rs_cfg = RasterizedSourceConfig(
             vector_source=GeoJSONVectorSourceConfig(
                 uris=uri,
-                ignore_crs_field=True,
                 transformers=[
                     ClassInferenceTransformerConfig(default_class_id=1)
                 ]),

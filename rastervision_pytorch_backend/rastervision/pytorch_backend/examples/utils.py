@@ -63,7 +63,6 @@ def save_image_crop(
             vs = GeoJSONVectorSource(
                 uris=label_uri,
                 crs_transformer=crs_tf,
-                ignore_crs_field=True,
                 vector_transformers=[
                     ClassInferenceTransformer(
                         default_class_id=default_class_id,

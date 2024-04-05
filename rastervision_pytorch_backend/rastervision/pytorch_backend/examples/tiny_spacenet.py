@@ -65,9 +65,6 @@ def make_scene(scene_id: str, image_uri: str, label_uri: str,
     # configure GeoJSON reading
     vector_source = GeoJSONVectorSourceConfig(
         uris=label_uri,
-        # This assumes the CRS is WGS-84 and ignores whatever the CRS specified
-        # in the file is.
-        ignore_crs_field=True,
         # The geoms in the label GeoJSON do not have a "class_id" property, so
         # classes must be inferred. Since all geoms are for the building class,
         # this is easy to do: we just assign the building class ID to all of

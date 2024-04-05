@@ -1,22 +1,25 @@
 from typing import Callable
 import unittest
-import os
+from os.path import join
 
 from shapely.geometry import shape
+import geopandas as gpd
 
+from rastervision.pipeline.file_system import json_to_file, get_tmp_dir
+from rastervision.core.box import Box
 from rastervision.core.data import (
     BufferTransformerConfig, ClassConfig, ClassInferenceTransformerConfig,
     GeoJSONVectorSource, GeoJSONVectorSourceConfig, IdentityCRSTransformer)
 from rastervision.core.data.vector_source.geojson_vector_source_config import (
     geojson_vector_source_config_upgrader)
-from rastervision.pipeline.file_system import json_to_file, get_tmp_dir
+from rastervision.core.data.utils import geometries_to_geojson
 
-from tests import test_config_upgrader, data_file_path
+from tests import test_config_upgrader
 from tests.core.data.mock_crs_transformer import DoubleCRSTransformer
 
 
 class TestGeoJSONVectorSourceConfig(unittest.TestCase):
-    def test_upgrader(self):
+    def test_upgrader_v8(self):
         cfg = GeoJSONVectorSourceConfig(uris=['a', 'b'])
         old_cfg_dict = cfg.dict()
         old_cfg_dict['uri'] = old_cfg_dict['uris']
@@ -26,6 +29,16 @@ class TestGeoJSONVectorSourceConfig(unittest.TestCase):
             old_cfg_dict=old_cfg_dict,
             upgrader=geojson_vector_source_config_upgrader,
             curr_version=8)
+
+    def test_upgrader_v13(self):
+        cfg = GeoJSONVectorSourceConfig(uris=['a', 'b'])
+        old_cfg_dict = cfg.dict()
+        old_cfg_dict['ignore_crs_field'] = True
+        test_config_upgrader(
+            cfg_class=GeoJSONVectorSourceConfig,
+            old_cfg_dict=old_cfg_dict,
+            upgrader=geojson_vector_source_config_upgrader,
+            curr_version=13)
 
 
 class TestGeoJSONVectorSource(unittest.TestCase):
@@ -39,13 +52,10 @@ class TestGeoJSONVectorSource(unittest.TestCase):
 
     def setUp(self):
         self.tmp_dir = get_tmp_dir()
-        self.uri = os.path.join(self.tmp_dir.name, 'vectors.json')
+        self.uri = join(self.tmp_dir.name, 'vectors.json')
 
     def tearDown(self):
         self.tmp_dir.cleanup()
-
-    def geom_to_geojson(self, geom):
-        return {'type': 'FeatureCollection', 'features': [{'geometry': geom}]}
 
     def transform_geojson(self,
                           geojson,
@@ -71,7 +81,7 @@ class TestGeoJSONVectorSource(unittest.TestCase):
 
     def test_transform_geojson_no_coords(self):
         geom = {'type': 'Point', 'coordinates': []}
-        geojson = self.geom_to_geojson(geom)
+        geojson = geometries_to_geojson([geom])
         trans_geojson = self.transform_geojson(geojson)
 
         self.assertEqual(0, len(trans_geojson['features']))
@@ -85,7 +95,7 @@ class TestGeoJSONVectorSource(unittest.TestCase):
                 'coordinates': [[10, 10], [20, 20]]
             }]
         }
-        geojson = self.geom_to_geojson(geom)
+        geojson = geometries_to_geojson([geom])
         trans_geojson = self.transform_geojson(geojson)
 
         feats = trans_geojson['features']
@@ -95,7 +105,7 @@ class TestGeoJSONVectorSource(unittest.TestCase):
 
     def test_transform_geojson_multi(self):
         geom = {'type': 'MultiPoint', 'coordinates': [[10, 10], [20, 20]]}
-        geojson = self.geom_to_geojson(geom)
+        geojson = geometries_to_geojson([geom])
         trans_geojson = self.transform_geojson(geojson)
 
         feats = trans_geojson['features']
@@ -105,7 +115,7 @@ class TestGeoJSONVectorSource(unittest.TestCase):
 
     def test_transform_geojson_line_buf(self):
         geom = {'type': 'LineString', 'coordinates': [[10, 10], [10, 20]]}
-        geojson = self.geom_to_geojson(geom)
+        geojson = geometries_to_geojson([geom])
 
         trans_geojson = self.transform_geojson(geojson, line_bufs={0: 5.0})
         trans_geom = trans_geojson['features'][0]['geometry']
@@ -121,7 +131,7 @@ class TestGeoJSONVectorSource(unittest.TestCase):
 
     def test_transform_point_buf(self):
         geom = {'type': 'Point', 'coordinates': [10, 10]}
-        geojson = self.geom_to_geojson(geom)
+        geojson = geometries_to_geojson([geom])
 
         trans_geojson = self.transform_geojson(geojson, point_bufs={0: 5.0})
         trans_geom = trans_geojson['features'][0]['geometry']
@@ -140,7 +150,7 @@ class TestGeoJSONVectorSource(unittest.TestCase):
             'type': 'Polygon',
             'coordinates': [[[0, 0], [0, 10], [10, 10], [10, 0], [0, 0]]]
         }
-        geojson = self.geom_to_geojson(geom)
+        geojson = geometries_to_geojson([geom])
 
         trans_geojson = self.transform_geojson(geojson)
         trans_geom = trans_geojson['features'][0]['geometry']
@@ -162,18 +172,28 @@ class TestGeoJSONVectorSource(unittest.TestCase):
         trans_geom = trans_geojson['features'][0]['geometry']
         self.assertTrue(shape(geom).equals(shape(trans_geom)))
 
-    def test_ignore_crs_field(self):
-        uri = data_file_path('0-aoi.geojson')
-        crs_transformer = IdentityCRSTransformer()
+    def test_crs_in_geojson(self):
+        geom_4326 = Box(10., 10., 20., 20.).to_shapely()
+        gdf_4326 = gpd.GeoDataFrame(geometry=[geom_4326], crs='epsg:4326')
+        gdf_3857 = gdf_4326.to_crs('epsg:3857')
+        with get_tmp_dir() as tmp_dir:
+            path = join(tmp_dir, 'test_3857.json')
+            gdf_3857.to_file(path)
+            vs = GeoJSONVectorSource(
+                path, crs_transformer=IdentityCRSTransformer())
+            geom_4326_out = vs.get_geoms()[0]
+        self.assertEqual(geom_4326_out, geom_4326)
 
-        vs = GeoJSONVectorSource(uri, crs_transformer=crs_transformer)
-        with self.assertRaises(NotImplementedError):
-            _ = vs.get_geojson()
-
-        vs = GeoJSONVectorSource(
-            uri, crs_transformer=crs_transformer, ignore_crs_field=True)
-        self.assertNoError(lambda: vs.get_geojson())
-        self.assertNotIn('crs', vs.get_geojson())
+    def test__geo_interface__(self):
+        geom_4326 = Box(10., 10., 20., 20.).to_shapely()
+        gdf_4326 = gpd.GeoDataFrame(geometry=[geom_4326], crs='epsg:4326')
+        gdf_3857 = gdf_4326.to_crs('epsg:3857')
+        with get_tmp_dir() as tmp_dir:
+            path = join(tmp_dir, 'test_3857.json')
+            gdf_3857.to_file(path)
+            vs = GeoJSONVectorSource(
+                path, crs_transformer=IdentityCRSTransformer())
+            self.assertNoError(lambda: gpd.GeoDataFrame.from_features(vs))
 
 
 if __name__ == '__main__':
