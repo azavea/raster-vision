@@ -65,10 +65,40 @@ Alternatively, you can set the following environment variables:
 Running on AWS SageMaker
 ------------------------
 
-You can specify configuration options for AWS SageMaker in multiple ways (see :ref:`raster vision config`).
+AWS SageMaker is a managed service for training and deploying ML models. For our purposes, it can be thought of as a higher-level alternative to Batch, specialized for ML jobs.
+
+Like Batch, SageMaker allows us to run a DAG of jobs on EC2 instances. But unlike Batch, SageMaker provides a "Pipeline" abstraction which is analogous to :doc:`Raster Vision's own Pipeline <../framework/index>`; running on SageMaker, then, becomes a simple matter of translating the Raster Vision Pipeline to the SageMaker Pipeline. Also unlike Batch, SageMaker does not require setting up job definitions, job queues, and compute environments. Moreover, SageMaker has special support for PyTorch-based training jobs, allowing them to be distributed across multiple nodes. Raster Vision fully supports this functionality which means you can use it to run heavy training loads on multiple machines, each with multiple GPUs.
+
+To use SageMaker, you will need to do the following setup steps:
+
+AWS Service Quotas
+~~~~~~~~~~~~~~~~~~
+
+You will need to bump up the service quotas for the kinds of instances you want to use. You can do this from the SageMaker management console like so (as of April 2024):
+
+#. From the drop-down menu under your account name (top-right), select "Service Quotas".
+#. From the sidebar, select "AWS Services".
+#. Select "Amazon SageMaker".
+#. In the search bar, type the instance name e.g. "ml.p3.8xlarge".
+#. Select one of the quotas from the search results e.g. "ml.p3.8xlarge for spot training job usage".
+#. Click the "Request increase at account level" button, fill out the request form, and submit.
+
+For small increases, these requests are approved automatically.
+
+Local configuration
+~~~~~~~~~~~~~~~~~~~
+
+Firstly, you will need to install :mod:`rastervision.aws_sagemaker`:
+
+.. code-block:: console
+
+    > pip install rastervision_aws_sagemaker=={{ version }}
+
+
+You will also need to specify the following configuration options via an INI file or as environment variables.
 
 INI file
-~~~~~~~~
+^^^^^^^^
 
 Add the following to your ``~/.rastervision/default`` file.
 
@@ -101,7 +131,7 @@ Add the following to your ``~/.rastervision/default`` file.
 
 
 Environment variables
-~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^
 
 Alternatively, you can set the following environment variables:
 

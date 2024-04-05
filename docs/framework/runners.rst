@@ -40,6 +40,15 @@ executing, and will fail the command if any upstream commands fail.
 
 If you are running on AWS Batch or any other remote runner, you will not be able to use your local file system to store any of the data associated with an experiment.
 
+Sample command:
+
+.. code-block:: console
+
+   rastervision run batch \
+	   "rastervision_pytorch_backend/rastervision/pytorch_backend/examples/semantic_segmentation/isprs_potsdam.py" \
+	   -a raw_uri "s3://raster-vision-raw-data/isprs-potsdam" \
+	   -a root_uri "s3://your-bucket/isprs_potsdam/"
+
 .. note::
    To run on AWS Batch, you'll need the proper setup. See :ref:`aws batch setup` for instructions.
 
@@ -49,6 +58,15 @@ If you are running on AWS Batch or any other remote runner, you will not be able
 ^^^^^^^^^^^^^
 
 Running ``rastervision run sagemaker ...`` will submit a DAG (directed acyclic graph) of jobs represented as a SageMaker Pipeline to be run on AWS SageMaker.
+
+Sample command:
+
+.. code-block:: console
+
+   SAGEMAKER_TRAIN_INSTANCE_TYPE=ml.p3.8xlarge SAGEMAKER_TRAIN_INSTANCE_COUNT=2 rastervision run sagemaker \
+	   "rastervision_pytorch_backend/rastervision/pytorch_backend/examples/semantic_segmentation/isprs_potsdam.py" \
+	   -a raw_uri "s3://raster-vision-raw-data/isprs-potsdam" \
+	   -a root_uri "s3://your-bucket/isprs_potsdam/"
 
 .. note::
    To run on AWS SageMaker, you'll need the proper setup. See :ref:`aws sagemaker setup` for instructions.
