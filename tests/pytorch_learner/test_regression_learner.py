@@ -88,8 +88,7 @@ class TestRegressionLearner(unittest.TestCase):
                 sampling=WindowSamplingConfig(
                     method=WindowSamplingMethod.random, size=20,
                     max_windows=8),
-                class_names=class_config.names,
-                class_colors=class_config.colors,
+                class_config=class_config,
                 plot_options=RegressionPlotOptions(
                     channel_display_groups=channel_display_groups),
                 num_workers=0)

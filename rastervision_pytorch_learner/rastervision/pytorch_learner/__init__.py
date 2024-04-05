@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 
 
 def register_plugin(registry: 'Registry'):
-    registry.set_plugin_version('rastervision.pytorch_learner', 6)
+    registry.set_plugin_version('rastervision.pytorch_learner', 7)
     registry.register_renamed_type_hints('geo_data_window', 'window_sampling')
 
 

@@ -104,8 +104,7 @@ class TestSemanticSegmentationLearner(unittest.TestCase):
                 sampling=WindowSamplingConfig(
                     method=WindowSamplingMethod.random, size=20,
                     max_windows=8),
-                class_names=class_config.names,
-                class_colors=class_config.colors,
+                class_config=class_config,
                 aug_transform=aug_tf,
                 plot_options=PlotOptions(
                     channel_display_groups=channel_display_groups),

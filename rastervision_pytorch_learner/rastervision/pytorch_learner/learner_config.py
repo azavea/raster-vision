@@ -26,7 +26,7 @@ from rastervision.core.data import (ClassConfig, Scene, DatasetConfig as
                                     SceneDatasetConfig)
 from rastervision.core.rv_pipeline import (WindowSamplingConfig)
 from rastervision.pytorch_learner.utils import (
-    color_to_triple, validate_albumentation_transform, MinMaxNormalize,
+    validate_albumentation_transform, MinMaxNormalize,
     deserialize_albumentation_transform, get_hubconf_dir_from_cfg,
     torch_hub_load_local, torch_hub_load_github, torch_hub_load_uri)
 
@@ -594,44 +594,23 @@ class PlotOptions(Config):
         return validate_channel_display_groups(v)
 
 
-def ensure_class_colors(
-        class_names: List[str],
-        class_colors: Optional[List[Union[str, RGBTuple]]] = None):
-    """Ensure that class_colors is valid.
-
-    If class_names is empty, fill with random colors.
-
-    Args:
-        class_names: see DataConfig.class_names
-        class_colors: see DataConfig.class_colors
-    """
-    if class_colors is not None:
-        if len(class_names) != len(class_colors):
-            raise ConfigError(f'len(class_names) ({len(class_names)}) != '
-                              f'len(class_colors) ({len(class_colors)})\n'
-                              f'class_names: {class_names}\n'
-                              f'class_colors: {class_colors}')
-    elif len(class_names) > 0:
-        class_colors = [color_to_triple() for _ in class_names]
-    return class_colors
-
-
 def data_config_upgrader(cfg_dict: dict, version: int) -> dict:
-    if version < 2:
+    if version == 1:
         cfg_dict['type_hint'] = 'image_data'
-    elif version < 3:
+    elif version == 2:
         cfg_dict['img_channels'] = cfg_dict.get('img_channels')
+    elif version == 6:
+        class_names = cfg_dict.pop('class_names', [])
+        class_colors = cfg_dict.pop('class_colors', [])
+        cfg_dict['class_config'] = ClassConfig(
+            names=class_names, colors=class_colors)
     return cfg_dict
 
 
 @register_config('data', upgrader=data_config_upgrader)
 class DataConfig(Config):
     """Config related to dataset for training and testing."""
-    class_names: List[str] = Field([], description='Names of classes.')
-    class_colors: Optional[List[Union[str, RGBTuple]]] = Field(
-        None,
-        description=('Colors used to display classes. '
-                     'Can be color 3-tuples in list form.'))
+    class_config: ClassConfig | None = Field(None, description='Class config.')
     img_channels: Optional[PosInt] = Field(
         None, description='The number of channels of the training images.')
     img_sz: PosInt = Field(
@@ -676,21 +655,26 @@ class DataConfig(Config):
          'during training.'))
 
     @property
+    def class_names(self):
+        if self.class_config is None:
+            return None
+        return self.class_config.names
+
+    @property
+    def class_colors(self):
+        if self.class_config is None:
+            return None
+        return self.class_config.colors
+
+    @property
     def num_classes(self):
-        return len(self.class_names)
+        return len(self.class_config)
 
     # validators
     _base_tf = validator(
         'base_transform', allow_reuse=True)(validate_albumentation_transform)
     _aug_tf = validator(
         'aug_transform', allow_reuse=True)(validate_albumentation_transform)
-
-    @root_validator(skip_on_failure=True)
-    def ensure_class_colors(cls, values: dict) -> dict:
-        class_names = values.get('class_names')
-        class_colors = values.get('class_colors')
-        values['class_colors'] = ensure_class_colors(class_names, class_colors)
-        return values
 
     @validator('augmentors', each_item=True)
     def validate_augmentors(cls, v: str) -> str:
@@ -1224,14 +1208,13 @@ class GeoDataConfig(DataConfig):
         return v
 
     @root_validator(skip_on_failure=True)
-    def get_class_info_from_class_config_if_needed(cls, values: dict) -> dict:
-        no_classes = len(values['class_names']) == 0
+    def get_class_config_from_dataset_if_needed(cls, values: dict) -> dict:
+        has_class_config = values.get('class_config') is not None
+        if has_class_config:
+            return values
         has_scene_dataset = values.get('scene_dataset') is not None
-        if no_classes and has_scene_dataset:
-            class_config: ClassConfig = values['scene_dataset'].class_config
-            class_config.update()
-            values['class_names'] = class_config.names
-            values['class_colors'] = class_config.colors
+        if has_scene_dataset:
+            values['class_config'] = values['scene_dataset'].class_config
         return values
 
     def build_scenes(self,

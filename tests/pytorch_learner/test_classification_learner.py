@@ -98,8 +98,7 @@ class TestClassificationLearner(unittest.TestCase):
             data_cfg = ClassificationGeoDataConfig(
                 scene_dataset=dataset_cfg,
                 sampling=sampling_cfg,
-                class_names=class_config.names,
-                class_colors=class_config.colors,
+                class_config=class_config,
                 plot_options=PlotOptions(
                     channel_display_groups=channel_display_groups),
                 num_workers=0)
