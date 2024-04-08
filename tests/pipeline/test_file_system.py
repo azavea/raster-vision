@@ -3,7 +3,7 @@ import unittest
 import datetime
 
 import boto3
-from moto import mock_s3
+from moto import mock_aws
 
 from rastervision.pipeline.file_system import (
     file_to_str, str_to_file, download_if_needed, upload_or_copy, make_dir,
@@ -20,7 +20,7 @@ LOREM = """ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
         mollit anim id est laborum.  """
 
 
-@mock_s3
+@mock_aws
 class TestMakeDir(unittest.TestCase):
     def setUp(self):
         self.lorem = LOREM
@@ -125,7 +125,7 @@ class TestGetLocalPath(unittest.TestCase):
         self.assertEqual(path, '/download_dir/http/bucket/10/25/53')
 
 
-@mock_s3
+@mock_aws
 class TestFileToStr(unittest.TestCase):
     """Test file_to_str and str_to_file."""
 
@@ -168,7 +168,7 @@ class TestFileToStr(unittest.TestCase):
             file_to_str(wrong_path)
 
 
-@mock_s3
+@mock_aws
 class TestDownloadIfNeeded(unittest.TestCase):
     """Test download_if_needed and upload_or_copy and str_to_file."""
 
@@ -221,7 +221,7 @@ class TestDownloadIfNeeded(unittest.TestCase):
             upload_or_copy(local_path, wrong_path)
 
 
-@mock_s3
+@mock_aws
 class TestS3Misc(unittest.TestCase):
     def setUp(self):
         self.lorem = LOREM

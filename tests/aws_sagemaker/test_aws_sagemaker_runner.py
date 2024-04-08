@@ -8,7 +8,7 @@ from rastervision.pipeline import rv_config_ as rv_config
 from rastervision.aws_sagemaker.aws_sagemaker_runner import AWSSageMakerRunner
 
 import boto3
-from moto import mock_s3
+from moto import mock_aws
 
 
 class MockRVPipelineConfig:
@@ -25,7 +25,7 @@ class MockRVPipeline:
     gpu_commands = ['train', 'predict']
 
 
-@mock_s3
+@mock_aws
 class TestAWSSageMakerRunner(unittest.TestCase):
     def setUp(self):
         self.s3 = boto3.client('s3')

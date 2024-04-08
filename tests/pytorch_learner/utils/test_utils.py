@@ -7,7 +7,7 @@ from torch import nn
 import numpy as np
 from matplotlib import pyplot as plt
 import boto3
-from moto import mock_s3
+from moto import mock_aws
 import pandas as pd
 
 from rastervision.pipeline.file_system.utils import get_tmp_dir
@@ -324,7 +324,7 @@ class TestOtherUtils(unittest.TestCase):
         np.testing.assert_array_equal(
             tf_original(image=x)['image'], tf_deserialized(image=x)['image'])
 
-    @mock_s3
+    @mock_aws
     def test_albu_serialization_and_deserialization_lambda(self):
         x = np.random.randn(20, 20, 4)
         tf_original = lambda_transforms['ndvi']
