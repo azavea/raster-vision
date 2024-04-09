@@ -1163,7 +1163,7 @@ class ImageDataConfig(DataConfig):
 
 def geo_data_config_upgrader(cfg_dict: dict, version: int) -> dict:
     if version == 5:
-        cfg_dict['sampling'] = cfg_dict.pop('window_opts')
+        cfg_dict['sampling'] = cfg_dict.pop('window_opts', {})
     return cfg_dict
 
 
@@ -1177,7 +1177,7 @@ class GeoDataConfig(DataConfig):
     scene_dataset: Optional['SceneDatasetConfig'] = Field(None, description='')
     sampling: Union[WindowSamplingConfig, Dict[
         str, WindowSamplingConfig]] = Field(
-            ..., description='Window sampling config.')
+            {}, description='Window sampling config.')
 
     def __repr_args__(self):
         ds = self.scene_dataset
