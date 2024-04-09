@@ -15,7 +15,7 @@ example_rgb_transform = A.Compose([
         A.ToSepia(),
     ]),
     A.OneOf([
-        A.RandomBrightness(),
+        A.RandomBrightnessContrast(),
         A.RandomGamma(),
     ]),
     A.OneOf([
