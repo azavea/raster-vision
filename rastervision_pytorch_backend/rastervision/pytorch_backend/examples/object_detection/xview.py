@@ -3,7 +3,8 @@ from os.path import join
 
 from rastervision.core.rv_pipeline import (
     ObjectDetectionConfig, ObjectDetectionChipOptions,
-    ObjectDetectionPredictOptions, WindowSamplingConfig, WindowSamplingMethod)
+    ObjectDetectionPredictOptions, ObjectDetectionWindowSamplingConfig,
+    WindowSamplingMethod)
 from rastervision.core.data import (
     ClassConfig, ClassInferenceTransformerConfig, DatasetConfig,
     GeoJSONVectorSourceConfig, ObjectDetectionLabelSourceConfig,
@@ -88,7 +89,7 @@ def get_config(runner,
     img_sz = chip_sz
 
     chip_options = ObjectDetectionChipOptions(
-        sampling=WindowSamplingConfig(
+        sampling=ObjectDetectionWindowSamplingConfig(
             method=WindowSamplingMethod.random,
             size=chip_sz,
             size_lims=(chip_sz, chip_sz + 1),
