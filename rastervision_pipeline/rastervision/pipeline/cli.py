@@ -120,6 +120,8 @@ def _run_pipeline(cfg,
     if not commands:
         commands = pipeline.commands
 
+    click.secho(f'Stages to run: {commands}', fg='white', bold=True)
+
     runner.run(
         cfg_json_uri,
         pipeline,
