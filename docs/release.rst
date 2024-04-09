@@ -25,7 +25,7 @@ Minor or Major Version Release
 
 #.  Test examples:
 
-    #.  Checkout the ``master`` branch, re-build the docker image (``docker/build``), and push it to ECR (``docker/ecr_publish``).
+    #. Checkout the ``master`` branch, re-build the docker image (``docker/build``), and push it to ECR (``docker/ecr_publish``).
     #. Follow the instructions in `this README <{{ repo_examples }}/README.md>`__ to do the following:
         
        #.  Run all :ref:`rv examples` and check that evaluation metrics are close to the scores from the last release. (For each example, there should be a link to a JSON file with the evaluation metrics from the last release.) This stage often uncovers bugs, and is the most time consuming part of the release process.
@@ -43,12 +43,6 @@ Minor or Major Version Release
    #.  Update the docs if needed. See the `docs README <{{ repo }}/docs/README.md>`__ for instructions.
    #.  Update `tiny_spacenet.py <{{ repo_examples }}/tiny_spacenet.py>`__ if needed and ensure the line numbers in every ``literalinclude`` of that file are correct. Tip: you can find all instances by searching the repo using the regex: ``\.\. literalinclude:: .+tiny_spacenet\.py$``.
    #.  Test :ref:`setup` and :ref:`quickstart` instructions and make sure they work.
-   #.  Test examples from :ref:`bootstrap`.
-
-       .. code-block:: console
-
-           cookiecutter /opt/src/cookiecutter_template
-
    #.  Update the `the changelog <{{ repo }}/docs/changelog.rst>`__, and point out API changes.
    #.  Fix any broken badges on the GitHub repo readme.
 
