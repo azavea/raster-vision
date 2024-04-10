@@ -26,6 +26,7 @@
     usage/tutorials/index
     framework/index
     api_reference/index
+    Migration guides <migration/index>
     Contributing <CONTRIBUTING>
 
 
