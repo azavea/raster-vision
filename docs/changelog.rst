@@ -1,6 +1,95 @@
 CHANGELOG
 =========
 
+
+Raster Vision 0.30
+------------------
+
+This release brings exciting new functionality and major usability improvements to Raster Vision. 
+
+Highlights
+~~~~~~~~~~
+
+- **Easier installation:** Raster Vision no longer requires exact versions of dependencies, which means it can more easily be installed alongside other packages!
+- **AWS SageMaker support:** you can now run Raster Vision jobs on SageMaker via
+
+  .. code-block:: python
+
+    rastervision run sagemaker ...
+  
+  You can even run training over multiple instances with multiple GPUs! See :ref:`aws sagemaker setup` for more details.
+- **Distributed training support:** Raster Vision ``Learners`` now support distributed training (both multi-node and multi-GPU) via `PyTorch DDP <https://pytorch.org/docs/stable/notes/ddp.html>`__. If your machine has multiple GPUs, Raster Vision will now automatically use them all during training.
+- **New CLI command**, :ref:`cli predict_scene`, that allows greater configurability than the ``predict`` command.
+
+  .. code-block:: python
+
+    rastervision predict_scene <model_bundle_uri> <scene_config_uri> [--predict_options_uri <predict_options_uri>]
+- **New tutorial:** :doc:`usage/tutorials/onnx_inference`.
+
+API changes
+~~~~~~~~~~~
+
+This release makes a number of breaking changes; however, it should still be backward compatible with older model-bundles. See the :doc:`migration guide <migration/v0-21_to_v0-30>` for more details.
+
+Full changelog
+~~~~~~~~~~~~~~
+
+Features
+^^^^^^^^
+
+* Add AWS SageMaker support via new ``rastervision_aws_sagemaker`` module. (`#1968 <https://github.com/azavea/raster-vision/pull/1968>`__, `#1986 <https://github.com/azavea/raster-vision/pull/1986>`__, `#2031 <https://github.com/azavea/raster-vision/pull/2031>`__, `#2098 <https://github.com/azavea/raster-vision/pull/2098>`__)
+* Add a ``predict_scene`` CLI command that makes predictions on a scene specified by a SceneConfig (`#1979 <https://github.com/azavea/raster-vision/pull/1979>`__)
+* Add ``XarraySourceConfig`` to allow specifying an ``XarraySource`` from STAC Items (`#1980 <https://github.com/azavea/raster-vision/pull/1980>`__)
+* Add Apple Silicon GPU Acceleration (`#1985 <https://github.com/azavea/raster-vision/pull/1985>`__)
+* Add support for distributed training (multi-node and multi-GPU) via PyTorch DDP (`#2018 <https://github.com/azavea/raster-vision/pull/2018>`__, `#2028 <https://github.com/azavea/raster-vision/pull/2028>`__)
+* Allow specifying class probability thresholds for semantic segmentation vectorization (`#2057 <https://github.com/azavea/raster-vision/pull/2057>`__)
+* Allow reading GeoJSONs with non-epsg:4326 CRS's (`#2101 <https://github.com/azavea/raster-vision/pull/2101>`__)
+* Add ``within_aoi`` arg to ``GeoDataset`` (`#2088 <https://github.com/azavea/raster-vision/pull/2088>`__)
+* Add ``class_name_mapping`` to ``ClassInferenceTransformer`` (`#2088 <https://github.com/azavea/raster-vision/pull/2088>`__)
+* Add ``Config.deserialize()`` method for instantiating ``Configs`` from a file or dict (`#2088 <https://github.com/azavea/raster-vision/pull/2088>`__)
+* Add a ``.run_command()`` method to ``Runners`` (`#1981 <https://github.com/azavea/raster-vision/pull/1981>`__)
+* Allow ``Visualizers`` to plot predictions without ground truth (`#1987 <https://github.com/azavea/raster-vision/pull/1987>`__)
+* Allow ``ChipClassificationLabelSource`` to load scores, if available, when reading labels (`#1988 <https://github.com/azavea/raster-vision/pull/1988>`__)
+* Allow passing ``out_size`` param to ``SlidingWindowGeoDataset`` (`#2099 <https://github.com/azavea/raster-vision/pull/2099>`__)
+* Define ``XarraySource.from_stac()`` for more convenient creation of an ``XarraySource`` from a STAC ``Item`` or ``ItemCollection`` (`#2061 <https://github.com/azavea/raster-vision/pull/2061>`__)
+
+Refactoring
+^^^^^^^^^^^
+
+* Allow setting some Learner-related params via environment variables (or other Everett config options) (`#1978 <https://github.com/azavea/raster-vision/pull/1978>`__)
+* Refactor ``DataConfig`` and implement ``DataConfig.build_dataset()`` (`#2023 <https://github.com/azavea/raster-vision/pull/2023>`__)
+* Reconcile chip-sampling functionality in ``RVPipelines`` with ``GeoDatasets`` (#1496) (`#2040 <https://github.com/azavea/raster-vision/pull/2040>`__)
+* Consolidate prediction options into ``PredictOptions`` for all tasks (`#2055 <https://github.com/azavea/raster-vision/pull/2055>`__)
+* Simplify inference with ONNX models (`#2060 <https://github.com/azavea/raster-vision/pull/2060>`__)
+
+Docs
+^^^^
+
+* Misc. minor docs fixes (`#1993 <https://github.com/azavea/raster-vision/pull/1993>`__)
+* Fix typos in notebook (`#1967 <https://github.com/azavea/raster-vision/pull/1967>`__)
+* Add a tutorial notebook for ONNX inference (`#2062 <https://github.com/azavea/raster-vision/pull/2062>`__)
+
+Maintenance/bug fixes
+^^^^^^^^^^^^^^^^^^^^^
+* Fix formatting in CONTRIBUTING.rst (`#1965 <https://github.com/azavea/raster-vision/pull/1965>`__)
+* Improve unit test coverage of CLI and Runners (`#1966 <https://github.com/azavea/raster-vision/pull/1966>`__)
+* Update PR template (`#1982 <https://github.com/azavea/raster-vision/pull/1982>`__)
+* Remove the ``typing_extensions`` dependency (`#1992 <https://github.com/azavea/raster-vision/pull/1992>`__)
+* Remove legacy test, overfit, and predict modes from Learner (`#2024 <https://github.com/azavea/raster-vision/pull/2024>`__)
+* Misc. minor fixes and improvements to examples (`#2033 <https://github.com/azavea/raster-vision/pull/2033>`__)
+* Bug fix: use correct transforms for val & test sets in ``GeoDataConfig._build_datasets()`` (`#2039 <https://github.com/azavea/raster-vision/pull/2039>`__)
+* Remove ``LearnerPipeline`` and ``LearnerPipelineConfig`` (`#2056 <https://github.com/azavea/raster-vision/pull/2056>`__)
+* Fix handing of some edge cases when reading chips from ``XarraySource`` (`#2058 <https://github.com/azavea/raster-vision/pull/2058>`__)
+* Fix circular import problems (`#2059 <https://github.com/azavea/raster-vision/pull/2059>`__)
+* Ignore version constraints in setup.py's (`#2065 <https://github.com/azavea/raster-vision/pull/2065>`__)
+* Add ``THIRD_PARTY_LICENSES.txt`` (`#2072 <https://github.com/azavea/raster-vision/pull/2072>`__)
+* Misc. docker fixes (`#2085 <https://github.com/azavea/raster-vision/pull/2085>`__)
+* Misc. minor fixes (`#1984 <https://github.com/azavea/raster-vision/pull/1984>`__, `#1994 <https://github.com/azavea/raster-vision/pull/1994>`__, `#2053 <https://github.com/azavea/raster-vision/pull/2053>`__, `#2088 <https://github.com/azavea/raster-vision/pull/2088>`__)
+* Make ``DataConfig`` take a ``ClassConfig`` instead of ``class_names`` and ``class_colors`` separately (`#2100 <https://github.com/azavea/raster-vision/pull/2100>`__)
+* Pre-release fixes (`#2105 <https://github.com/azavea/raster-vision/pull/2105>`__)
+
+----
+
 Raster Vision 0.21.3
 --------------------
 
@@ -24,6 +113,8 @@ Raster Vision 0.21.3
   * Bump pillow to address CVE-2023-4863 (`#1952 <https://github.com/azavea/raster-vision/pull/1952>`__)
   * Update CI and release workflows to free up disk space before building docker image (`#1953 <https://github.com/azavea/raster-vision/pull/1953>`__, `#1959 <https://github.com/azavea/raster-vision/pull/1959>`__)
 
+----
+
 Raster Vision 0.21.2
 --------------------
 
@@ -43,6 +134,8 @@ Raster Vision 0.21.2
   * Update GitHub actions' versions (`#1913 <https://github.com/azavea/raster-vision/pull/1913>`__, `#1926 <https://github.com/azavea/raster-vision/pull/1926>`__)
   * Add scripts for building packages and publishing them to PyPi  (`#1915 <https://github.com/azavea/raster-vision/pull/1915>`__)
   * Add unit tests for ``VsiFileSystem`` (`#1918 <https://github.com/azavea/raster-vision/pull/1918>`__)
+
+----
 
 Raster Vision 0.21.1
 --------------------
@@ -68,6 +161,8 @@ Raster Vision 0.21.1
 
   * Split CI tests into smaller pieces ; prune docker (`#1873 <https://github.com/azavea/raster-vision/pull/1873>`__, `#1874 <https://github.com/azavea/raster-vision/pull/1874>`__)
 
+
+----
 
 Raster Vision 0.21
 ------------------
