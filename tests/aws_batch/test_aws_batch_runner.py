@@ -17,8 +17,9 @@ class TestAWSBatchRunner(unittest.TestCase):
         runner = AWSBatchRunner()
         rv_config.set_verbosity(4)
         cmd, args = runner.build_cmd(
+            'predict',
             'config.json',
-            pipeline, ['predict'],
+            pipeline,
             num_splits=2,
             pipeline_run_name='test')
         cmd_expected = [
@@ -26,7 +27,6 @@ class TestAWSBatchRunner(unittest.TestCase):
             'config.json', 'predict', '--runner', 'batch'
         ]
         args_expected = {
-            'parent_job_ids': [],
             'num_array_jobs': None,
             'use_gpu': False,
             'job_queue': None,

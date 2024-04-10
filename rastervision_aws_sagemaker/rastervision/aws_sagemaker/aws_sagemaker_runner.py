@@ -107,6 +107,7 @@ class AWSSageMakerRunner(Runner):
         from sagemaker.workflow.pipeline_definition_config import (
             PipelineDefinitionConfig)
 
+        verbosity = rv_config.get_verbosity_cli_opt()
         config = rv_config.get_namespace_config(AWS_SAGEMAKER)
         role = config('role')
         cpu_image = config('cpu_image')
@@ -134,7 +135,8 @@ class AWSSageMakerRunner(Runner):
         for command in commands:
             job_name = f'{pipeline_run_name}-{command}'
             cmd = cmd_prefix[:]
-            cmd += [rv_config.get_verbosity_cli_opt()]
+            if verbosity:
+                cmd += [verbosity]
             cmd.extend(['run_command', cfg_json_uri, command])
 
             if command.lower() == 'train':
