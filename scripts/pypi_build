@@ -7,7 +7,7 @@ SCRIPTS_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 SRC_DIR="$( cd -P "$( dirname "$SCRIPTS_DIR" )" && pwd )"
 
 # List of plugins to build
-plugins=("rastervision_pipeline" "rastervision_aws_batch" "rastervision_aws_s3" "rastervision_core" "rastervision_pytorch_learner" "rastervision_pytorch_backend" "rastervision_gdal_vsi")
+plugins=("rastervision_pipeline" "rastervision_aws_batch" "rastervision_aws_s3" "rastervision_core" "rastervision_pytorch_learner" "rastervision_pytorch_backend" "rastervision_gdal_vsi" "rastervision_aws_sagemaker")
 
 # Usage documentation
 function usage() {
