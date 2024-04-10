@@ -1,4 +1,4 @@
-rastervision_pipeline==0.21.4-dev
+rastervision_pipeline==0.30.0
 shapely==2.0.2
 geopandas==0.14.3
 numpy==1.26.3
