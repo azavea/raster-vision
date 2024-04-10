@@ -36,68 +36,70 @@ class AWSBatchRunner(Runner):
             commands: List[str],
             num_splits: int = 1,
             pipeline_run_name: str = 'raster-vision'):  # pragma: no cover
-        cmd, args = self.build_cmd(
-            cfg_json_uri,
-            pipeline,
-            commands,
-            num_splits,
-            pipeline_run_name=pipeline_run_name)
-        job_id = self.run_command(cmd=cmd, **args)
+        parent_job_ids = []
+        for command in commands:
+            cmd, args = self.build_cmd(
+                command,
+                cfg_json_uri,
+                pipeline,
+                num_splits,
+                pipeline_run_name=pipeline_run_name)
+            job_id = self.run_command(
+                cmd, parent_job_ids=parent_job_ids, **args)
 
-        job_info = dict(
-            name=args['job_name'],
-            id=job_id,
-            parents=args['parent_job_ids'],
-            cmd=cmd,
-        )
-        job_info_str = pformat(job_info, sort_dicts=False)
-        msg = (f'Job submitted:\n{job_info_str}')
-        log.info(msg)
+            job_info = dict(
+                name=args['job_name'],
+                id=job_id,
+                parents=parent_job_ids,
+                cmd=cmd,
+            )
+            job_info_str = pformat(job_info, sort_dicts=False)
+            msg = (f'Job submitted:\n{job_info_str}')
+            log.info(msg)
+
+            parent_job_ids = [job_id]
 
     def build_cmd(self,
+                  command: str,
                   cfg_json_uri: str,
                   pipeline: 'Pipeline',
-                  commands: List[str],
                   num_splits: int = 1,
                   pipeline_run_name: str = 'raster-vision'
                   ) -> Tuple[List[str], Dict[str, Any]]:
-        parent_job_ids = []
+
+        verbosity = rv_config.get_verbosity_cli_opt()
 
         # pipeline-specific job queue and job definition
         pipeline_job_queue = getattr(pipeline, 'job_queue', None)
         pipeline_job_def = getattr(pipeline, 'job_def', None)
 
-        for command in commands:
-            # command-specific job queue, job definition
-            cmd_obj = getattr(pipeline, command, None)
-            job_def = getattr(cmd_obj, 'job_def', pipeline_job_def)
-            job_queue = getattr(cmd_obj, 'job_queue', pipeline_job_queue)
+        # command-specific job queue, job definition
+        cmd_obj = getattr(pipeline, command, None)
+        job_def = getattr(cmd_obj, 'job_def', pipeline_job_def)
+        job_queue = getattr(cmd_obj, 'job_queue', pipeline_job_queue)
 
-            num_array_jobs = None
-            use_gpu = command in pipeline.gpu_commands
+        num_array_jobs = None
+        use_gpu = command in pipeline.gpu_commands
 
-            job_name = f'{pipeline_run_name}-{command}-{uuid.uuid4()}'
+        job_name = f'{pipeline_run_name}-{command}-{uuid.uuid4()}'
 
-            cmd = ['python', '-m', 'rastervision.pipeline.cli']
-            cmd += [rv_config.get_verbosity_cli_opt()]
-            cmd += [
-                'run_command', cfg_json_uri, command, '--runner', AWS_BATCH
-            ]
+        cmd = ['python', '-m', 'rastervision.pipeline.cli']
+        if verbosity:
+            cmd += [verbosity]
+        cmd += ['run_command', cfg_json_uri, command, '--runner', AWS_BATCH]
 
-            if command in pipeline.split_commands and num_splits > 1:
-                num_array_jobs = num_splits
-                cmd += ['--num-splits', str(num_splits)]
+        if command in pipeline.split_commands and num_splits > 1:
+            num_array_jobs = num_splits
+            cmd += ['--num-splits', str(num_splits)]
 
-            args = dict(
-                job_name=job_name,
-                parent_job_ids=parent_job_ids,
-                num_array_jobs=num_array_jobs,
-                use_gpu=use_gpu,
-                job_queue=job_queue,
-                job_def=job_def,
-            )
-
-            return cmd, args
+        args = dict(
+            job_name=job_name,
+            num_array_jobs=num_array_jobs,
+            use_gpu=use_gpu,
+            job_queue=job_queue,
+            job_def=job_def,
+        )
+        return cmd, args
 
     def get_split_ind(self) -> int:
         return int(os.environ.get('AWS_BATCH_JOB_ARRAY_INDEX', 0))
@@ -145,7 +147,7 @@ class AWSBatchRunner(Runner):
         if job_queue is None:
             job_queue = batch_config(f'{device}_job_queue')
         if job_def is None:
-            job_queue = batch_config(f'{device}_job_def')
+            job_def = batch_config(f'{device}_job_def')
 
         if debug:
             cmd = [
