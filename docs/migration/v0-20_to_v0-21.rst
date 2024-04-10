@@ -1,0 +1,6 @@
+v0.20 to v0.21
+==============
+
+- To crop the extent of a :class:`.RasterSource` (or :class:`.LabelSource`), you now have to specify ``bbox`` instead of ``extent``. The term "extent", as used in the codebase, has also been redefined to always be the box ``Box(0, 0, height, width)``, where ``height`` and ``width`` are the height and width of the ``bbox``.
+- :class:`.GeoJSONVectorSource` can now take a list of URIs, allowing geometries to be read from multiple files.
+- :class:`.VectorOutputConfig` (and subclasses) no longer require ``uri`` to be specified.

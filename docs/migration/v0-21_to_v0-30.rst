@@ -1,0 +1,106 @@
+v0.21 to v0.30
+==============
+
+v0.30 makes a number of breaking API changes, most of which are described below. You should also check out the updated `examples <{{ repo_examples }}/README.md>`__ and :doc:`tutorials <../usage/tutorials/index>`. Note that despite these changes, v0.30 is still backward compatible with model-bundles produced via older versions.
+
+If something has been missed or you are unsure how to migrate a particular piece of code, please do not hesitate to open a new `discussion <https://github.com/azavea/raster-vision/discussions>`__.
+
+Chip sampling configuration
+---------------------------
+
+* :class:`.GeoDataWIndowConfig` has been refactored to :class:`.WindowSamplingConfig`.
+* :class:`.GeoDataWIndowMethod` has been refactored to :class:`.WindowSamplingMethod`.
+* :class:`.ObjectDetectionWindowMethod` has been removed.
+* Object detection options such as ``neg_ratio``, ``ioa_thresh``, ``clip``, and ``neg_ioa_thresh`` have been moved from :class:`.ObjectDetectionChipOptions` and :class:`.ObjectDetectionGeoDataWindowConfig` to :class:`.ObjectDetectionWindowSamplingConfig`.
+* ``train_chip_sz`` and ``chip_nodata_threshold`` have been moved to :class:`.ChipOptions`.
+* In :class:`.GeoDataConfig`, ``window_opts`` has been replaced by ``sampling``.
+* ``SemanticSegmentationLabelSource.enough_target_pixels()`` has been refactored to :meth:`.SemanticSegmentationChipOptions.enough_target_pixels`.
+* ``RVPipeline.get_train_windows()`` and ``RVPipeline.get_train_labels()`` have been removed. :meth:`.RVPipeline.chip` now calls :meth:`.Backend.chip_dataset`.
+
+Sample code changes (also applies to chip classification and object detection):
+
+v0.21:
+
+.. code-block:: python
+
+    window_opts = GeoDataWindowConfig(
+        method=GeoDataWindowMethod.sliding, stride=chip_sz, size=chip_sz)
+
+    data = SemanticSegmentationGeoDataConfig(
+        ...,
+        window_opts=window_opts,
+        ...,
+    )
+
+    pipeline = SemanticSegmentationConfig(
+        ...,
+        train_chip_sz=chip_sz,
+    )
+
+v0.30:
+
+.. code-block:: python
+
+    from rastervision.core.rv_pipeline import (
+        SemanticSegmentationChipOptions, WindowSamplingConfig, WindowSamplingMethod)
+
+    chip_options = SemanticSegmentationChipOptions(
+        sampling=WindowSamplingConfig(
+            method=WindowSamplingMethod.sliding, stride=chip_sz, size=chip_sz))
+
+    data = SemanticSegmentationGeoDataConfig(
+        ...,
+        sampling=chip_options.sampling,
+        ...,
+    )
+
+    pipeline = SemanticSegmentationConfig(
+        ...,
+        chip_options=chip_options,
+    )
+
+.. note:: 
+    See :class:`.ChipOptions`, :class:`.ObjectDetectionChipOptions`, and :class:`.SemanticSegmentationChipOptions`.
+
+:class:`.PredictOptions`
+------------------------
+
+* ``predict_chip_sz`` and ``predict_batch_sz`` have been moved to :class:`.PredictOptions` which also provides the new ``stride`` field.
+* :class:`.ChipClassificationConfig` now also expects a ``predict_options``. Previously, this was only true for semantic segmentation and object detection.
+
+Sample code changes (also applies to chip classification and object detection):
+
+v0.21:
+
+.. code-block:: python
+
+    pipeline = SemanticSegmentationConfig(
+        ...,
+        predict_chip_sz=chip_sz,
+        predict_batch_sz=batch_sz,
+    )
+
+v0.30:
+
+.. code-block:: python
+
+    predict_options = SemanticSegmentationPredictOptions(
+        chip_sz=chip_sz, batch_sz=batch_sz)
+
+    pipeline = SemanticSegmentationConfig(
+        ...,
+        predict_options=predict_options,
+    )
+
+.. note:: 
+    See :class:`.PredictOptions`, :class:`.ObjectDetectionPredictOptions`, and :class:`.SemanticSegmentationPredictOptions`.
+
+Other changes
+-------------
+
+* :class:`.GeoJSONVectorSource` and :class:`.GeoJSONVectorSourceConfig` now support GeoJSONs with a CRS field and no longer take ``ignore_crs_field``.
+* :class:`.DataConfig` now takes a ``class_config`` instead of ``class_names`` and ``class_colors`` separately.
+* :class:`.SolverConfig` no longer takes ``test_batch_sz``, ``test_num_epochs``, or ``overfit_num_steps``.
+* :class:`.PyTorchLearnerBackendConfig` no longer takes ``test_mode``.
+* :class:`.LearnerConfig` no longer takes ``overfit_mode``, ``predict_mode``, or ``test_mode``.
+* :meth:`.Backend.predict_scene` now takes :class:`.PredictOptions` instead of ``chip_sz``, ``stride`` etc.
