@@ -128,6 +128,8 @@ Use ``predict`` to make predictions on new imagery given a :ref:`model bundle <m
     --help                Show this message and exit.
 
 
+.. _cli predict_scene:
+
 ``predict_scene``
 ^^^^^^^^^^^^^^^^^
 
