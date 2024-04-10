@@ -72,9 +72,9 @@ author = u'Azavea'
 # built documents.
 #
 # The short X.Y version.
-version = u'0.21'
+version = u'0.30'
 # The full version, including alpha/beta/rc tags
-release = u'0.21.4-dev'
+release = u'0.30.0'
 
 # -- Extension configuration --------------------------------------------------
 
