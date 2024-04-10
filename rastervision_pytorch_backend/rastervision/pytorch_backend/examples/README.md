@@ -24,10 +24,9 @@ run "spacenet-rio-cc" \
 Some examples require preprocessing data. Remember to upload that first. If unchanged from previous version, just copy it over:
 
 ```sh
-aws s3 cp \
-s3://raster-vision/examples/0.20/processed-data/ \
-s3://raster-vision/examples/0.20.1/processed-data/ \
---recursive
+aws s3 sync \
+s3://raster-vision/examples/0.21/processed-data/ \
+s3://raster-vision/examples/0.30/processed-data/
 ```
 
 ### Run
@@ -57,16 +56,16 @@ This currently only compares the respective `eval.json`'s, but can be extended i
 ```sh
 python "rastervision_pytorch_backend/rastervision/pytorch_backend/examples/test.py" \
 compare \
---root_uri_old "s3://raster-vision/examples/0.20/output/spacenet-rio-cc/" \
---root_uri_new "s3://raster-vision/examples/0.20.1/output/spacenet-rio-cc/"
+--root_uri_old "s3://raster-vision/examples/0.21/output/spacenet-rio-cc/" \
+--root_uri_new "s3://raster-vision/examples/0.30.0/output/spacenet-rio-cc/"
 ```
 
 **All examples**:
 ```sh
 python "rastervision_pytorch_backend/rastervision/pytorch_backend/examples/test.py" \
 compare \
---examples_root_old "s3://raster-vision/examples/0.20.1/output/" \
---examples_root_new "s3://raster-vision/examples/0.21/output/"
+--examples_root_old "s3://raster-vision/examples/0.21/output/" \
+--examples_root_new "s3://raster-vision/examples/0.30.0/output/"
 ```
 
 ### Collect
