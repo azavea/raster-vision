@@ -1,18 +1,18 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 from genericpath import exists
 from pprint import pformat
 import subprocess
-from os.path import (basename, isdir, isfile, join, relpath, split)
+from os.path import basename, join, relpath, split
 from tempfile import TemporaryDirectory
 
 import click
 
 from rastervision.pipeline.file_system import (
-    file_to_json, sync_from_dir, upload_or_copy, download_or_copy, file_exists,
-    sync_to_dir, NotReadableError, download_if_needed)
+    file_to_json, sync_from_dir, download_or_copy, file_exists, sync_to_dir,
+    NotReadableError, download_if_needed)
 
-NEW_VERSION_FULL = '0.21.2'
-NEW_VERSION_MAJOR_MINOR = '0.21'
+NEW_VERSION_FULL = '0.30.0'  # x.y.z
+NEW_VERSION_MAJOR_MINOR = '0.30'  # x.y
 
 EXAMPLES_MODULE_ROOT = 'rastervision.pytorch_backend.examples'
 EXAMPLES_PATH_ROOT = '/opt/src/rastervision_pytorch_backend/rastervision/pytorch_backend/examples'  # noqa
@@ -205,6 +205,7 @@ def collect(keys, collect_dir, remote, paths, overrides=[]):
     overrides = dict(overrides)
     if paths is None:
         paths = [
+            'analyze',
             'train/model-bundle.zip',
             'train/last-model.pth',
             'eval',
@@ -228,11 +229,12 @@ def collect(keys, collect_dir, remote, paths, overrides=[]):
             for path in paths:
                 src_uri = join(root_uri, path)
                 console_info(f'{key}: Fetching {path}')
+                dst_dir = None
                 if file_exists(src_uri, include_dir=False):
                     # is a single file
                     dst_dir = join(collect_dir, key, split(path)[0])
                     dst_dir = split(to_local_uri(src_uri, dst_dir))[0]
-                    download_or_copy(src_uri, dst_dir)
+                    download_or_copy(src_uri, dst_dir, delete_tmp=True)
                 elif file_exists(src_uri, include_dir=True):
                     # is a directory
                     dst_dir = join(collect_dir, key, path)
@@ -288,11 +290,11 @@ def predict(keys, collect_dir, remote, overrides=[]):
 @click.option('--examples_root_old', default=None)
 @click.option('--examples_root_new', default=None)
 @click.option('--download_dir', '-d', default=LOCAL_COLLECT_ROOT)
-def compare(root_uri_old: Optional[str],
-            root_uri_new: Optional[str],
-            examples_root_old: Optional[str] = None,
-            examples_root_new: Optional[str] = None,
-            download_dir: Optional[str] = LOCAL_COLLECT_ROOT) -> None:
+def compare(root_uri_old: str | None,
+            root_uri_new: str | None,
+            examples_root_old: str | None = None,
+            examples_root_new: str | None = None,
+            download_dir: str | None = LOCAL_COLLECT_ROOT) -> None:
     """Compare different runs of the same example."""
     if root_uri_old is None and root_uri_new is None:
         assert examples_root_old is not None and examples_root_new is not None
@@ -306,9 +308,9 @@ def compare(root_uri_old: Optional[str],
     return _compare(root_uri_old, root_uri_new, download_dir)
 
 
-def _compare(root_uri_old: Optional[str],
-             root_uri_new: Optional[str],
-             download_dir: Optional[str] = None) -> None:
+def _compare(root_uri_old: str | None,
+             root_uri_new: str | None,
+             download_dir: str | None = None) -> None:
     """Compare different runs of the same example."""
     if root_uri_old != '/':
         root_uri_old = root_uri_old.rstrip('/')
@@ -350,7 +352,7 @@ def upload(keys, collect_dir, upload_dir, overrides=[]):
                 override_cfg(exp_cfg, overrides)
             _collect_dir = join(collect_dir, key)
             _upload_dir = join(upload_dir, key)
-            _upload_to_zoo(exp_cfg, _collect_dir, _upload_dir)
+            sync_to_dir(_collect_dir, _upload_dir)
 
 
 ######################
@@ -359,7 +361,7 @@ def upload(keys, collect_dir, upload_dir, overrides=[]):
 def _run(exp_cfg: dict,
          test: bool = False,
          remote: bool = False,
-         commands: List[str] = None) -> None:
+         commands: list[str] = None) -> None:
     """Builds a command from the params in exp_cfg and other arguments and
     then executes it.
     """
@@ -412,43 +414,9 @@ def _predict(exp_cfg: dict, collect_dir: str) -> None:
     run_command(cmd)
 
 
-def _upload_to_zoo(exp_cfg: dict, collect_dir: str, upload_dir: str) -> None:
-    src_uris = {}
-    dst_uris = {}
-
-    src_uris['eval'] = join(collect_dir, 'eval', 'validation_scenes',
-                            'eval.json')
-    src_uris['bundle'] = join(collect_dir, 'bundle', 'model-bundle.zip')
-    src_uris['sample_predictions'] = join(collect_dir, 'sample-predictions')
-    src_uris['learner_bundle'] = join(collect_dir, 'train', 'model-bundle.zip')
-    src_uris['learner_model'] = join(collect_dir, 'train', 'last-model.pth')
-
-    dst_uris['eval'] = join(upload_dir, 'validation_scenes', 'eval.json')
-    dst_uris['bundle'] = join(upload_dir, 'model-bundle.zip')
-    dst_uris['sample_predictions'] = join(upload_dir, 'sample-predictions')
-    dst_uris['learner_bundle'] = join(upload_dir, 'train', 'model-bundle.zip')
-    dst_uris['learner_model'] = join(upload_dir, 'model.pth')
-
-    assert len(src_uris) == len(dst_uris)
-
-    for k, src in src_uris.items():
-        dst = dst_uris[k]
-        if not exists(src):
-            console_failure(f'{k}: {src} not found.')
-            exit(1)
-        if isfile(src):
-            console_info(f'Uploading {k} file: {src} to {dst}.')
-            upload_or_copy(src, dst)
-        elif isdir(src):
-            console_info(f'Syncing {k} dir: {src} to {dst}.')
-            sync_to_dir(src, dst)
-        else:
-            raise ValueError(src)
-
-
 def _compare_runs(root_uri_old: str,
                   root_uri_new: str,
-                  download_dir: Optional[str],
+                  download_dir: str | None,
                   commands=['eval']) -> None:
     """Compare outputs of commands for two runs of an example.
     Currently only supports eval, but can be extended to include others.
@@ -483,7 +451,7 @@ def _compare_evals(root_uri_old: str,
         eval_old, eval_new, float_tol=float_tol, exclude_keys=exclude_keys)
 
 
-def validate_keys(keys: List[str]) -> None:
+def validate_keys(keys: list[str]) -> None:
     exp_keys = [exp_cfg['key'] for exp_cfg in cfg]
     invalid_keys = set(keys).difference(exp_keys)
     if invalid_keys:
@@ -537,16 +505,15 @@ def fetch_cmd_dir(root_uri: str, cmd: str, download_dir: str) -> str:
     return cmd_root_uri_local
 
 
-def flatten_dict(d: Union[dict, list], sep: str = '.') -> dict:
+def flatten_dict(d: dict | list, sep: str = '.') -> dict:
     """Flatten a dict so that it does not have any nested dicts or lists.
     Nested keys will be concatenated using the separator, sep. For example,
     {'a': {'b': ['x', 10]}} becomes {'a.b.0': 'x', 'a.b.1': 10}.
     This makes it simpler to compare dicts.
 
     Args:
-        d (Union[dict, list]): A dict or list.
-        sep (str, optional): Separator to use for concatenating nested keys.
-            Defaults to '.'.
+        d: A dict or list.
+        sep: Separator to use for concatenating nested keys. Defaults to '.'.
 
     Returns:
         dict: The flattened dict.
@@ -590,7 +557,7 @@ def _compare_dicts(dict_old: dict,
             comparing values. Defaults to [].
     """
     dict_old = flatten_dict(dict_old)
-    dict_new: Dict[str, Any] = flatten_dict(dict_new)
+    dict_new: dict[str, Any] = flatten_dict(dict_new)
     keys_old, keys_new = set(dict_old.keys()), set(dict_new.keys())
     diff1, diff2 = keys_new - keys_old, keys_old - keys_new
     if len(diff1) > 0:
