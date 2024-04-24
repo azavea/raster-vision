@@ -90,3 +90,12 @@ class DatasetConfig(Config):
     @property
     def all_scenes(self) -> List[SceneConfig]:
         return self.train_scenes + self.validation_scenes + self.test_scenes
+
+    def __repr__(self):
+        num_train = len(self.train_scenes)
+        num_val = len(self.validation_scenes)
+        num_test = len(self.test_scenes)
+        out = (f'DatasetConfig(train_scenes=<{num_train} scenes>, '
+               f'validation_scenes=<{num_val} scenes>, '
+               f'test_scenes=<{num_test} scenes>)')
+        return out
