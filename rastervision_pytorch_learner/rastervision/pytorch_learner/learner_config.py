@@ -1180,11 +1180,12 @@ class GeoDataConfig(DataConfig):
             {}, description='Window sampling config.')
 
     def __repr_args__(self):
-        ds = self.scene_dataset
-        ds_repr = (f'<{len(ds.train_scenes)} train_scenes, '
-                   f'{len(ds.validation_scenes)} validation_scenes, '
-                   f'{len(ds.test_scenes)} test_scenes>')
-        out = [('scene_dataset', ds_repr), ('sampling', str(self.sampling))]
+        ds_str = repr(self.scene_dataset)
+        if isinstance(self.sampling, dict):
+            sampling_str = f'Dict with {len(self.sampling)} keys'
+        else:
+            sampling_str = str(self.sampling)
+        out = [('scene_dataset', ds_str), ('sampling', sampling_str)]
         return out
 
     @validator('sampling')
