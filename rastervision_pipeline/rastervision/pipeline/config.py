@@ -115,6 +115,13 @@ class Config(BaseModel):
             if val not in valid_options:
                 raise ConfigError(f'{val} is not a valid option for {field}')
 
+    def dict(self, with_rv_metadata: bool = False, **kwargs) -> dict:
+        cfg_json = self.json(**kwargs)
+        cfg_dict = json.loads(cfg_json)
+        if with_rv_metadata:
+            cfg_dict['plugin_versions'] = registry.plugin_versions
+        return cfg_dict
+
     def to_file(self, uri: str, with_rv_metadata: bool = True) -> None:
         """Save a Config to a JSON file, optionally with RV metadata.
 
@@ -124,13 +131,7 @@ class Config(BaseModel):
                 ``plugin_versions``, so that the config can be upgraded when
                 loaded.
         """
-        cfg_json = self.json()
-        if with_rv_metadata:
-            # self.dict() --> json_to_file() would be simpler but runs into
-            # JSON serialization problems
-            cfg_dict = json.loads(cfg_json)
-            cfg_dict['plugin_versions'] = registry.plugin_versions
-            cfg_json = json.dumps(cfg_dict)
+        cfg_dict = self.dict(with_rv_metadata=with_rv_metadata)
         json_to_file(cfg_dict, uri)
 
     @classmethod
@@ -157,7 +158,7 @@ class Config(BaseModel):
         Args:
             uri: URI to load from.
         """
-        cfg_dict = load_config_dict(uri)
+        cfg_dict = file_to_json(uri)
         cfg = cls.from_dict(cfg_dict)
         return cfg
 
@@ -168,6 +169,9 @@ class Config(BaseModel):
         Args:
             cfg_dict: Dict to deserialize.
         """
+        if 'plugin_versions' in cfg_dict:
+            cfg_dict: dict = upgrade_config(cfg_dict)
+            cfg_dict.pop('plugin_versions', None)
         cfg = build_config(cfg_dict)
         return cfg
 
@@ -192,15 +196,6 @@ def save_pipeline_config(cfg: 'PipelineConfig', output_uri: str) -> None:
     str_to_file(cfg_json, output_uri)
 
 
-def load_config_dict(uri: str) -> dict:
-    """Load a serialized Config from a JSON file as a dict and upgrade it."""
-    cfg_dict = file_to_json(uri)
-    if 'plugin_versions' in cfg_dict:
-        cfg_dict = upgrade_config(cfg_dict)
-        cfg_dict.pop('plugin_versions', None)
-    return cfg_dict
-
-
 def build_config(x: Union[dict, List[Union[dict, Config]], Config]
                  ) -> Union[Config, List[Config]]:
     """Build a Config from various types of input.
@@ -216,9 +211,10 @@ def build_config(x: Union[dict, List[Union[dict, Config]], Config]
         Config: the corresponding Config(s)
     """
     if isinstance(x, dict):
-        new_x = {}
-        for k, v in x.items():
-            new_x[k] = build_config(v)
+        new_x = {
+            k: build_config(v)
+            for k, v in x.items() if k not in ('plugin_versions', 'rv_config')
+        }
         type_hint = new_x.get('type_hint')
         if type_hint is not None:
             config_cls = registry.get_config(type_hint)
@@ -311,12 +307,11 @@ def upgrade_config(
         to the current version.
     """
     plugin_versions = config_dict.get('plugin_versions')
-    plugin_versions = upgrade_plugin_versions(plugin_versions)
     if plugin_versions is None:
-        raise ConfigError(
-            'Configuration is missing plugin_version field so is not backward '
-            'compatible.')
-    return _upgrade_config(config_dict, plugin_versions)
+        return config_dict
+    plugin_versions = upgrade_plugin_versions(plugin_versions)
+    out = _upgrade_config(config_dict, plugin_versions)
+    return out
 
 
 def get_plugin(config_cls: Type) -> str:
