@@ -1118,7 +1118,8 @@ class Learner(ABC):
         if self.model is None:
             self.model = self.build_model(model_def_path=model_def_path)
         self.model.to(device=self.device)
-        if self.is_ddp_process:  # pragma: no cover
+        if self.is_ddp_process and not isinstance(self.model,
+                                                  DDP):  # pragma: no cover
             self.model = nn.SyncBatchNorm.convert_sync_batchnorm(self.model)
             self.model = DDP(self.model, device_ids=[self.ddp_local_rank])
         self.load_init_weights(model_weights_path=model_weights_path)
