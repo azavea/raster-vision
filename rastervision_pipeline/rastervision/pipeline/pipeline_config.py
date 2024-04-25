@@ -44,3 +44,6 @@ class PipelineConfig(Config):
         """
         from rastervision.pipeline.pipeline import Pipeline  # noqa
         return Pipeline(self, tmp_dir)
+
+    def dict(self, with_rv_metadata: bool = True, **kwargs) -> dict:
+        return super().dict(with_rv_metadata=with_rv_metadata, **kwargs)
