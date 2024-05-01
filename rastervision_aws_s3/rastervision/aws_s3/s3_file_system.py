@@ -187,8 +187,9 @@ class S3FileSystem(FileSystem):
         bucket, key = S3FileSystem.parse_uri(uri)
         with io.BytesIO() as file_buffer:
             try:
-                file_size = s3.head_object(
-                    Bucket=bucket, Key=key)['ContentLength']
+                obj = s3.head_object(
+                    Bucket=bucket, Key=key, RequestPayer=request_payer)
+                file_size = obj['ContentLength']
                 with progressbar(file_size, desc='Downloading') as bar:
                     s3.download_fileobj(
                         Bucket=bucket,
@@ -263,7 +264,9 @@ class S3FileSystem(FileSystem):
         request_payer = S3FileSystem.get_request_payer()
         bucket, key = S3FileSystem.parse_uri(src_uri)
         try:
-            file_size = s3.head_object(Bucket=bucket, Key=key)['ContentLength']
+            obj = s3.head_object(
+                Bucket=bucket, Key=key, RequestPayer=request_payer)
+            file_size = obj['ContentLength']
             with progressbar(file_size, desc=f'Downloading') as bar:
                 s3.download_file(
                     Bucket=bucket,
