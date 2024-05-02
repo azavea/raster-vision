@@ -50,7 +50,7 @@ coverage run -m unittest discover -t . tests -vf
 
 Generate an HTML report from the `.coverage` file:
 ```sh
-coverage html
+coverage html --omit=/opt/data/* --skip-empty --precision=2
 ```
 
 See `coverage help` for other available report formats.
