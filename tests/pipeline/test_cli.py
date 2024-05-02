@@ -1,7 +1,14 @@
+import os
+from os.path import join
 import unittest
 import shutil
 
-from rastervision.pipeline.cli import main, print_error, convert_bool_args
+from rastervision.pipeline.file_system.utils import get_tmp_dir
+from rastervision.pipeline.config import Config
+from rastervision.pipeline.cli import (convert_bool_args, get_configs, main,
+                                       print_error)
+from rastervision.pipeline_example_plugin1.sample_pipeline import (
+    SamplePipelineConfig)
 
 from click.testing import CliRunner
 
@@ -74,6 +81,31 @@ class TestUtils(unittest.TestCase):
         args_in = dict(a='true', b='false')
         args_out = convert_bool_args(args_in)
         self.assertDictEqual(args_out, dict(a=True, b=False))
+
+    def test_get_configs_json(self):
+        cfg = SamplePipelineConfig(root_uri='abc', names=['x', 'y', 'z'])
+        with get_tmp_dir() as tmp_dir:
+            cfg_path = join(tmp_dir, 'cfg.json')
+            cfg.to_file(cfg_path)
+            cfgs = get_configs(cfg_path)
+        self.assertEqual(len(cfgs), 1)
+        self.assertEqual(cfgs[0].root_uri, cfg.root_uri)
+        self.assertListEqual(cfgs[0].names, cfg.names)
+
+    def test_get_configs_no_func(self):
+        with get_tmp_dir() as tmp_dir:
+            cfg_path = join(tmp_dir, 'cfg.py')
+            with open(cfg_path, 'w'):
+                pass
+            self.assertRaises(ImportError, lambda: get_configs(cfg_path))
+            os.remove(cfg_path)
+
+    def test_get_configs_not_pipeline_cfg(self):
+        cfg = Config()
+        with get_tmp_dir() as tmp_dir:
+            cfg_path = join(tmp_dir, 'cfg.json')
+            cfg.to_file(cfg_path)
+            self.assertRaises(TypeError, lambda: get_configs(cfg_path))
 
 
 if __name__ == '__main__':
