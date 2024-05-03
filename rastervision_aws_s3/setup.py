@@ -5,7 +5,7 @@ from setuptools import setup, find_namespace_packages
 import re
 
 name = 'rastervision_aws_s3'
-version = '0.30.0'
+version = '0.30.1'
 description = 'A rastervision plugin that adds an AWS S3 file system'
 requirement_constraints = {}
 
