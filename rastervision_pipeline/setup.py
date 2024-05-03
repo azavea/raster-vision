@@ -5,7 +5,7 @@ from setuptools import setup, find_namespace_packages
 import re
 
 name = 'rastervision_pipeline'
-version = '0.30.0'
+version = '0.30.1'
 description = 'The main rastervision package for configuring, defining, and running pipelines'
 requirement_constraints = {
     'pydantic': '<2',
