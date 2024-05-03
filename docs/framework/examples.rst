@@ -83,7 +83,7 @@ The ``--tensorboard`` option should be used if running locally and you would lik
     export PROCESSED_URI="/opt/data/examples/spacenet/rio/processed-data"
     export ROOT_URI="/opt/data/examples/spacenet/rio/local-output"
 
-    rastervision run local rastervision.examples.chip_classification.spacenet_rio \
+    rastervision run local rastervision.pytorch_backend.examples.chip_classification.spacenet_rio \
         -a raw_uri $RAW_URI -a processed_uri $PROCESSED_URI -a root_uri $ROOT_URI \
         -a test True --splits 2
 
@@ -104,7 +104,7 @@ To run the full experiment on GPUs using AWS Batch, use something like the follo
     export PROCESSED_URI="s3://mybucket/examples/spacenet/rio/processed-data"
     export ROOT_URI="s3://mybucket/examples/spacenet/rio/remote-output"
 
-    rastervision run batch rastervision.examples.chip_classification.spacenet_rio \
+    rastervision run batch rastervision.pytorch_backend.examples.chip_classification.spacenet_rio \
         -a raw_uri $RAW_URI -a processed_uri $PROCESSED_URI -a root_uri $ROOT_URI \
         -a test False --splits 8
 
