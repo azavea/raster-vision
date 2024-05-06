@@ -5,7 +5,7 @@ from setuptools import setup, find_namespace_packages
 import re
 
 name = 'rastervision_aws_sagemaker'
-version = '0.30.1-dev'
+version = '0.30.2-dev'
 description = 'A rastervision plugin that adds an AWS SageMaker pipeline runner'
 requirement_constraints = {}
 
