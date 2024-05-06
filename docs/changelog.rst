@@ -2,6 +2,29 @@ CHANGELOG
 =========
 
 
+Raster Vision 0.30.1
+--------------------
+
+* Features:
+
+  * Allow passing pipeline configs as JSON files to ``rastervision run`` CLI cmd (`#2136 <https://github.com/azavea/raster-vision/pull/2136>`__)
+
+* Fixes:
+
+  * Add ``rastervision_aws_sagemaker`` to API reference on RTD (`#2117 <https://github.com/azavea/raster-vision/pull/2117>`__)
+  * Let ``RasterSource.get_chip_by_map_window()`` take all ``.get_chip()`` args (`#2136 <https://github.com/azavea/raster-vision/pull/2136>`__)
+  * Make repr more concise for some configs (`#2136 <https://github.com/azavea/raster-vision/pull/2136>`__)
+  * Misc config serialization fixes and improvements (`#2136 <https://github.com/azavea/raster-vision/pull/2136>`__)
+  * Avoid double-wrapping model in ``DistributedDataParallel`` (`#2136 <https://github.com/azavea/raster-vision/pull/2136>`__)
+  * Make ``S3FileSystem.list_paths()`` only list direct children (`#2136 <https://github.com/azavea/raster-vision/pull/2136>`__)
+  * Add missing ``RequestPayer`` arg to some s3-related boto3 API calls (`#2136 <https://github.com/azavea/raster-vision/pull/2136>`__)
+  * Fix incorrect path in RV pipeline examples doc (`#2138 <https://github.com/azavea/raster-vision/pull/2138>`__)
+* Maintenance:
+
+  * Update docker dependencies (`#2116 <https://github.com/azavea/raster-vision/pull/2116>`__, `#2122 <https://github.com/azavea/raster-vision/pull/2122>`__)
+  * Tweak coverage report generation (`#2136 <https://github.com/azavea/raster-vision/pull/2136>`__)
+
+
 Raster Vision 0.30
 ------------------
 
