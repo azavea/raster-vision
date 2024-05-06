@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Any, Iterator, Tuple
 import io
 import os
 import subprocess
@@ -16,41 +16,38 @@ AWS_S3 = 'aws_s3'
 
 
 # Code from https://alexwlchan.net/2017/07/listing-s3-keys/
-def get_matching_s3_objects(bucket, prefix='', suffix='',
-                            request_payer='None'):
-    """
-    Generate objects in an S3 bucket.
+def get_matching_s3_objects(
+        bucket: str,
+        prefix: str = '',
+        suffix: str = '',
+        delimiter: str = '/',
+        request_payer: str = 'None') -> Iterator[tuple[str, Any]]:
+    """Generate objects in an S3 bucket.
 
-    :param bucket: Name of the S3 bucket.
-    :param prefix: Only fetch objects whose key starts with
-        this prefix (optional).
-    :param suffix: Only fetch objects whose keys end with
-        this suffix (optional).
+    Args:
+        bucket: Name of the S3 bucket.
+        prefix: Only fetch objects whose key starts with this prefix.
+        suffix: Only fetch objects whose keys end with this suffix.
     """
     s3 = S3FileSystem.get_client()
-    kwargs = {'Bucket': bucket, 'RequestPayer': request_payer}
-
-    # If the prefix is a single string (not a tuple of strings), we can
-    # do the filtering directly in the S3 API.
-    if isinstance(prefix, str):
-        kwargs['Prefix'] = prefix
-
+    kwargs = dict(
+        Bucket=bucket,
+        RequestPayer=request_payer,
+        Delimiter=delimiter,
+        Prefix=prefix,
+    )
     while True:
-
-        # The S3 API response is a large blob of metadata.
-        # 'Contents' contains information about the listed objects.
-        resp = s3.list_objects_v2(**kwargs)
-
-        try:
-            contents = resp['Contents']
-        except KeyError:
-            return
-
-        for obj in contents:
+        resp: dict = s3.list_objects_v2(**kwargs)
+        dirs: list[dict] = resp.get('CommonPrefixes', {})
+        files: list[dict] = resp.get('Contents', {})
+        for obj in dirs:
+            key = obj['Prefix']
+            if key.startswith(prefix) and key.endswith(suffix):
+                yield key, obj
+        for obj in files:
             key = obj['Key']
             if key.startswith(prefix) and key.endswith(suffix):
-                yield obj
-
+                yield key, obj
         # The S3 API is paginated, returning up to 1000 keys at a time.
         # Pass the continuation token into the next response, until we
         # reach the final page (when this field is missing).
@@ -60,16 +57,26 @@ def get_matching_s3_objects(bucket, prefix='', suffix='',
             break
 
 
-def get_matching_s3_keys(bucket, prefix='', suffix='', request_payer='None'):
-    """
-    Generate the keys in an S3 bucket.
+def get_matching_s3_keys(bucket: str,
+                         prefix: str = '',
+                         suffix: str = '',
+                         delimiter: str = '/',
+                         request_payer: str = 'None') -> Iterator[str]:
+    """Generate the keys in an S3 bucket.
 
-    :param bucket: Name of the S3 bucket.
-    :param prefix: Only fetch keys that start with this prefix (optional).
-    :param suffix: Only fetch keys that end with this suffix (optional).
+    Args:
+        bucket: Name of the S3 bucket.
+        prefix: Only fetch keys that start with this prefix.
+        suffix: Only fetch keys that end with this suffix.
     """
-    for obj in get_matching_s3_objects(bucket, prefix, suffix, request_payer):
-        yield obj['Key']
+    obj_iterator = get_matching_s3_objects(
+        bucket,
+        prefix=prefix,
+        suffix=suffix,
+        delimiter=delimiter,
+        request_payer=request_payer)
+    out = (key for key, _ in obj_iterator)
+    return out
 
 
 def progressbar(total_size: int, desc: str):
@@ -180,8 +187,9 @@ class S3FileSystem(FileSystem):
         bucket, key = S3FileSystem.parse_uri(uri)
         with io.BytesIO() as file_buffer:
             try:
-                file_size = s3.head_object(
-                    Bucket=bucket, Key=key)['ContentLength']
+                obj = s3.head_object(
+                    Bucket=bucket, Key=key, RequestPayer=request_payer)
+                file_size = obj['ContentLength']
                 with progressbar(file_size, desc='Downloading') as bar:
                     s3.download_fileobj(
                         Bucket=bucket,
@@ -256,7 +264,9 @@ class S3FileSystem(FileSystem):
         request_payer = S3FileSystem.get_request_payer()
         bucket, key = S3FileSystem.parse_uri(src_uri)
         try:
-            file_size = s3.head_object(Bucket=bucket, Key=key)['ContentLength']
+            obj = s3.head_object(
+                Bucket=bucket, Key=key, RequestPayer=request_payer)
+            file_size = obj['ContentLength']
             with progressbar(file_size, desc=f'Downloading') as bar:
                 s3.download_file(
                     Bucket=bucket,
@@ -284,11 +294,16 @@ class S3FileSystem(FileSystem):
         return head_data['LastModified']
 
     @staticmethod
-    def list_paths(uri, ext=''):
+    def list_paths(uri: str, ext: str = '', delimiter: str = '/') -> list[str]:
         request_payer = S3FileSystem.get_request_payer()
         parsed_uri = urlparse(uri)
         bucket = parsed_uri.netloc
         prefix = os.path.join(parsed_uri.path[1:])
         keys = get_matching_s3_keys(
-            bucket, prefix, suffix=ext, request_payer=request_payer)
-        return [os.path.join('s3://', bucket, key) for key in keys]
+            bucket,
+            prefix,
+            suffix=ext,
+            delimiter=delimiter,
+            request_payer=request_payer)
+        paths = [os.path.join('s3://', bucket, key) for key in keys]
+        return paths

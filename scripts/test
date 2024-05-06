@@ -47,7 +47,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
                         -v "$(pwd):/opt/src" \
                         --rm -t \
                         "raster-vision-${IMAGE_TYPE}" \
-                        coverage xml
+                        coverage xml --omit=/opt/data/* --skip-empty
                     ;;
                 *)
                     echo "Invalid argument. Run --help for usage."
@@ -67,7 +67,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
             ./scripts/integration_tests
 
             # Create new coverage reports
-            coverage xml
+            coverage xml --omit=/opt/data/* --skip-empty
         fi
     fi
 fi

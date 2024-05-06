@@ -219,8 +219,10 @@ def file_exists(uri, fs=None, include_dir=True) -> bool:
     return fs.file_exists(uri, include_dir)
 
 
-def list_paths(uri: str, ext: str = '',
-               fs: Optional[FileSystem] = None) -> List[str]:
+def list_paths(uri: str,
+               ext: str = '',
+               fs: Optional[FileSystem] = None,
+               **kwargs) -> List[str]:
     """List paths rooted at URI.
 
     Optionally only includes paths with a certain file extension.
@@ -230,6 +232,7 @@ def list_paths(uri: str, ext: str = '',
         ext: the optional file extension to filter by
         fs: if supplied, use fs instead of automatically chosen FileSystem for
             uri
+        **kwargs: extra kwargs to pass to fs.list_paths().
     """
     if uri is None:
         return None
@@ -237,7 +240,7 @@ def list_paths(uri: str, ext: str = '',
     if not fs:
         fs = FileSystem.get_file_system(uri, 'r')
 
-    return fs.list_paths(uri, ext=ext)
+    return fs.list_paths(uri, ext=ext, **kwargs)
 
 
 def upload_or_copy(src_path: str,

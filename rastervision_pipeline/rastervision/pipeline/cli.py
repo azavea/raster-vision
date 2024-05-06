@@ -1,17 +1,19 @@
+from typing import TYPE_CHECKING
 import sys
 import os
 import logging
-import importlib
-import importlib.util
-from typing import List, Dict, Optional, Tuple
 
 import click
 
 from rastervision.pipeline import (registry_ as registry, rv_config_ as
                                    rv_config)
 from rastervision.pipeline.file_system import (file_to_json, get_tmp_dir)
-from rastervision.pipeline.config import build_config, save_pipeline_config
+from rastervision.pipeline.config import (build_config, Config,
+                                          save_pipeline_config)
 from rastervision.pipeline.pipeline_config import PipelineConfig
+
+if TYPE_CHECKING:
+    from rastervision.pipeline.runner import Runner
 
 log = logging.getLogger(__name__)
 
@@ -40,8 +42,9 @@ def convert_bool_args(args: dict) -> dict:
     return new_args
 
 
-def get_configs(cfg_module_path: str, runner: str,
-                args: Dict[str, any]) -> List[PipelineConfig]:
+def get_configs(cfg_module_path: str,
+                runner: str | None = None,
+                args: dict[str, any] | None = None) -> list[PipelineConfig]:
     """Get PipelineConfigs from a module.
 
     Calls a get_config(s) function with some arguments from the CLI
@@ -55,6 +58,26 @@ def get_configs(cfg_module_path: str, runner: str,
         args: CLI args to pass to the get_config(s) function that comes from
             the --args option
     """
+    if cfg_module_path.endswith('.json'):
+        cfgs_json = file_to_json(cfg_module_path)
+        if not isinstance(cfgs_json, list):
+            cfgs_json = [cfgs_json]
+        cfgs = [Config.deserialize(json) for json in cfgs_json]
+    else:
+        cfgs = get_configs_from_module(cfg_module_path, runner, args)
+
+    for cfg in cfgs:
+        if not issubclass(type(cfg), PipelineConfig):
+            raise TypeError('All objects returned by get_configs in '
+                            f'{cfg_module_path} must be PipelineConfigs.')
+    return cfgs
+
+
+def get_configs_from_module(cfg_module_path: str, runner: str,
+                            args: dict[str, any]) -> list[PipelineConfig]:
+    import importlib
+    import importlib.util
+
     if cfg_module_path.endswith('.py'):
         # From https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path  # noqa
         spec = importlib.util.spec_from_file_location('rastervision.pipeline',
@@ -65,20 +88,14 @@ def get_configs(cfg_module_path: str, runner: str,
         cfg_module = importlib.import_module(cfg_module_path)
 
     _get_config = getattr(cfg_module, 'get_config', None)
-    _get_configs = _get_config
-    if _get_config is None:
-        _get_configs = getattr(cfg_module, 'get_configs', None)
+    _get_configs = getattr(cfg_module, 'get_configs', _get_config)
     if _get_configs is None:
-        raise Exception('There must be a get_config or get_configs function '
-                        f'in {cfg_module_path}.')
+        raise ImportError('There must be a get_config() or get_configs() '
+                          f'function in {cfg_module_path}.')
+
     cfgs = _get_configs(runner, **args)
     if not isinstance(cfgs, list):
         cfgs = [cfgs]
-
-    for cfg in cfgs:
-        if not issubclass(type(cfg), PipelineConfig):
-            raise Exception('All objects returned by get_configs in '
-                            f'{cfg_module_path} must be PipelineConfigs.')
     return cfgs
 
 
@@ -89,8 +106,7 @@ def get_configs(cfg_module_path: str, runner: str,
 @click.option(
     '-v', '--verbose', help='Increment the verbosity level.', count=True)
 @click.option('--tmpdir', help='Root of temporary directories to use.')
-def main(ctx: click.Context, profile: Optional[str], verbose: int,
-         tmpdir: str):
+def main(ctx: click.Context, profile: str | None, verbose: int, tmpdir: str):
     """The main click command.
 
     Sets the profile, verbosity, and tmp_dir in RVConfig.
@@ -103,20 +119,22 @@ def main(ctx: click.Context, profile: Optional[str], verbose: int,
     rv_config.set_everett_config(profile=profile)
 
 
-def _run_pipeline(cfg,
-                  runner,
-                  tmp_dir,
-                  splits=1,
-                  commands=None,
+def _run_pipeline(cfg: PipelineConfig,
+                  runner: 'Runner',
+                  tmp_dir: str,
+                  splits: int = 1,
+                  commands: list[str] | None = None,
                   pipeline_run_name: str = 'raster-vision'):
     cfg.update()
     cfg.recursive_validate_config()
-    # This is to run the validation again to check any fields that may have changed
-    # after the Config was constructed, possibly by the update method.
+
+    # This is to run the validation again to check any fields that may have
+    # changed after the Config was constructed, possibly by the update method.
     build_config(cfg.dict())
     cfg_json_uri = cfg.get_config_uri()
     save_pipeline_config(cfg, cfg_json_uri)
     pipeline = cfg.build(tmp_dir)
+
     if not commands:
         commands = pipeline.commands
 
@@ -150,8 +168,8 @@ def _run_pipeline(cfg,
     '--pipeline-run-name',
     default='raster-vision',
     help='The name for this run of the pipeline.')
-def run(runner: str, cfg_module: str, commands: List[str],
-        arg: List[Tuple[str, str]], splits: int, pipeline_run_name: str):
+def run(runner: str, cfg_module: str, commands: list[str],
+        arg: list[tuple[str, str]], splits: int, pipeline_run_name: str):
     """Run COMMANDS within pipelines in CFG_MODULE using RUNNER.
 
     RUNNER: name of the Runner to use
@@ -178,9 +196,9 @@ def run(runner: str, cfg_module: str, commands: List[str],
 
 def _run_command(cfg_json_uri: str,
                  command: str,
-                 split_ind: Optional[int] = None,
-                 num_splits: Optional[int] = None,
-                 runner: Optional[str] = None):
+                 split_ind: int | None = None,
+                 num_splits: int | None = None,
+                 runner: str | None = None):
     """Run a single command using a serialized PipelineConfig.
 
     Args:
@@ -229,8 +247,8 @@ def _run_command(cfg_json_uri: str,
     help='The number of processes to use for running splittable commands')
 @click.option(
     '--runner', type=str, help='Name of runner to use', default='inprocess')
-def run_command(cfg_json_uri: str, command: str, split_ind: Optional[int],
-                num_splits: Optional[int], runner: str):
+def run_command(cfg_json_uri: str, command: str, split_ind: int | None,
+                num_splits: int | None, runner: str):
     """Run a single COMMAND using a serialized PipelineConfig in CFG_JSON_URI."""
     _run_command(
         cfg_json_uri,
