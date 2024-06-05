@@ -70,6 +70,13 @@ class TemporalMultiRasterSource(MultiRasterSource):
 
         self.validate_raster_sources()
 
+    @classmethod
+    def from_stac(cls, *args, **kwargs):
+        """Not implemented for ``TemporalMultiRasterSource``."""
+        raise NotImplementedError(
+            'Create raster sources by calling MultiRasterSource.from_stac() '
+            'on each Item and then pass them to TemporalMultiRasterSource.')
+
     def _get_chip(self,
                   window: Box,
                   out_shape: Optional[Tuple[int, int]] = None) -> np.ndarray:

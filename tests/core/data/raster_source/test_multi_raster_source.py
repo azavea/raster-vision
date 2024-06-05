@@ -3,6 +3,7 @@ import unittest
 
 import numpy as np
 from xarray import DataArray
+from pystac import Item
 
 from rastervision.pipeline.file_system import get_tmp_dir
 from rastervision.core.box import Box
@@ -84,6 +85,12 @@ class TestMultiRasterSourceConfig(unittest.TestCase):
 
 
 class TestMultiRasterSource(unittest.TestCase):
+    def assertNoError(self, fn: Callable, msg: str = ''):
+        try:
+            fn()
+        except Exception:
+            self.fail(msg)
+
     def setUp(self):
         self.tmp_dir_obj = get_tmp_dir()
         self.tmp_dir = self.tmp_dir_obj.name
@@ -217,6 +224,36 @@ class TestMultiRasterSource(unittest.TestCase):
         chip_expected[..., :4] *= np.arange(4, dtype=np.uint8)
         chip_expected[..., 4:] *= np.arange(4, dtype=np.uint8)
         np.testing.assert_array_equal(chip, chip_expected)
+
+    def test_from_stac(self):
+        item = Item.from_file(data_file_path('stac/item.json'))
+
+        # avoid reading actual remote files
+        mock_raster_uri = data_file_path('ones.tif')
+        item.assets['red'].__setattr__('href', mock_raster_uri)
+        item.assets['green'].__setattr__('href', mock_raster_uri)
+
+        # test bbox
+        bbox = Box(ymin=0, xmin=0, ymax=100, xmax=100)
+        rs = MultiRasterSource.from_stac(
+            item, assets=['red', 'green'], bbox=bbox)
+        self.assertEqual(rs.bbox, bbox)
+
+        # test bbox_map_coords
+        bbox_map_coords = Box(
+            ymin=29.978710, xmin=31.134949, ymax=29.977309, xmax=31.136567)
+        rs = MultiRasterSource.from_stac(
+            item, assets=['red', 'green'], bbox_map_coords=bbox_map_coords)
+        self.assertEqual(rs.bbox, Box(ymin=50, xmin=50, ymax=206, xmax=206))
+
+        # test error if both bbox and bbox_map_coords specified
+        args = dict(
+            item=item,
+            assets=['red', 'green'],
+            bbox=bbox,
+            bbox_map_coords=bbox_map_coords)
+        self.assertRaises(ValueError,
+                          lambda: MultiRasterSource.from_stac(**args))
 
 
 if __name__ == '__main__':

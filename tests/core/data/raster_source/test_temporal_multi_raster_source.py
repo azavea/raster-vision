@@ -105,6 +105,10 @@ class TestTemporalMultiRasterSource(unittest.TestCase):
             ], dtype=dtype)
         np.testing.assert_array_equal(chip, chip_expected)
 
+    def test_from_stac(self):
+        self.assertRaises(NotImplementedError,
+                          TemporalMultiRasterSource.from_stac)
+
 
 if __name__ == '__main__':
     unittest.main()

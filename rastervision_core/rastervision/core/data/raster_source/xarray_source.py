@@ -95,11 +95,11 @@ class XarraySource(RasterSource):
     @classmethod
     def from_stac(
             cls,
-            item_or_item_collection: Union['Item', 'ItemCollection'],
-            raster_transformers: List['RasterTransformer'] = [],
-            channel_order: Optional[Sequence[int]] = None,
-            bbox: Optional[Box] = None,
-            bbox_map_coords: Optional[Box] = None,
+            item_or_item_collection: 'Item | ItemCollection',
+            raster_transformers: list['RasterTransformer'] = [],
+            channel_order: Sequence[int] | None = None,
+            bbox: Box | tuple[int, int, int, int] | None = None,
+            bbox_map_coords: Box | tuple[int, int, int, int] | None = None,
             temporal: bool = False,
             allow_streaming: bool = False,
             stackstac_args: dict = dict(rescale=False)) -> 'XarraySource':
@@ -113,13 +113,15 @@ class XarraySource(RasterSource):
                 imagery. Can be a subset of the available channels. If None,
                 all channels available in the image will be read.
                 Defaults to None.
-            bbox: User-specified crop of the extent. If None, the full extent
+            bbox: User-specified crop of the extent. Can be :class:`.Box` or
+                (ymin, xmin, ymax, xmax) tuple. If None, the full extent
                 available in the source file is used. Mutually exclusive with
                 ``bbox_map_coords``. Defaults to ``None``.
-            bbox_map_coords: User-specified bbox in EPSG:4326 coords of the
-                form (ymin, xmin, ymax, xmax). Useful for cropping the raster
-                source so that only part of the raster is read from. Mutually
-                exclusive with ``bbox``. Defaults to ``None``.
+            bbox_map_coords: User-specified bbox in EPSG:4326 coords. Can be
+                :class:`.Box` or (ymin, xmin, ymax, xmax) tuple. Useful for
+                cropping the raster source so that only part of the raster is
+                read from. Mutually exclusive with ``bbox``.
+                Defaults to ``None``.
             temporal: If True, data_array is expected to have a "time"
                 dimension and the chips returned will be of shape (T, H, W, C).
             allow_streaming: If False, load the entire DataArray into memory.
