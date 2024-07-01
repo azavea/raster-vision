@@ -1,10 +1,10 @@
-from typing import Optional
+from typing import Optional, Self
 
 from rastervision.core.data.vector_source import (VectorSourceConfig)
 from rastervision.core.data.label_source import (LabelSourceConfig,
                                                  ChipClassificationLabelSource)
 from rastervision.pipeline.config import (ConfigError, register_config, Field,
-                                          validator, root_validator)
+                                          field_validator, model_validator)
 from rastervision.core.data.vector_transformer import (
     ClassInferenceTransformerConfig, BufferTransformerConfig)
 
@@ -62,7 +62,8 @@ class ChipClassificationLabelSourceConfig(LabelSourceConfig):
         description='If True, labels will not be populated automatically '
         'during initialization of the label source.')
 
-    @validator('vector_source')
+    @field_validator('vector_source')
+    @classmethod
     def ensure_required_transformers(
             cls, v: VectorSourceConfig) -> VectorSourceConfig:
         """Add class-inference and buffer transformers if absent."""
@@ -84,14 +85,14 @@ class ChipClassificationLabelSourceConfig(LabelSourceConfig):
 
         return v
 
-    @root_validator(skip_on_failure=True)
-    def ensure_bg_class_id_if_inferring(cls, values: dict) -> dict:
-        infer_cells = values.get('infer_cells')
-        has_bg_class_id = values.get('background_class_id') is not None
+    @model_validator(mode='after')
+    def ensure_bg_class_id_if_inferring(self) -> Self:
+        infer_cells = self.infer_cells
+        has_bg_class_id = self.background_class_id is not None
         if infer_cells and not has_bg_class_id:
             raise ConfigError(
                 'background_class_id is required if infer_cells=True.')
-        return values
+        return self
 
     def build(self, class_config, crs_transformer, bbox=None,
               tmp_dir=None) -> ChipClassificationLabelSource:

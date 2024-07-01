@@ -1,5 +1,5 @@
 from typing import (TYPE_CHECKING, Any, Callable, Dict, Iterable, List,
-                    Literal, Optional, Sequence, Tuple, Union)
+                    Literal, Optional, Self, Sequence, Tuple, Union)
 import os
 from os.path import join, isdir
 from enum import Enum
@@ -7,10 +7,10 @@ import random
 import uuid
 import logging
 
-from pydantic import (PositiveFloat, PositiveInt as PosInt, constr, confloat,
-                      conint)
-from pydantic.utils import sequence_like
-
+from typing_extensions import Annotated
+from pydantic import (NonNegativeInt as NonNegInt, PositiveFloat, PositiveInt
+                      as PosInt, StringConstraints)
+from pydantic.v1.utils import sequence_like
 import albumentations as A
 import torch
 from torch import (nn, optim)
@@ -18,13 +18,15 @@ from torch.optim.lr_scheduler import CyclicLR, MultiStepLR, _LRScheduler
 from torch.utils.data import Dataset, ConcatDataset, Subset
 
 from rastervision.pipeline.config import (Config, register_config, ConfigError,
-                                          Field, validator, root_validator)
+                                          Field, field_validator,
+                                          model_validator)
 from rastervision.pipeline.file_system import (list_paths, download_if_needed,
                                                unzip, file_exists,
                                                get_local_path, sync_from_dir)
 from rastervision.core.data import (ClassConfig, Scene, DatasetConfig as
                                     SceneDatasetConfig)
 from rastervision.core.rv_pipeline import (WindowSamplingConfig)
+from rastervision.core.utils import NonEmptyStr, Proportion
 from rastervision.pytorch_learner.utils import (
     validate_albumentation_transform, MinMaxNormalize,
     deserialize_albumentation_transform, get_hubconf_dir_from_cfg,
@@ -43,14 +45,11 @@ augmentors = [
 ]
 
 # types
-Proportion = confloat(ge=0, le=1)
-NonEmptyStr = constr(strip_whitespace=True, min_length=1)
-NonNegInt = conint(ge=0)
 RGBTuple = Tuple[int, int, int]
 ChannelInds = Sequence[NonNegInt]
 
 
-class Backbone(Enum):
+class Backbone(str, Enum):
     alexnet = 'alexnet'
     densenet121 = 'densenet121'
     densenet169 = 'densenet169'
@@ -136,9 +135,10 @@ class ExternalModuleConfig(Config):
         None,
         description=('Local uri of a zip file, or local uri of a directory,'
                      'or remote uri of zip file.'))
-    github_repo: Optional[constr(
-        strip_whitespace=True, regex=r'.+/.+')] = Field(
-            None, description='<repo-owner>/<repo-name>[:tag]')
+    github_repo: Optional[Annotated[
+        str, StringConstraints(
+            strip_whitespace=True, pattern=r'.+/.+')]] = Field(
+                None, description='<repo-owner>/<repo-name>[:tag]')
     name: Optional[NonEmptyStr] = Field(
         None,
         description=
@@ -157,14 +157,14 @@ class ExternalModuleConfig(Config):
     force_reload: bool = Field(
         False, description='Force reload of module definition.')
 
-    @root_validator(skip_on_failure=True)
-    def check_either_uri_or_repo(cls, values: dict) -> dict:
-        has_uri = values.get('uri') is not None
-        has_repo = values.get('github_repo') is not None
+    @model_validator(mode='after')
+    def check_either_uri_or_repo(self) -> Self:
+        has_uri = self.uri is not None
+        has_repo = self.github_repo is not None
         if has_uri == has_repo:
             raise ConfigError(
                 'Must specify one (and only one) of github_repo and uri.')
-        return values
+        return self
 
     def build(self,
               save_dir: str,
@@ -366,11 +366,11 @@ class SolverConfig(Config):
         description='If specified, the loss will be built from the definition '
         'from this external source, using Torch Hub.')
 
-    @root_validator(skip_on_failure=True)
-    def check_no_loss_opts_if_external(cls, values: dict) -> dict:
-        has_external_loss_def = values.get('external_loss_def') is not None
-        has_ignore_class_index = values.get('ignore_class_index') is not None
-        has_class_loss_weights = values.get('class_loss_weights') is not None
+    @model_validator(mode='after')
+    def check_no_loss_opts_if_external(self) -> Self:
+        has_external_loss_def = self.external_loss_def is not None
+        has_ignore_class_index = self.ignore_class_index is not None
+        has_class_loss_weights = self.class_loss_weights is not None
 
         if has_external_loss_def:
             if has_ignore_class_index:
@@ -379,7 +379,7 @@ class SolverConfig(Config):
             if has_class_loss_weights:
                 raise ConfigError('class_loss_weights is not supported '
                                   'with external_loss_def.')
-        return values
+        return self
 
     def build_loss(self,
                    num_classes: int,
@@ -576,8 +576,7 @@ class PlotOptions(Config):
              'for that group.'))
 
     # validators
-    _tf = validator(
-        'transform', allow_reuse=True)(validate_albumentation_transform)
+    _tf = field_validator('transform')(validate_albumentation_transform)
 
     def update(self, **kwargs) -> None:
         super().update()
@@ -586,7 +585,8 @@ class PlotOptions(Config):
             self.channel_display_groups = get_default_channel_display_groups(
                 img_channels)
 
-    @validator('channel_display_groups')
+    @field_validator('channel_display_groups')
+    @classmethod
     def validate_channel_display_groups(
             cls, v: Optional[Union[Dict[str, Sequence[NonNegInt]], Sequence[
                 Sequence[NonNegInt]]]]
@@ -671,26 +671,24 @@ class DataConfig(Config):
         return len(self.class_config)
 
     # validators
-    _base_tf = validator(
-        'base_transform', allow_reuse=True)(validate_albumentation_transform)
-    _aug_tf = validator(
-        'aug_transform', allow_reuse=True)(validate_albumentation_transform)
+    _base_tf = field_validator('base_transform')(
+        validate_albumentation_transform)
+    _aug_tf = field_validator('aug_transform')(
+        validate_albumentation_transform)
 
-    @validator('augmentors', each_item=True)
-    def validate_augmentors(cls, v: str) -> str:
-        if v not in augmentors:
-            raise ConfigError(f'Unsupported augmentor "{v}"')
+    @field_validator('augmentors')
+    @classmethod
+    def validate_augmentors(cls, v: list[str]) -> str:
+        for aug_name in v:
+            if aug_name not in augmentors:
+                raise ConfigError(f'Unsupported augmentor "{aug_name}"')
         return v
 
-    @root_validator(skip_on_failure=True)
-    def validate_plot_options(cls, values: dict) -> dict:
-        plot_options: Optional[PlotOptions] = values.get('plot_options')
-        if plot_options is None:
-            return None
-        img_channels: Optional[PosInt] = values.get('img_channels')
-        if img_channels is not None:
-            plot_options.update(img_channels=img_channels)
-        return values
+    @model_validator(mode='after')
+    def validate_plot_options(self) -> Self:
+        if self.plot_options is not None and self.img_channels is not None:
+            self.plot_options.update(img_channels=self.img_channels)
+        return self
 
     def get_custom_albumentations_transforms(self) -> List[dict]:
         """Returns all custom transforms found in this config.
@@ -833,11 +831,11 @@ class ImageDataConfig(DataConfig):
         'that will be used for all groups or a list of values '
         '(one for each group).')
 
-    @root_validator(skip_on_failure=True)
-    def validate_group_uris(cls, values: dict) -> dict:
-        group_train_sz = values.get('group_train_sz')
-        group_train_sz_rel = values.get('group_train_sz_rel')
-        group_uris = values.get('group_uris')
+    @model_validator(mode='after')
+    def validate_group_uris(self) -> Self:
+        group_train_sz = self.group_train_sz
+        group_train_sz_rel = self.group_train_sz_rel
+        group_uris = self.group_uris
 
         has_group_train_sz = group_train_sz is not None
         has_group_train_sz_rel = group_train_sz_rel is not None
@@ -858,7 +856,7 @@ class ImageDataConfig(DataConfig):
             if len(group_train_sz_rel) != len(group_uris):
                 raise ConfigError(
                     'len(group_train_sz_rel) != len(group_uris).')
-        return values
+        return self
 
     def _build_dataset(self,
                        dirs: Iterable[str],
@@ -1188,35 +1186,31 @@ class GeoDataConfig(DataConfig):
         out = [('scene_dataset', ds_str), ('sampling', sampling_str)]
         return out
 
-    @validator('sampling')
-    def validate_sampling(
-            cls,
-            v: Union[WindowSamplingConfig, Dict[str, WindowSamplingConfig]],
-            values: dict
-    ) -> Union[WindowSamplingConfig, Dict[str, WindowSamplingConfig]]:
-        if isinstance(v, dict):
-            if len(v) == 0:
-                return v
-            scene_dataset: Optional['SceneDatasetConfig'] = values.get(
-                'scene_dataset')
-            if scene_dataset is None:
-                raise ConfigError('sampling is a non-empty dict but '
-                                  'scene_dataset is None.')
-            for s in scene_dataset.all_scenes:
-                if s.id not in v:
-                    raise ConfigError(
-                        f'Window config not found for scene {s.id}')
-        return v
+    @model_validator(mode='after')
+    def validate_sampling(self) -> Self:
+        if not isinstance(self.sampling, dict):
+            return self
 
-    @root_validator(skip_on_failure=True)
-    def get_class_config_from_dataset_if_needed(cls, values: dict) -> dict:
-        has_class_config = values.get('class_config') is not None
-        if has_class_config:
-            return values
-        has_scene_dataset = values.get('scene_dataset') is not None
-        if has_scene_dataset:
-            values['class_config'] = values['scene_dataset'].class_config
-        return values
+        # empty dict
+        if len(self.sampling) == 0:
+            return self
+
+        if self.scene_dataset is None:
+            raise ConfigError('sampling is a non-empty dict but '
+                              'scene_dataset is None.')
+
+        for s in self.scene_dataset.all_scenes:
+            if s.id not in self.sampling:
+                raise ConfigError(
+                    f'Window sampling config not found for scene: {s.id}')
+
+        return self
+
+    @model_validator(mode='after')
+    def get_class_config_from_dataset_if_needed(self) -> Self:
+        if self.class_config is None and self.scene_dataset is not None:
+            self.class_config = self.scene_dataset.class_config
+        return self
 
     def build_scenes(self,
                      scene_configs: Iterable['SceneConfig'],
@@ -1386,28 +1380,26 @@ class LearnerConfig(Config):
             'last epoch are stored as `model-ckpt-epoch-{N}.pth` where `N` '
             'is the epoch number.'))
 
-    @validator('run_tensorboard')
-    def validate_run_tensorboard(cls, v: bool, values: dict) -> bool:
-        if v and not values.get('log_tensorboard'):
+    @model_validator(mode='after')
+    def validate_run_tensorboard(self) -> Self:
+        if self.run_tensorboard and not self.log_tensorboard:
             raise ConfigError(
                 'Cannot run tensorboard if log_tensorboard is False')
-        return v
+        return self
 
-    @root_validator(skip_on_failure=True)
-    def validate_class_loss_weights(cls, values: dict) -> dict:
-        solver: Optional[SolverConfig] = values.get('solver')
-        if solver is None:
-            return values
-        class_loss_weights = solver.class_loss_weights
+    @model_validator(mode='after')
+    def validate_class_loss_weights(self) -> Self:
+        if self.solver is None:
+            return self
+        class_loss_weights = self.solver.class_loss_weights
         if class_loss_weights is not None:
-            data: DataConfig = values.get('data')
             num_weights = len(class_loss_weights)
-            num_classes = data.num_classes
+            num_classes = self.data.num_classes
             if num_weights != num_classes:
                 raise ConfigError(
                     f'class_loss_weights ({num_weights}) must be same length as '
                     f'the number of classes ({num_classes})')
-        return values
+        return self
 
     def build(self,
               tmp_dir: Optional[str] = None,

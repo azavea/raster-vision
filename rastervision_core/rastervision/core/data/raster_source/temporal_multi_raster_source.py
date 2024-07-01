@@ -1,6 +1,6 @@
 from typing import Any, Optional, Sequence, Tuple
-from pydantic import conint
 
+from pydantic import NonNegativeInt as NonNegInt
 import numpy as np
 
 from rastervision.core.box import Box
@@ -14,7 +14,7 @@ class TemporalMultiRasterSource(MultiRasterSource):
 
     def __init__(self,
                  raster_sources: Sequence[RasterSource],
-                 primary_source_idx: conint(ge=0) = 0,
+                 primary_source_idx: NonNegInt = 0,
                  force_same_dtype: bool = False,
                  raster_transformers: Sequence = [],
                  bbox: Optional[Box] = None):

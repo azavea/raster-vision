@@ -1,4 +1,4 @@
-from typing import (TYPE_CHECKING, List, Optional)
+from typing import (TYPE_CHECKING, List, Optional, Self)
 from os.path import join
 
 from rastervision.pipeline.pipeline_config import PipelineConfig
@@ -10,7 +10,7 @@ from rastervision.core.evaluation import EvaluatorConfig
 from rastervision.core.analyzer import AnalyzerConfig
 from rastervision.core.rv_pipeline.chip_options import ChipOptions
 from rastervision.pipeline.config import (Config, Field, register_config,
-                                          validator)
+                                          model_validator)
 
 if TYPE_CHECKING:
     from rastervision.core.backend.backend import Backend  # noqa
@@ -27,12 +27,11 @@ class PredictOptions(Config):
     batch_sz: int = Field(
         8, description='Batch size to use during prediction.')
 
-    @validator('stride', always=True)
-    def validate_stride(cls, v: Optional[int], values: dict) -> dict:
-        if v is None:
-            chip_sz: int = values['chip_sz']
-            return chip_sz
-        return v
+    @model_validator(mode='after')
+    def validate_stride(self) -> Self:
+        if self.stride is None:
+            self.stride = self.chip_sz
+        return self
 
 
 def rv_pipeline_config_upgrader(cfg_dict: dict, version: int) -> dict:

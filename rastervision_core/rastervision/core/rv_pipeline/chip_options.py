@@ -1,15 +1,13 @@
-from typing import (Any, Dict, Literal, Optional, Tuple, Union)
+from typing import (Any, Dict, Literal, Optional, Self, Tuple, Union)
 from enum import Enum
 
-from pydantic import (PositiveInt as PosInt, conint)
+from pydantic import NonNegativeInt as NonNegInt, PositiveInt as PosInt
 import numpy as np
 
-from rastervision.core.utils.misc import Proportion
 from rastervision.core.rv_pipeline.utils import nodata_below_threshold
+from rastervision.core.utils import Proportion
 from rastervision.pipeline.config import (Config, ConfigError, Field,
-                                          register_config, root_validator)
-
-NonNegInt = conint(ge=0)
+                                          register_config, model_validator)
 
 
 class WindowSamplingMethod(Enum):
@@ -88,33 +86,25 @@ class WindowSamplingConfig(Config):
         'that lie fully within the AOI. If False, windows only partially '
         'intersecting the AOI will also be allowed.')
 
-    @root_validator(skip_on_failure=True)
-    def validate_options(cls, values: dict) -> dict:
-        method = values.get('method')
-        size = values.get('size')
+    @model_validator(mode='after')
+    def validate_options(self) -> Self:
+        method = self.method
+        size = self.size
         if method == WindowSamplingMethod.sliding:
-            has_stride = values.get('stride') is not None
-
-            if not has_stride:
-                values['stride'] = size
+            if self.stride is None:
+                self.stride = size
         elif method == WindowSamplingMethod.random:
-            size_lims = values.get('size_lims')
-            h_lims = values.get('h_lims')
-            w_lims = values.get('w_lims')
-
-            has_size_lims = size_lims is not None
-            has_h_lims = h_lims is not None
-            has_w_lims = w_lims is not None
-
+            has_size_lims = self.size_lims is not None
+            has_h_lims = self.h_lims is not None
+            has_w_lims = self.w_lims is not None
             if not (has_size_lims or has_h_lims or has_w_lims):
-                size_lims = (size, size + 1)
+                self.size_lims = (size, size + 1)
                 has_size_lims = True
-                values['size_lims'] = size_lims
             if has_size_lims == (has_w_lims or has_h_lims):
                 raise ConfigError('Specify either size_lims or h and w lims.')
             if has_h_lims != has_w_lims:
                 raise ConfigError('h_lims and w_lims must both be specified')
-        return values
+        return self
 
 
 @register_config('chip_options')

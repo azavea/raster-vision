@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Optional, Sequence, Self, Tuple
-from pydantic import conint
 
+from pydantic import NonNegativeInt as NonNegInt
 import numpy as np
 from pystac import Item
 
@@ -18,29 +18,28 @@ class MultiRasterSource(RasterSource):
 
     def __init__(self,
                  raster_sources: Sequence[RasterSource],
-                 primary_source_idx: conint(ge=0) = 0,
+                 primary_source_idx: NonNegInt = 0,
                  force_same_dtype: bool = False,
-                 channel_order: Optional[Sequence[conint(ge=0)]] = None,
+                 channel_order: Sequence[NonNegInt] | None = None,
                  raster_transformers: Sequence = [],
-                 bbox: Optional[Box] = None):
+                 bbox: Box | None = None):
         """Constructor.
 
         Args:
-            raster_sources (Sequence[RasterSource]): Sequence of RasterSources.
+            raster_sources: Sequence of RasterSources.
             primary_source_idx (0 <= int < len(raster_sources)): Index of the
                 raster source whose CRS, dtype, and other attributes will
                 override those of the other raster sources.
-            force_same_dtype (bool): If true, force all sub-chips to have the
+            force_same_dtype: If true, force all sub-chips to have the
                 same dtype as the primary_source_idx-th sub-chip. No careful
                 conversion is done, just a quick cast. Use with caution.
-            channel_order (Sequence[conint(ge=0)], optional): Channel ordering
-                that will be used by .get_chip(). Defaults to None.
-            raster_transformers (Sequence, optional): Sequence of transformers.
-                Defaults to [].
-            bbox (Optional[Box], optional): User-specified crop of the extent.
-                If given, the primary raster source's bbox is set to this.
-                If None, the full extent available in the source file of the
-                primary raster source is used.
+            channel_order: Channel ordering that will be used by
+                :meth:`MultiRasterSource.get_chip()`. Defaults to ``None``.
+            raster_transformers: List of transformers. Defaults to ``[]``.
+            bbox: User-specified crop of the extent. If specified, the primary
+                raster source's bbox is set to this. If ``None``, the full
+                extent available in the source file of the primary raster
+                source is used.
         """
         num_channels_raw = sum(rs.num_channels for rs in raster_sources)
         if not channel_order:
@@ -78,7 +77,7 @@ class MultiRasterSource(RasterSource):
             cls,
             item: Item,
             assets: list[str] | None,
-            primary_source_idx: conint(ge=0) = 0,
+            primary_source_idx: NonNegInt = 0,
             raster_transformers: list['RasterTransformer'] = [],
             force_same_dtype: bool = False,
             channel_order: Sequence[int] | None = None,

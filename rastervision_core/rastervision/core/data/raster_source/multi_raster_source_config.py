@@ -1,7 +1,10 @@
-from typing import Optional
-from pydantic import conint, conlist
+from typing import List, Optional, Self
 
-from rastervision.pipeline.config import (Field, register_config, validator)
+from typing_extensions import Annotated
+from pydantic import NonNegativeInt as NonNegInt
+
+from rastervision.pipeline.config import (Field, register_config,
+                                          model_validator)
 from rastervision.core.box import Box
 from rastervision.core.data.raster_source import (RasterSourceConfig,
                                                   MultiRasterSource)
@@ -25,10 +28,10 @@ class MultiRasterSourceConfig(RasterSourceConfig):
     Or :class:`.TemporalMultiRasterSource`, if ``temporal=True``.
     """
 
-    raster_sources: conlist(
-        RasterSourceConfig, min_items=1) = Field(
+    raster_sources: Annotated[List[
+        RasterSourceConfig], Field(min_length=1)] = Field(
             ..., description='List of RasterSourceConfig to combine.')
-    primary_source_idx: conint(ge=0) = Field(
+    primary_source_idx: NonNegInt = Field(
         0,
         description=
         'Index of the raster source whose CRS, dtype, and other attributes '
@@ -42,21 +45,21 @@ class MultiRasterSourceConfig(RasterSourceConfig):
         description='Stack images from sub raster sources into a time-series '
         'of shape (T, H, W, C) instead of concatenating bands.')
 
-    @validator('primary_source_idx')
-    def validate_primary_source_idx(cls, v: int, values: dict):
-        raster_sources = values.get('raster_sources', [])
-        if not (0 <= v < len(raster_sources)):
+    @model_validator(mode='after')
+    def validate_primary_source_idx(self) -> Self:
+        primary_source_idx = self.primary_source_idx
+        raster_sources = self.raster_sources
+        if not (0 <= primary_source_idx < len(raster_sources)):
             raise IndexError('primary_source_idx must be in range '
                              '[0, len(raster_sources)].')
-        return v
+        return self
 
-    @validator('temporal')
-    def validate_temporal(cls, v: int, values: dict):
-        channel_order = values.get('channel_order')
-        if v and channel_order is not None:
+    @model_validator(mode='after')
+    def validate_temporal(self) -> Self:
+        if self.temporal and self.channel_order is not None:
             raise ValueError(
                 'Setting channel_order is not allowed if temporal=True.')
-        return v
+        return self
 
     def build(self,
               tmp_dir: Optional[str] = None,
