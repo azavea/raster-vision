@@ -8,7 +8,7 @@ name = 'rastervision_pipeline'
 version = '0.30.2-dev'
 description = 'The main rastervision package for configuring, defining, and running pipelines'
 requirement_constraints = {
-    'pydantic': '<2',
+    'pydantic': '>=2',
 }
 
 here = abspath(dirname(__file__))
