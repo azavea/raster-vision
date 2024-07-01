@@ -1,20 +1,18 @@
 from typing import (TYPE_CHECKING, Callable, Dict, List, Literal, Optional,
-                    Type, Union)
+                    Self, Type, Union)
 import inspect
 import logging
-import json
 
 from pydantic import (  # noqa
-    BaseModel, create_model, Field, root_validator, validate_model,
-    ValidationError, validator)
+    ConfigDict, BaseModel, create_model, Field, model_validator,
+    ValidationError, field_validator)
 
 from rastervision.pipeline import (registry_ as registry, rv_config_ as
                                    rv_config)
-from rastervision.pipeline.file_system import (str_to_file, json_to_file,
-                                               file_to_json)
+from rastervision.pipeline.file_system import (file_to_json, json_to_file,
+                                               str_to_file)
 
 if TYPE_CHECKING:
-    from typing import Self
     from rastervision.pipeline.pipeline_config import PipelineConfig
 
 log = logging.getLogger(__name__)
@@ -37,12 +35,7 @@ class Config(BaseModel):
     Validation, serialization, deserialization, and IDE support is
     provided automatically based on this schema.
     """
-
-    # This is here to forbid instantiating Configs with fields that do not
-    # exist in the schema, which helps avoid a command source of bugs.
-    class Config:
-        extra = 'forbid'
-        validate_assignment = True
+    model_config = ConfigDict(extra='forbid', validate_assignment=True)
 
     def update(self, *args, **kwargs):
         """Update any fields before validation.
@@ -70,13 +63,8 @@ class Config(BaseModel):
         """Re-validate an instantiated Config.
 
         Runs all Pydantic validators plus self.validate_config().
-
-        Adapted from:
-        https://github.com/samuelcolvin/pydantic/issues/1864#issuecomment-679044432
         """
-        *_, validation_error = validate_model(self.__class__, self.__dict__)
-        if validation_error:
-            raise validation_error
+        self.model_validate(self.__dict__)
         self.validate_config()
 
     def recursive_validate_config(self):
@@ -115,12 +103,17 @@ class Config(BaseModel):
             if val not in valid_options:
                 raise ConfigError(f'{val} is not a valid option for {field}')
 
+    def copy(self) -> Self:
+        return self.model_copy()
+
     def dict(self, with_rv_metadata: bool = False, **kwargs) -> dict:
-        cfg_json = self.json(**kwargs)
-        cfg_dict = json.loads(cfg_json)
+        cfg_dict = self.model_dump(serialize_as_any=True, **kwargs)
         if with_rv_metadata:
             cfg_dict['plugin_versions'] = registry.plugin_versions
         return cfg_dict
+
+    def json(self, **kwargs) -> dict:
+        return self.model_dump_json(serialize_as_any=True, **kwargs)
 
     def to_file(self, uri: str, with_rv_metadata: bool = True) -> None:
         """Save a Config to a JSON file, optionally with RV metadata.
@@ -131,11 +124,19 @@ class Config(BaseModel):
                 ``plugin_versions``, so that the config can be upgraded when
                 loaded.
         """
-        cfg_dict = self.dict(with_rv_metadata=with_rv_metadata)
-        json_to_file(cfg_dict, uri)
+        # Using self.dict() followed by json_to_file() would make the code
+        # simpler, but it doesn't work due to serialization errors.
+        cfg_json = self.json()
+        if with_rv_metadata:
+            import json
+            cfg_dict = json.loads(cfg_json)
+            cfg_dict['plugin_versions'] = registry.plugin_versions
+            json_to_file(cfg_dict, uri)
+        else:
+            str_to_file(cfg_json, uri)
 
     @classmethod
-    def deserialize(cls, inp: 'str | dict | Config') -> 'Self':
+    def deserialize(cls, inp: 'str | dict | Config') -> Self:
         """Deserialize Config from a JSON file or dict, upgrading if possible.
 
         If ``inp`` is already a :class:`.Config`, it is returned as is.
@@ -152,7 +153,7 @@ class Config(BaseModel):
         raise TypeError(f'Cannot deserialize Config from type: {type(inp)}.')
 
     @classmethod
-    def from_file(cls, uri: str) -> 'Self':
+    def from_file(cls, uri: str) -> Self:
         """Deserialize Config from a JSON file, upgrading if possible.
 
         Args:
@@ -163,7 +164,7 @@ class Config(BaseModel):
         return cfg
 
     @classmethod
-    def from_dict(cls, cfg_dict: dict) -> 'Self':
+    def from_dict(cls, cfg_dict: dict) -> Self:
         """Deserialize Config from a dict.
 
         Args:
@@ -211,10 +212,7 @@ def build_config(x: Union[dict, List[Union[dict, Config]], Config]
         Config: the corresponding Config(s)
     """
     if isinstance(x, dict):
-        new_x = {
-            k: build_config(v)
-            for k, v in x.items() if k not in ('plugin_versions', 'rv_config')
-        }
+        new_x = {k: build_config(v) for k, v in x.items()}
         type_hint = new_x.get('type_hint')
         if type_hint is not None:
             config_cls = registry.get_config(type_hint)
