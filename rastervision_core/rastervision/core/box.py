@@ -1,6 +1,6 @@
 from typing import (TYPE_CHECKING, Callable, Dict, List, Literal, Optional,
                     Sequence, Tuple, Union)
-from pydantic import PositiveInt as PosInt, conint
+from pydantic import NonNegativeInt as NonNegInt, PositiveInt as PosInt
 import math
 import random
 
@@ -10,8 +10,6 @@ from shapely.ops import unary_union
 from rasterio.windows import Window as RioWindow
 
 from rastervision.pipeline.utils import repr_with_args
-
-NonNegInt = conint(ge=0)
 
 if TYPE_CHECKING:
     from shapely.geometry import MultiPolygon

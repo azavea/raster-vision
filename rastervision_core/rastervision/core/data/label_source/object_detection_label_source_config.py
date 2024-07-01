@@ -3,7 +3,7 @@ from rastervision.core.data.label_source import (LabelSourceConfig,
 from rastervision.core.data.vector_source import VectorSourceConfig
 from rastervision.core.data.vector_transformer import (
     ClassInferenceTransformerConfig, BufferTransformerConfig)
-from rastervision.pipeline.config import register_config, validator
+from rastervision.pipeline.config import register_config, field_validator
 
 
 @register_config('object_detection_label_source')
@@ -12,7 +12,8 @@ class ObjectDetectionLabelSourceConfig(LabelSourceConfig):
 
     vector_source: VectorSourceConfig
 
-    @validator('vector_source')
+    @field_validator('vector_source')
+    @classmethod
     def ensure_required_transformers(
             cls, v: VectorSourceConfig) -> VectorSourceConfig:
         """Add class-inference and buffer transformers if absent."""

@@ -150,7 +150,7 @@ class RegressionModel(nn.Module):
 class RegressionModelConfig(ModelConfig):
     """Configure a regression model."""
 
-    output_multiplier: List[float] = None
+    output_multiplier: list[float] | None = None
 
     def update(self, learner=None):
         if learner is not None and self.output_multiplier is None:

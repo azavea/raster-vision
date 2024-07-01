@@ -11,7 +11,7 @@ from torchvision.models.detection.faster_rcnn import FasterRCNN
 from rastervision.core.data import Scene
 from rastervision.core.rv_pipeline import WindowSamplingMethod
 from rastervision.pipeline.config import (Config, register_config, Field,
-                                          validator, ConfigError)
+                                          field_validator, ConfigError)
 from rastervision.pytorch_learner.learner_config import (
     LearnerConfig, ModelConfig, Backbone, ImageDataConfig, GeoDataConfig)
 from rastervision.pytorch_learner.dataset import (
@@ -131,7 +131,8 @@ class ObjectDetectionModelConfig(ModelConfig):
         ('The torchvision.models backbone to use, which must be in the resnet* '
          'family.'))
 
-    @validator('backbone')
+    @field_validator('backbone')
+    @classmethod
     def only_valid_backbones(cls, v):
         if v not in [
                 Backbone.resnet18, Backbone.resnet34, Backbone.resnet50,
@@ -221,7 +222,8 @@ class ObjectDetectionLearnerConfig(LearnerConfig):
             loss_def_path=loss_def_path,
             training=training)
 
-    @validator('solver')
+    @field_validator('solver')
+    @classmethod
     def validate_solver_config(cls, v: 'SolverConfig') -> 'SolverConfig':
         if v.ignore_class_index is not None:
             raise ConfigError(

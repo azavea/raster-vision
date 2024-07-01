@@ -5,7 +5,7 @@ from rastervision.core.data.vector_source import (VectorSourceConfig)
 from rastervision.core.data.vector_transformer import (
     ClassInferenceTransformerConfig, BufferTransformerConfig)
 from rastervision.pipeline.config import (register_config, Config, Field,
-                                          validator)
+                                          field_validator)
 
 if TYPE_CHECKING:
     from rastervision.core.box import Box
@@ -35,7 +35,8 @@ class RasterizedSourceConfig(Config):
     vector_source: VectorSourceConfig
     rasterizer_config: RasterizerConfig
 
-    @validator('vector_source')
+    @field_validator('vector_source')
+    @classmethod
     def ensure_required_transformers(
             cls, v: VectorSourceConfig) -> VectorSourceConfig:
         """Add class-inference and buffer transformers if absent."""

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Dict, Optional
+from typing import TYPE_CHECKING
 
 from rastervision.pipeline.config import register_config, Field
 from rastervision.core.data.vector_transformer import (
@@ -12,13 +12,13 @@ if TYPE_CHECKING:
 class ClassInferenceTransformerConfig(VectorTransformerConfig):
     """Configure a :class:`.ClassInferenceTransformer`."""
 
-    default_class_id: Optional[int] = Field(
+    default_class_id: int | None = Field(
         None,
         description='The default ``class_id`` to use if class cannot be '
         'inferred using other mechanisms. If a feature has an inferred '
         '``class_id`` of ``None``, then it will be deleted. '
         'Defaults to ``None``.')
-    class_id_to_filter: Optional[Dict[int, list]] = Field(
+    class_id_to_filter: dict[int, list] | None = Field(
         None,
         description='Map from ``class_id`` to JSON filter used to infer '
         'missing class IDs. Each key should be a class ID, and its value '
@@ -28,7 +28,7 @@ class ClassInferenceTransformerConfig(VectorTransformerConfig):
         'is that described by '
         'https://docs.mapbox.com/mapbox-gl-js/style-spec/other/#other-filter. '
         'Defaults to ``None``.')
-    class_name_mapping: dict[str, str] = Field(
+    class_name_mapping: dict[str, str] | None = Field(
         None,
         description='``old_name --> new_name`` mapping for values in the '
         '``class_name`` or ``label`` property of the GeoJSON features. The '
@@ -36,7 +36,7 @@ class ClassInferenceTransformerConfig(VectorTransformerConfig):
         'can also be used to merge multiple classes into one e.g.: '
         '``dict(car="vehicle", truck="vehicle")``. Defaults to None.')
 
-    def build(self, class_config: Optional['ClassConfig'] = None
+    def build(self, class_config: 'ClassConfig | None' = None
               ) -> ClassInferenceTransformer:
         return ClassInferenceTransformer(
             self.default_class_id,

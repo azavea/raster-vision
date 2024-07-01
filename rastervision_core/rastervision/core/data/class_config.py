@@ -1,7 +1,7 @@
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Self, Tuple, Union
 
 from rastervision.pipeline.config import (Config, register_config, ConfigError,
-                                          Field, validator)
+                                          Field, model_validator)
 from rastervision.core.data.utils import color_to_triple, normalize_color
 
 DEFAULT_NULL_CLASS_NAME = 'null'
@@ -32,42 +32,43 @@ class ClassConfig(Config):
         'Config is part of a SemanticSegmentationConfig, a null class will be '
         'added automatically.')
 
-    @validator('colors', always=True)
-    def validate_colors(cls, v: Optional[List[Union[str, Tuple]]],
-                        values: dict) -> Optional[List[Union[str, Tuple]]]:
+    @model_validator(mode='after')
+    def validate_colors(self) -> Self:
         """Compare length w/ names. Also auto-generate if not specified."""
-        class_names = values['names']
-        class_colors = v
-        if class_colors is None:
-            class_colors = [color_to_triple() for _ in class_names]
-        elif len(class_names) != len(class_colors):
-            raise ConfigError(f'len(class_names) ({len(class_names)}) != '
-                              f'len(class_colors) ({len(class_colors)})\n'
-                              f'class_names: {class_names}\n'
-                              f'class_colors: {class_colors}')
-        return class_colors
+        names = self.names
+        colors = self.colors
+        if colors is None:
+            self.colors = [color_to_triple() for _ in names]
+        elif len(names) != len(colors):
+            raise ConfigError(f'len(class_names) ({len(names)}) != '
+                              f'len(class_colors) ({len(colors)})\n'
+                              f'class_names: {names}\n'
+                              f'class_colors: {colors}')
+        return self
 
-    @validator('null_class', always=True)
-    def validate_null_class(cls, v: Optional[str],
-                            values: dict) -> Optional[str]:
+    @model_validator(mode='after')
+    def validate_null_class(self) -> Self:
         """Check if in names. If 'null' in names, use it as null class."""
-        names = values['names']
-        if v is None:
+        names = self.names
+        null_class = self.null_class
+        if null_class is None:
             if DEFAULT_NULL_CLASS_NAME in names:
-                v = DEFAULT_NULL_CLASS_NAME
+                self.null_class = DEFAULT_NULL_CLASS_NAME
         else:
-            if v not in names:
+            if null_class not in names:
                 raise ConfigError(
-                    f'The null_class, "{v}", must be in list of class names.')
+                    f'The null_class, "{null_class}", must be in list of '
+                    'class names.')
 
             # edge case
             default_null_class_in_names = (DEFAULT_NULL_CLASS_NAME in names)
-            null_class_neq_default = (v != DEFAULT_NULL_CLASS_NAME)
+            null_class_neq_default = (null_class != DEFAULT_NULL_CLASS_NAME)
             if default_null_class_in_names and null_class_neq_default:
                 raise ConfigError(
                     f'"{DEFAULT_NULL_CLASS_NAME}" is in names but the '
-                    f'specified null_class is something else ("{v}").')
-        return v
+                    'specified null_class is something else '
+                    f'("{null_class}").')
+        return self
 
     def get_class_id(self, name: str) -> int:
         return self.names.index(name)

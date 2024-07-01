@@ -11,7 +11,7 @@ from torchvision import models
 from rastervision.core.data import Scene
 from rastervision.core.rv_pipeline import WindowSamplingMethod
 from rastervision.pipeline.config import (Config, register_config, Field,
-                                          validator, ConfigError)
+                                          field_validator, ConfigError)
 from rastervision.pytorch_learner.learner_config import (
     Backbone, LearnerConfig, ModelConfig, ImageDataConfig, GeoDataConfig)
 from rastervision.pytorch_learner.dataset import (
@@ -165,7 +165,8 @@ class SemanticSegmentationModelConfig(ModelConfig):
         description='The torchvision.models backbone to use. Currently, only '
         'resnet50 and resnet101 are supported.')
 
-    @validator('backbone')
+    @field_validator('backbone')
+    @classmethod
     def only_valid_backbones(cls, v):
         if v not in [Backbone.resnet50, Backbone.resnet101]:
             raise ValueError(
