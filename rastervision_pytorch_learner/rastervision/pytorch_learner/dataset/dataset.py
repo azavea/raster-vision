@@ -224,7 +224,7 @@ class SlidingWindowGeoDataset(GeoDataset):
             pad_direction (Literal['both', 'start', 'end']): If 'end', only pad
                 ymax and xmax (bottom and right). If 'start', only pad ymin and
                 xmin (top and left). If 'both', pad all sides. Has no effect if
-                paddiong is zero. Defaults to 'end'.
+                padding is zero. Defaults to 'end'.
             within_aoi: If True and if the scene has an AOI, only sample
                 windows that lie fully within the AOI. If False, windows only
                 partially intersecting the AOI will also be allowed.
