@@ -4,6 +4,7 @@ import logging
 from rastervision.core.data import (ChipClassificationLabels,
                                     ObjectDetectionLabels,
                                     SemanticSegmentationLabels)
+from rastervision.core.utils import calculate_required_padding
 
 if TYPE_CHECKING:
     import numpy as np
@@ -98,13 +99,25 @@ def predict_scene_ss(learner: 'SemanticSegmentationLearner', scene: 'Scene',
     raw_out = label_store.smooth_output
 
     base_tf, _ = learner.cfg.data.get_data_transforms()
-    pad_direction = 'end' if crop_sz is None else 'both'
-    ds = SemanticSegmentationSlidingWindowGeoDataset(
-        scene,
-        size=chip_sz,
-        stride=stride,
-        pad_direction=pad_direction,
-        transform=base_tf)
+    if crop_sz is None:
+        ds = SemanticSegmentationSlidingWindowGeoDataset(
+            scene, size=chip_sz, stride=stride, transform=base_tf)
+    else:
+        padding = calculate_required_padding(
+            extent_sz=scene.extent.size,
+            chip_sz=(chip_sz, chip_sz),
+            stride=(stride, stride),
+            pad_direction='both',
+            crop_sz=crop_sz,
+        )
+        ds = SemanticSegmentationSlidingWindowGeoDataset(
+            scene,
+            size=chip_sz,
+            stride=stride,
+            padding=padding,
+            pad_direction='both',
+            transform=base_tf,
+        )
 
     predictions: Iterator['np.ndarray'] = learner.predict_dataset(
         ds,
