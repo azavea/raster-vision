@@ -21,9 +21,9 @@ class ObjectDetectionLabels(Labels):
     """
 
     def __init__(self,
-                 npboxes: np.array,
-                 class_ids: np.array,
-                 scores: np.array = None):
+                 npboxes: np.ndarray,
+                 class_ids: np.ndarray,
+                 scores: np.ndarray = None):
         """Construct a set of object detection labels.
 
         Args:

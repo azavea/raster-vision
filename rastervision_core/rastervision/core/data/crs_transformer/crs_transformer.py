@@ -30,8 +30,9 @@ class CRSTransformer(ABC):
 
     @overload
     def map_to_pixel(self,
-                     inp: tuple['np.array', 'np.array'],
-                     bbox: Box | None = None) -> tuple['np.array', 'np.array']:
+                     inp: tuple['np.ndarray', 'np.ndarray'],
+                     bbox: Box | None = None
+                     ) -> tuple['np.ndarray', 'np.ndarray']:
         ...
 
     @overload
@@ -94,8 +95,9 @@ class CRSTransformer(ABC):
 
     @overload
     def pixel_to_map(self,
-                     inp: tuple['np.array', 'np.array'],
-                     bbox: Box | None = None) -> tuple['np.array', 'np.array']:
+                     inp: tuple['np.ndarray', 'np.ndarray'],
+                     bbox: Box | None = None
+                     ) -> tuple['np.ndarray', 'np.ndarray']:
         ...
 
     @overload

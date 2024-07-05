@@ -337,7 +337,7 @@ def adjust_conv_channels(old_conv: nn.Conv2d,
 
 
 def plot_channel_groups(axs: Iterable,
-                        imgs: Iterable[np.array | torch.Tensor],
+                        imgs: Iterable[np.ndarray | torch.Tensor],
                         channel_groups: dict,
                         plot_title: bool = True) -> None:
     for title, ax, img in zip(channel_groups.keys(), axs, imgs):

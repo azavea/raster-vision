@@ -34,7 +34,7 @@ def predict_scene_cc(
     ds = ClassificationSlidingWindowGeoDataset(
         scene, size=chip_sz, stride=stride, transform=base_tf)
 
-    predictions: Iterator['np.array'] = learner.predict_dataset(
+    predictions: Iterator['np.ndarray'] = learner.predict_dataset(
         ds,
         raw_out=True,
         numpy_out=True,
