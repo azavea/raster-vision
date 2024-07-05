@@ -1,4 +1,3 @@
-from typing import Optional
 from os.path import join, basename
 
 import albumentations as A
@@ -40,7 +39,7 @@ CLASS_COLORS = [
 def get_config(runner,
                raw_uri: str,
                root_uri: str,
-               processed_uri: Optional[str] = None,
+               processed_uri: str | None = None,
                multiband: bool = False,
                external_model: bool = True,
                augment: bool = False,
@@ -57,22 +56,22 @@ def get_config(runner,
         root_uri (str): Directory where all the output will be written.
         processed_uri (str): Directory for storing processed data.
                              E.g. crops for testing. Defaults to None.
-        multiband (bool, optional): If True, all 4 channels (R, G, B, & IR)
+        multiband (bool): If True, all 4 channels (R, G, B, & IR)
             available in the raster source will be used. If False, only
             IR, R, G (in that order) will be used. Defaults to False.
-        external_model (bool, optional): If True, use an external model defined
+        external_model (bool): If True, use an external model defined
             by the ExternalModuleConfig. Defaults to True.
-        augment (bool, optional): If True, use custom data augmentation
+        augment (bool): If True, use custom data augmentation
             transforms. Some basic data augmentation is done even if this is
             False. To completely disable, specify augmentors=[] is the dat
             config. Defaults to False.
-        nochip (bool, optional): If True, read directly from the TIFF during
+        nochip (bool): If True, read directly from the TIFF during
             training instead of from pre-generated chips. The analyze and chip
             commands should not be run, if this is set to True. Defaults to
             True.
         num_epochs (int): Number of epochs to train for.
         batch_sz (int): Batch size.
-        test (bool, optional): If True, does the following simplifications:
+        test (bool): If True, does the following simplifications:
             (1) Uses only the first 2 scenes
             (2) Uses only a 600x600 crop of the scenes
             (3) Trains for only 2 epochs and uses a batch size of 2.
