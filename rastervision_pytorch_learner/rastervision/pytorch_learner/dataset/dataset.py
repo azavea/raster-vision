@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Literal, Optional, Tuple, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Literal, Optional, Tuple, Union
 import logging
 
 import numpy as np
@@ -8,6 +8,7 @@ from torch.utils.data import Dataset
 from shapely.ops import unary_union
 
 from rastervision.core.box import Box
+from rastervision.core.utils import ensure_tuple
 from rastervision.core.data import Scene
 from rastervision.core.data.utils import AoiSampler
 from rastervision.pytorch_learner.learner_config import PosInt, NonNegInt
@@ -18,17 +19,6 @@ if TYPE_CHECKING:
     from shapely.geometry import MultiPolygon, Polygon
 
 log = logging.getLogger(__name__)
-
-T = TypeVar('T')
-
-
-def _to_tuple(x: T, n: int = 2) -> Tuple[T, ...]:
-    """Convert to n-tuple if not already an n-tuple."""
-    if isinstance(x, tuple):
-        if len(x) != n:
-            raise ValueError()
-        return x
-    return tuple([x] * n)
 
 
 class AlbumentationsDataset(Dataset):
@@ -160,7 +150,7 @@ class GeoDataset(AlbumentationsDataset):
         self.out_size = None
 
         if out_size is not None:
-            self.out_size = _to_tuple(out_size)
+            self.out_size: tuple[PosInt, PosInt] = ensure_tuple(out_size)
             transform = self.append_resize_transform(transform, self.out_size)
 
         super().__init__(
@@ -224,7 +214,7 @@ class SlidingWindowGeoDataset(GeoDataset):
             pad_direction (Literal['both', 'start', 'end']): If 'end', only pad
                 ymax and xmax (bottom and right). If 'start', only pad ymin and
                 xmin (top and left). If 'both', pad all sides. Has no effect if
-                paddiong is zero. Defaults to 'end'.
+                padding is zero. Defaults to 'end'.
             within_aoi: If True and if the scene has an AOI, only sample
                 windows that lie fully within the AOI. If False, windows only
                 partially intersecting the AOI will also be allowed.
@@ -256,8 +246,8 @@ class SlidingWindowGeoDataset(GeoDataset):
             normalize=normalize,
             to_pytorch=to_pytorch,
             return_window=return_window)
-        self.size = _to_tuple(size)
-        self.stride = _to_tuple(stride)
+        self.size: tuple[PosInt, PosInt] = ensure_tuple(size)
+        self.stride: tuple[PosInt, PosInt] = ensure_tuple(stride)
         self.padding = padding
         self.pad_direction = pad_direction
         self.init_windows()
@@ -402,7 +392,7 @@ class RandomWindowGeoDataset(GeoDataset):
             else:
                 max_h, max_w = h_lims[1], w_lims[1]
                 padding = (max_h // 2, max_w // 2)
-        padding = _to_tuple(padding)
+        padding: tuple[NonNegInt, NonNegInt] = ensure_tuple(padding)
 
         if max_windows is None:
             max_windows = np.iinfo('int').max

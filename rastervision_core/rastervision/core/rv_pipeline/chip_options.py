@@ -45,7 +45,7 @@ class WindowSamplingConfig(Config):
         'end',
         description='If "end", only pad ymax and xmax (bottom and right). '
         'If "start", only pad ymin and xmin (top and left). If "both", '
-        'pad all sides. Has no effect if paddiong is zero. Defaults to "end".')
+        'pad all sides. Has no effect if padding is zero. Defaults to "end".')
     size_lims: Optional[Tuple[PosInt, PosInt]] = Field(
         None,
         description='[min, max) interval from which window sizes will be '

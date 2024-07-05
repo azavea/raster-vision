@@ -264,7 +264,7 @@ class TestBox(unittest.TestCase):
 
         extent = Box(0, 0, 100, 100)
         windows = extent.get_windows(size=10, stride=5)
-        self.assertEqual(len(windows), 20 * 20)
+        self.assertEqual(len(windows), 19 * 19)
 
         extent = Box(0, 0, 20, 20)
         windows = set(extent.get_windows(size=10, stride=10))
@@ -364,6 +364,14 @@ class TestBox(unittest.TestCase):
         arg_str = ', '.join(f'{k}={v!r}' for k, v in args.items())
         msg = f'{extent!r}.get_windows({arg_str})'
         self.assertSetEqual(windows, expected_windows, msg=msg)
+
+        # default padding = (0, 0) if stride > size
+        extent = Box(0, 0, 10, 10)
+        args = dict(size=5, stride=6, pad_direction='end')
+        windows = extent.get_windows(**args)
+        arg_str = ', '.join(f'{k}={v!r}' for k, v in args.items())
+        msg = f'{extent!r}.get_windows({arg_str})'
+        self.assertEqual(len(windows), 1, msg=msg)
 
         args = dict(size=5, stride=3, padding=2, pad_direction='invalid')
         self.assertRaises(ValueError, lambda: extent.get_windows(**args))

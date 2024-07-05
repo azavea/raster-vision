@@ -10,6 +10,8 @@ from shapely.ops import unary_union
 from rasterio.windows import Window as RioWindow
 
 from rastervision.pipeline.utils import repr_with_args
+from rastervision.core.utils.misc import (calculate_required_padding,
+                                          ensure_tuple)
 
 if TYPE_CHECKING:
     from shapely.geometry import MultiPolygon
@@ -355,54 +357,52 @@ class Box():
     def copy(self) -> 'Box':
         return Box(*self)
 
-    def get_windows(self,
-                    size: Union[PosInt, Tuple[PosInt, PosInt]],
-                    stride: Union[PosInt, Tuple[PosInt, PosInt]],
-                    padding: Optional[Union[NonNegInt, Tuple[
-                        NonNegInt, NonNegInt]]] = None,
-                    pad_direction: Literal['both', 'start', 'end'] = 'end'
-                    ) -> List['Box']:
-        """Returns a list of boxes representing windows generated using a
-        sliding window traversal with the specified size, stride, and
-        padding.
+    def get_windows(
+            self,
+            size: PosInt | tuple[PosInt, PosInt],
+            stride: PosInt | tuple[PosInt, PosInt],
+            padding: NonNegInt | tuple[NonNegInt, NonNegInt] | None = None,
+            pad_direction: Literal['both', 'start', 'end'] = 'end'
+    ) -> list['Box']:
+        """Return sliding windows for given size, stride, and padding.
 
         Each of size, stride, and padding can be either a positive int or
-        a tuple `(vertical-component, horizontal-component)` of positive ints.
+        a tuple ``(vertical-component, horizontal-component)`` of positive
+        ints.
 
-        Padding currently only applies to the right and bottom edges.
+        If ``padding`` is not specified and ``stride <= size``, it will be
+        automatically calculated such that the windows cover the entire extent.
 
         Args:
-            size (Union[PosInt, Tuple[PosInt, PosInt]]): Size (h, w) of the
-                windows.
-            stride (Union[PosInt, Tuple[PosInt, PosInt]]): Step size between
-                windows. Can be 2-tuple (h_step, w_step) or positive int.
-            padding (Optional[Union[PosInt, Tuple[PosInt, PosInt]]], optional):
-                Optional padding to accommodate windows that overflow the
+            size: Size (h, w) of the windows.
+            stride: Step size between windows. Can be 2-tuple (h_step, w_step)
+                or positive int.
+            padding: Optional padding to accommodate windows that overflow the
                 extent. Can be 2-tuple (h_pad, w_pad) or non-negative int.
-                If None, will be set to (size[0]//2, size[1]//2).
-                Defaults to None.
-            pad_direction (Literal['both', 'start', 'end']): If 'end', only pad
-                ymax and xmax (bottom and right). If 'start', only pad ymin and
-                xmin (top and left). If 'both', pad all sides. Has no effect if
-                padding is zero. Defaults to 'end'.
+                If None, will be automatically calculated such that the windows
+                cover the entire extent. Defaults to ``None``.
+            pad_direction: If ``'end'``, only pad ymax and xmax (bottom and
+                right). If ``'start'``, only pad ymin and xmin (top and left).
+                If ``'both'``, pad all sides. If ``'both'`` pad all sides. Has
+                no effect if padding is zero. Defaults to ``'end'``.
 
         Returns:
-            List[Box]: List of Box objects.
+            List of Box objects.
         """
-        if not isinstance(size, tuple):
-            size = (size, size)
-
-        if not isinstance(stride, tuple):
-            stride = (stride, stride)
+        size: tuple[PosInt, PosInt] = ensure_tuple(size)
+        stride: tuple[PosInt, PosInt] = ensure_tuple(stride)
 
         if size[0] <= 0 or size[1] <= 0 or stride[0] <= 0 or stride[1] <= 0:
             raise ValueError('size and stride must be positive.')
 
         if padding is None:
-            padding = (size[0] // 2, size[1] // 2)
+            if size[0] < stride[0] or size[1] < stride[1]:
+                padding = (0, 0)
+            else:
+                padding = calculate_required_padding(self.size, size, stride,
+                                                     pad_direction)
 
-        if not isinstance(padding, tuple):
-            padding = (padding, padding)
+        padding: tuple[NonNegInt, NonNegInt] = ensure_tuple(padding)
 
         if padding[0] < 0 or padding[1] < 0:
             raise ValueError('padding must be non-negative.')

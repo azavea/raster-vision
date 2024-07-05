@@ -16,7 +16,6 @@ from rastervision.pytorch_learner.dataset import (
     ClassificationSlidingWindowGeoDataset,
     ObjectDetectionSlidingWindowGeoDataset, RandomWindowGeoDataset,
     SlidingWindowGeoDataset, TransformType)
-from rastervision.pytorch_learner.dataset.dataset import _to_tuple
 
 from tests import data_file_path
 
@@ -167,7 +166,7 @@ class TestSlidingWindowGeoDataset(unittest.TestCase):
 
         ds = SlidingWindowGeoDataset(
             scene,
-            10,
+            8,
             5,
             within_aoi=False,
             transform_type=TransformType.noop,
@@ -382,12 +381,6 @@ class TestRandomWindowGeoDataset(unittest.TestCase):
         self.assertNoError(lambda: RandomWindowGeoDataset(**args))
         ds = RandomWindowGeoDataset(**args)
         self.assertIsNone(ds.aoi_sampler)
-
-
-class TestUtils(unittest.TestCase):
-    def test__to_tuple(self):
-        self.assertTupleEqual(_to_tuple(1, 2), (1, 1))
-        self.assertRaises(ValueError, lambda: _to_tuple((1, 1, 1), 2))
 
 
 if __name__ == '__main__':
