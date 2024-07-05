@@ -146,8 +146,8 @@ class ExternalModuleConfig(Config):
         'Name of the folder in which to extract/copy the definition files.')
     entrypoint: NonEmptyStr = Field(
         ...,
-        description=('Name of a callable present in hubconf.py. '
-                     'See docs for torch.hub for details.'))
+        description=('Name of a Callable present in ``hubconf.py``. '
+                     'See docs for ``torch.hub`` for details.'))
     entrypoint_args: list = Field(
         [],
         description='Args to pass to the entrypoint. Must be serializable.')

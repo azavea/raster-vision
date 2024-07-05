@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Sequence
+from typing import TYPE_CHECKING, Any, Callable, Sequence
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -191,7 +191,7 @@ class Visualizer(ABC):
             return self._channel_display_groups
         return get_default_channel_display_groups(nb_img_channels)
 
-    def get_collate_fn(self) -> callable | None:
+    def get_collate_fn(self) -> Callable | None:
         """Returns a custom collate_fn to use in DataLoader.
 
         None is returned if default collate_fn should be used.
