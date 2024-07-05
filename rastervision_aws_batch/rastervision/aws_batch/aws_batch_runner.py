@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any
 import logging
 import os
 import uuid
@@ -33,7 +33,7 @@ class AWSBatchRunner(Runner):
     def run(self,
             cfg_json_uri: str,
             pipeline: 'Pipeline',
-            commands: List[str],
+            commands: list[str],
             num_splits: int = 1,
             pipeline_run_name: str = 'raster-vision'):  # pragma: no cover
         parent_job_ids = []
@@ -65,7 +65,7 @@ class AWSBatchRunner(Runner):
                   pipeline: 'Pipeline',
                   num_splits: int = 1,
                   pipeline_run_name: str = 'raster-vision'
-                  ) -> Tuple[List[str], Dict[str, Any]]:
+                  ) -> tuple[list[str], dict[str, Any]]:
 
         verbosity = rv_config.get_verbosity_cli_opt()
 
@@ -105,15 +105,15 @@ class AWSBatchRunner(Runner):
         return int(os.environ.get('AWS_BATCH_JOB_ARRAY_INDEX', 0))
 
     def run_command(self,
-                    cmd: List[str],
-                    job_name: Optional[str] = None,
+                    cmd: list[str],
+                    job_name: str | None = None,
                     debug: bool = False,
                     attempts: int = 1,
-                    parent_job_ids: Optional[List[str]] = None,
-                    num_array_jobs: Optional[int] = None,
+                    parent_job_ids: list[str] | None = None,
+                    num_array_jobs: int | None = None,
                     use_gpu: bool = False,
-                    job_queue: Optional[str] = None,
-                    job_def: Optional[str] = None,
+                    job_queue: str | None = None,
+                    job_def: str | None = None,
                     **kwargs) -> str:  # pragma: no cover
         """Submit a command as a job to AWS Batch.
 
