@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any
 import os
 from tempfile import TemporaryDirectory
 from pathlib import Path
@@ -86,7 +86,7 @@ class RVConfig:
         """Return the root of all temp dirs."""
         return self.tmp_dir_root
 
-    def set_tmp_dir_root(self, tmp_dir_root: Optional[str] = None):
+    def set_tmp_dir_root(self, tmp_dir_root: str | None = None):
         """Set root of all temporary directories.
 
         To set the value, the following rules are used in decreasing priority:
@@ -140,7 +140,7 @@ class RVConfig:
     def set_everett_config(self,
                            profile: str = None,
                            rv_home: str = None,
-                           config_overrides: Dict[str, str] = None):
+                           config_overrides: dict[str, str] = None):
         """Set Everett config.
 
         This sets up any other configuration using the Everett library.
@@ -217,8 +217,8 @@ class RVConfig:
     def get_namespace_option(self,
                              namespace: str,
                              key: str,
-                             default: Optional[Any] = None,
-                             as_bool: bool = False) -> Optional[Any]:
+                             default: Any | None = None,
+                             as_bool: bool = False) -> Any | None:
         """Get the value of an option from a namespace."""
         namespace_options = self.config.with_namespace(namespace)
         try:
@@ -232,7 +232,7 @@ class RVConfig:
             return default
 
     def get_config_dict(
-            self, rv_config_schema: Dict[str, List[str]]) -> Dict[str, str]:
+            self, rv_config_schema: dict[str, list[str]]) -> dict[str, str]:
         """Get all Everett configuration.
 
         This method is used to serialize an Everett configuration so it can be used on
@@ -257,7 +257,7 @@ class RVConfig:
 
         return config_dict
 
-    def _discover_config_file_locations(self, profile) -> List[str]:
+    def _discover_config_file_locations(self, profile) -> list[str]:
         """Discover the location of RV config files.
 
         Args:

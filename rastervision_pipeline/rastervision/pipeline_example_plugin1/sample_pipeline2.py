@@ -1,4 +1,3 @@
-from typing import List, Optional
 from os.path import join
 
 from rastervision.pipeline.pipeline import Pipeline
@@ -22,13 +21,13 @@ class MessageMaker():
 
     def make_message(self, name):
         # Use the greeting field to make the message.
-        return '{} {}!'.format(self.config.greeting, name)
+        return f'{self.config.greeting} {name}!'
 
 
 @register_config('pipeline_example_plugin1.sample_pipeline2')
 class SamplePipeline2Config(PipelineConfig):
-    names: List[str] = ['alice', 'bob']
-    message_uris: Optional[List[str]] = None
+    names: list[str] = ['alice', 'bob']
+    message_uris: list[str] | None = None
     # Fields can have other Configs as types.
     message_maker: MessageMakerConfig = MessageMakerConfig()
 
@@ -38,13 +37,12 @@ class SamplePipeline2Config(PipelineConfig):
     def update(self):
         if self.message_uris is None:
             self.message_uris = [
-                join(self.root_uri, '{}.txt'.format(name))
-                for name in self.names
+                join(self.root_uri, f'{name}.txt') for name in self.names
             ]
 
 
 class SamplePipeline2(Pipeline):
-    commands: List[str] = ['save_messages', 'print_messages']
+    commands: list[str] = ['save_messages', 'print_messages']
     split_commands = ['save_messages']
     gpu_commands = []
 

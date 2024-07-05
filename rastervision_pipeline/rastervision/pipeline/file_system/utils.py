@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING
 import os
 from os.path import join, normpath, relpath
 import shutil
@@ -6,7 +7,6 @@ import time
 import logging
 import json
 import zipfile
-from typing import TYPE_CHECKING, Optional, List
 
 from tqdm.auto import tqdm
 
@@ -21,9 +21,8 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-def get_local_path(uri: str,
-                   download_dir: str,
-                   fs: Optional[FileSystem] = None) -> str:
+def get_local_path(uri: str, download_dir: str,
+                   fs: FileSystem | None = None) -> str:
     """Return the path where a local copy of URI should be stored.
 
     If URI is local, return it. If it's remote, we generate a path for it
@@ -52,7 +51,7 @@ def get_local_path(uri: str,
 def sync_to_dir(src_dir: str,
                 dst_dir_uri: str,
                 delete: bool = False,
-                fs: Optional[FileSystem] = None):
+                fs: FileSystem | None = None):
     """Synchronize a local source directory to destination directory.
 
     Transfers files from source to destination directories so that the
@@ -75,7 +74,7 @@ def sync_to_dir(src_dir: str,
 def sync_from_dir(src_dir_uri: str,
                   dst_dir: str,
                   delete: bool = False,
-                  fs: Optional[FileSystem] = None):
+                  fs: FileSystem | None = None):
     """Synchronize a source directory to local destination directory.
 
     Transfers files from source to destination directories so that the
@@ -98,7 +97,7 @@ def sync_from_dir(src_dir_uri: str,
 def start_sync(src_dir: str,
                dst_dir_uri: str,
                sync_interval: int = 600,
-               fs: Optional[FileSystem] = None):  # pragma: no cover
+               fs: FileSystem | None = None):  # pragma: no cover
     """Repeatedly sync a local source directory to a destination on a schedule.
 
     Calls sync_to_dir on a schedule.
@@ -133,8 +132,8 @@ def start_sync(src_dir: str,
 
 
 def download_if_needed(uri: str,
-                       download_dir: Optional[str] = None,
-                       fs: Optional[FileSystem] = None,
+                       download_dir: str | None = None,
+                       fs: FileSystem | None = None,
                        use_cache: bool = True) -> str:
     """Download a file into a directory if it's remote.
 
@@ -142,12 +141,12 @@ def download_if_needed(uri: str,
 
     Args:
         uri (str): URI of file to download.
-        download_dir (Optional[str], optional): Local directory to download
+        download_dir (str | None): Local directory to download
             file into. If None, the file will be downloaded to
             cache dir as defined by RVConfig. Defaults to None.
-        fs (Optional[FileSystem], optional): If provided, use fs instead of
+        fs (FileSystem | None): If provided, use fs instead of
             the automatically chosen FileSystem for uri. Defaults to None.
-        use_cache (bool, optional): If False and the file is remote, download
+        use_cache (bool): If False and the file is remote, download
             it regardless of whether it exists in cache. Defaults to True.
 
     Returns:
@@ -180,7 +179,7 @@ def download_if_needed(uri: str,
 def download_or_copy(uri: str,
                      target_dir: str,
                      delete_tmp: bool = False,
-                     fs: Optional[FileSystem] = None) -> str:
+                     fs: FileSystem | None = None) -> str:
     """Downloads or copies a file to a directory.
 
     Downloads or copies URI into target_dir.
@@ -219,10 +218,8 @@ def file_exists(uri, fs=None, include_dir=True) -> bool:
     return fs.file_exists(uri, include_dir)
 
 
-def list_paths(uri: str,
-               ext: str = '',
-               fs: Optional[FileSystem] = None,
-               **kwargs) -> List[str]:
+def list_paths(uri: str, ext: str = '', fs: FileSystem | None = None,
+               **kwargs) -> list[str]:
     """List paths rooted at URI.
 
     Optionally only includes paths with a certain file extension.
@@ -243,9 +240,8 @@ def list_paths(uri: str,
     return fs.list_paths(uri, ext=ext, **kwargs)
 
 
-def upload_or_copy(src_path: str,
-                   dst_uri: str,
-                   fs: Optional[FileSystem] = None) -> None:
+def upload_or_copy(src_path: str, dst_uri: str,
+                   fs: FileSystem | None = None) -> None:
     """Upload or copy a file.
 
     If dst_uri is local, the file is copied. Otherwise, it is uploaded.
@@ -273,7 +269,7 @@ def upload_or_copy(src_path: str,
     fs.copy_to(src_path, dst_uri)
 
 
-def file_to_str(uri: str, fs: Optional[FileSystem] = None) -> str:
+def file_to_str(uri: str, fs: FileSystem | None = None) -> str:
     """Load contents of text file into a string.
 
     Args:
@@ -291,7 +287,7 @@ def file_to_str(uri: str, fs: Optional[FileSystem] = None) -> str:
     return fs.read_str(uri)
 
 
-def str_to_file(content_str: str, uri: str, fs: Optional[FileSystem] = None):
+def str_to_file(content_str: str, uri: str, fs: FileSystem | None = None):
     """Writes string to text file.
 
     Args:
@@ -359,8 +355,8 @@ def is_archive(uri: str) -> bool:
 
 
 def extract(uri: str,
-            target_dir: Optional[str] = None,
-            download_dir: Optional[str] = None) -> str:
+            target_dir: str | None = None,
+            download_dir: str | None = None) -> str:
     """Extract a compressed file."""
     if target_dir is None:
         target_dir = rv_config.get_cache_dir()
