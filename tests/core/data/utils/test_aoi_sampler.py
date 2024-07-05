@@ -43,7 +43,7 @@ class TestAoiSampler(unittest.TestCase):
         use a significance level of 0.05 here.
 
         Args:
-            nsamples (int, optional): Number of points to sample. It is
+            nsamples (int): Number of points to sample. It is
                 important for the sample size to not be too large or the test
                 will become over-powered. Defaults to 200.
         """

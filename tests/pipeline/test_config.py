@@ -1,4 +1,4 @@
-from typing import Callable, List
+from typing import Callable
 from os.path import join
 import unittest
 
@@ -45,8 +45,8 @@ def c_upgrader(cfg_dict, version):
 
 @register_config('c', plugin='rastervision.c', upgrader=c_upgrader)
 class CConfig(PipelineConfig):
-    al: List[AConfig]
-    bl: List[BConfig]
+    al: list[AConfig]
+    bl: list[BConfig]
     a: AConfig
     b: BConfig
     x: str = 'x'

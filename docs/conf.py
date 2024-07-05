@@ -6,7 +6,7 @@
 # full list see the documentation:
 # http://www.sphinx-doc.org/en/stable/config
 
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 import sys
 from unittest.mock import MagicMock
 
@@ -27,7 +27,7 @@ sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 # -- Allow Jinja templates in non-template .rst files -------------------------
 
 
-def rstjinja(app: 'Sphinx', docname: str, source: List[str]) -> None:
+def rstjinja(app: 'Sphinx', docname: str, source: list[str]) -> None:
     """Allow use of jinja templating in all doc pages.
 
     Adapted from:

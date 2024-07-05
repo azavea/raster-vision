@@ -1,4 +1,3 @@
-from typing import Tuple
 import unittest
 from os.path import join
 
@@ -14,7 +13,7 @@ chip_sz = 300
 
 
 def make_scene(i: int, is_random: bool = False
-               ) -> Tuple[Scene, MockRasterSource, np.ndarray]:
+               ) -> tuple[Scene, MockRasterSource, np.ndarray]:
     rs = MockRasterSource([0, 1, 2], 3)
     img = np.zeros((600, 600, 3))
     img[:, :, 0] = 1 + i

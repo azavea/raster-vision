@@ -1,4 +1,4 @@
-from typing import Any, Callable, Tuple
+from typing import Any, Callable
 import unittest
 from os.path import join
 import json
@@ -101,7 +101,7 @@ class TestParseArraySlices(unittest.TestCase):
             self.dims = dims
             self.bbox = bbox
 
-        def __getitem__(self, key: Any) -> Tuple[Box, list]:
+        def __getitem__(self, key: Any) -> tuple[Box, list]:
             if self.dims == 2:
                 return parse_array_slices_2d(key, self.bbox.extent)
             return parse_array_slices_Nd(key, self.bbox.extent, dims=self.dims)
