@@ -364,14 +364,14 @@ class Box():
             padding: NonNegInt | tuple[NonNegInt, NonNegInt] | None = None,
             pad_direction: Literal['both', 'start', 'end'] = 'end'
     ) -> list['Box']:
-        """Returns a list of boxes representing windows generated using a
-        sliding window traversal with the specified size, stride, and
-        padding.
+        """Return sliding windows for given size, stride, and padding.
 
         Each of size, stride, and padding can be either a positive int or
-        a tuple `(vertical-component, horizontal-component)` of positive ints.
+        a tuple ``(vertical-component, horizontal-component)`` of positive
+        ints.
 
-        Padding currently only applies to the right and bottom edges.
+        If ``padding`` is not specified and ``stride <= size``, it will be
+        automatically calculated such that the windows cover the entire extent.
 
         Args:
             size: Size (h, w) of the windows.
@@ -379,16 +379,15 @@ class Box():
                 or positive int.
             padding: Optional padding to accommodate windows that overflow the
                 extent. Can be 2-tuple (h_pad, w_pad) or non-negative int.
-                If None, will be set to (size[0]//2, size[1]//2).
-                Defaults to ``None``.
-            pad_direction: If ``'end'``, only pad
-                ymax and xmax (bottom and right). If ``'start'``, only pad ymin and
-                xmin (top and left). If ``'both'``, pad all sides. If
-                ``'both'`` and ``padding`` is ``None``, . Has no effect if
-                padding is zero. Defaults to 'end'.
+                If None, will be automatically calculated such that the windows
+                cover the entire extent. Defaults to ``None``.
+            pad_direction: If ``'end'``, only pad ymax and xmax (bottom and
+                right). If ``'start'``, only pad ymin and xmin (top and left).
+                If ``'both'``, pad all sides. If ``'both'`` pad all sides. Has
+                no effect if padding is zero. Defaults to ``'end'``.
 
         Returns:
-            List[Box]: List of Box objects.
+            List of Box objects.
         """
         size: tuple[PosInt, PosInt] = ensure_tuple(size)
         stride: tuple[PosInt, PosInt] = ensure_tuple(stride)
