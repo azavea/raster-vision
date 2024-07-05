@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional, Sequence
+from typing import TYPE_CHECKING, Sequence
 from textwrap import wrap
 
 import torch
@@ -17,8 +17,8 @@ class ClassificationVisualizer(Visualizer):
     def plot_xyz(self,
                  axs: Sequence['Axes'],
                  x: torch.Tensor,
-                 y: Optional[int] = None,
-                 z: Optional[int] = None,
+                 y: int | None = None,
+                 z: int | None = None,
                  plot_title: bool = True) -> None:
         channel_groups = self.get_channel_display_groups(x.shape[1])
 
@@ -61,7 +61,7 @@ class ClassificationVisualizer(Visualizer):
                   ax: 'Axes',
                   class_names: Sequence[str],
                   z: torch.Tensor,
-                  y: Optional[torch.Tensor] = None):
+                  y: torch.Tensor | None = None):
         """Plot predictions.
 
         Plots predicted class probabilities as a horizontal bar plot. If ground

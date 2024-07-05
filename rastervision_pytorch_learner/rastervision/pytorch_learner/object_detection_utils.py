@@ -1,5 +1,4 @@
-from typing import (Any, Callable, Optional, Sequence, Tuple, Iterable, List,
-                    Dict, Union)
+from typing import Any, Callable, Sequence, Iterable
 from collections import defaultdict
 from os.path import join
 from operator import iand
@@ -21,7 +20,7 @@ from rastervision.pytorch_learner.utils.utils import ONNXRuntimeAdapter
 
 
 def get_coco_gt(targets: Iterable['BoxList'],
-                num_class_ids: int) -> Dict[str, List[dict]]:
+                num_class_ids: int) -> dict[str, list[dict]]:
     images = []
     annotations = []
     ann_id = 1
@@ -60,7 +59,7 @@ def get_coco_gt(targets: Iterable['BoxList'],
     return coco
 
 
-def get_coco_preds(outputs: Iterable['BoxList']) -> List[dict]:
+def get_coco_preds(outputs: Iterable['BoxList']) -> list[dict]:
     preds = []
     for img_id, output in enumerate(outputs, 1):
         boxes = output.convert_boxes('xywh').float().tolist()
@@ -261,10 +260,10 @@ class BoxList():
         return pformat(dict(boxes=self.boxes, **self.extras))
 
 
-def collate_fn(data: Iterable[Sequence]) -> Tuple[torch.Tensor, List[BoxList]]:
+def collate_fn(data: Iterable[Sequence]) -> tuple[torch.Tensor, list[BoxList]]:
     imgs = [d[0] for d in data]
     x = torch.stack(imgs)
-    y: List[BoxList] = [d[1] for d in data]
+    y: list[BoxList] = [d[1] for d in data]
     return x, y
 
 
@@ -274,16 +273,16 @@ def draw_boxes(x: torch.Tensor, y: BoxList, class_names: Sequence[str],
     image."""
     boxes = y.boxes
     class_ids: np.ndarray = y.get_field('class_ids').numpy()
-    scores: Optional[torch.Tensor] = y.get_field('scores')
+    scores: torch.Tensor | None = y.get_field('scores')
 
     if len(boxes) > 0:
-        box_annotations: List[str] = np.array(class_names)[class_ids].tolist()
+        box_annotations: list[str] = np.array(class_names)[class_ids].tolist()
         if scores is not None:
             box_annotations = [
                 f'{ann} | {score:.2f}'
                 for ann, score in zip(box_annotations, scores)
             ]
-        box_colors: List[Union[str, Tuple[int, ...]]] = [
+        box_colors: list[str | tuple[int, ...]] = [
             tuple(c) if not isinstance(c, str) else c
             for c in np.array(class_colors)[class_ids]
         ]
@@ -321,7 +320,7 @@ class TorchVisionODAdapter(nn.Module):
 
         Args:
             model (nn.Module): A torchvision object detection model.
-            ignored_output_inds (Iterable[int], optional): Class labels to exclude.
+            ignored_output_inds (Iterable[int]): Class labels to exclude.
                 Defaults to [0].
         """
         super().__init__()
@@ -330,17 +329,15 @@ class TorchVisionODAdapter(nn.Module):
 
     def forward(self,
                 input: torch.Tensor,
-                targets: Optional[Iterable[BoxList]] = None
-                ) -> Union[Dict[str, Any], List[BoxList]]:
+                targets: Iterable[BoxList] | None = None
+                ) -> dict[str, Any] | list[BoxList]:
         """Forward pass.
 
         Args:
-            input (Tensor[batch_size, in_channels, in_height, in_width]): batch
-                of images.
-            targets (Optional[Iterable[BoxList]], optional): In training mode,
-                should be Iterable[BoxList]], with each BoxList having a
-                'class_ids' field. In eval mode, should be None. Defaults to
-                None.
+            input: batch of images.
+            targets: In training mode, should be ``Iterable[BoxList]]``, with
+                each ``BoxList`` having a ``'class_ids'`` field. In eval mode,
+                should be None. Defaults to ``None``.
 
         Returns:
             In training mode, returns a dict of losses. In eval mode, returns a
@@ -404,7 +401,7 @@ class TorchVisionODAdapter(nn.Module):
 class ONNXRuntimeAdapterForFasterRCNN(ONNXRuntimeAdapter):
     """TorchVision Faster RCNN model exported as ONNX"""
 
-    def __call__(self, x: Union[torch.Tensor, np.ndarray]) -> torch.Tensor:
+    def __call__(self, x: torch.Tensor | np.ndarray) -> torch.Tensor:
         N, *_ = x.shape
         x = x.numpy()
         outputs = self.ort_session.run(None, dict(x=x))

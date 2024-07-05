@@ -1,5 +1,4 @@
-from typing import (TYPE_CHECKING, Any, Dict, Sequence, Tuple, Optional, Union,
-                    List, Iterable, Container)
+from typing import TYPE_CHECKING, Any, Sequence, Iterable, Container
 from os.path import basename, join, isfile
 import logging
 
@@ -25,7 +24,7 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-def color_to_triple(color: Optional[str] = None) -> Tuple[int, int, int]:
+def color_to_triple(color: str | None = None) -> tuple[int, int, int]:
     """Given a PIL ImageColor string, return a triple of integers
     representing the red, green, and blue values.
 
@@ -57,7 +56,7 @@ def compute_conf_mat(out: torch.Tensor, y: torch.Tensor,
 
 def compute_conf_mat_metrics(conf_mat: torch.Tensor,
                              label_names: list[str],
-                             ignore_idx: Optional[int] = None,
+                             ignore_idx: int | None = None,
                              eps: float = 1e-6):
     # eps is to avoid dividing by zero.
     eps = torch.tensor(eps)
@@ -98,7 +97,7 @@ def compute_conf_mat_metrics(conf_mat: torch.Tensor,
     return metrics
 
 
-def validate_albumentation_transform(tf_dict: Optional[dict]) -> dict:
+def validate_albumentation_transform(tf_dict: dict | None) -> dict:
     """ Validate a serialized albumentation transform by attempting to
     deserialize it.
     """
@@ -122,8 +121,8 @@ def validate_albumentation_transform(tf_dict: Optional[dict]) -> dict:
 
 def serialize_albumentation_transform(
         tf: A.BasicTransform,
-        lambda_transforms_path: Optional[str] = None,
-        dst_dir: Optional[str] = None) -> dict:
+        lambda_transforms_path: str | None = None,
+        dst_dir: str | None = None) -> dict:
     """Serialize an albumentations transform to a dict.
 
     If the transform includes a Lambda transform, a `lambda_transforms_path`
@@ -135,10 +134,10 @@ def serialize_albumentation_transform(
 
     Args:
         tf (A.BasicTransform): The transform to serialize.
-        lambda_transforms_path (Optional[str], optional): Path to a python file
+        lambda_transforms_path (str | None): Path to a python file
             that defines a dict named `lambda_transforms` as required by
             `A.from_dict()`. Defaults to None.
-        dst_dir (Optional[str], optional): Directory to copy the transforms
+        dst_dir (str | None): Directory to copy the transforms
             file to. Useful for copying the file to S3 when running on Batch.
             Defaults to None.
 
@@ -291,8 +290,7 @@ class MinMaxNormalize(ImageOnlyTransform):
 
 def adjust_conv_channels(old_conv: nn.Conv2d,
                          in_channels: int,
-                         pretrained: bool = True
-                         ) -> Union[nn.Conv2d, nn.Sequential]:
+                         pretrained: bool = True) -> nn.Conv2d | nn.Sequential:
 
     if in_channels == old_conv.in_channels:
         return old_conv
@@ -335,11 +333,11 @@ def adjust_conv_channels(old_conv: nn.Conv2d,
         new_conv.weight.data[:, :in_channels] = pretrained_kernels
         return new_conv
     else:
-        raise ConfigError(f'Something went wrong.')
+        raise ConfigError('Something went wrong.')
 
 
 def plot_channel_groups(axs: Iterable,
-                        imgs: Iterable[Union[np.array, torch.Tensor]],
+                        imgs: Iterable[np.array | torch.Tensor],
                         channel_groups: dict,
                         plot_title: bool = True) -> None:
     for title, ax, img in zip(channel_groups.keys(), axs, imgs):
@@ -352,7 +350,7 @@ def plot_channel_groups(axs: Iterable,
 
 def channel_groups_to_imgs(
         x: torch.Tensor,
-        channel_groups: Dict[str, Sequence[int]]) -> List[torch.Tensor]:
+        channel_groups: dict[str, Sequence[int]]) -> list[torch.Tensor]:
     imgs = []
     for title, ch_inds in channel_groups.items():
         img = x[..., ch_inds]
@@ -373,7 +371,7 @@ def channel_groups_to_imgs(
     return imgs
 
 
-def log_metrics_to_csv(csv_path: str, metrics: Dict[str, Any]):
+def log_metrics_to_csv(csv_path: str, metrics: dict[str, Any]):
     """Append epoch metrics to CSV file."""
     # dict --> single-row DataFrame
     metrics_df = pd.DataFrame.from_records([metrics])
@@ -384,8 +382,8 @@ def log_metrics_to_csv(csv_path: str, metrics: Dict[str, Any]):
 
 
 def aggregate_metrics(
-        outputs: List[Dict[str, Union[float, torch.Tensor]]],
-        exclude_keys: Container[str] = set('conf_mat')) -> Dict[str, float]:
+        outputs: list[dict[str, float | torch.Tensor]],
+        exclude_keys: Container[str] = set('conf_mat')) -> dict[str, float]:
     """Aggregate the output of validate_step at the end of the epoch.
 
     Args:
@@ -394,7 +392,7 @@ def aggregate_metrics(
             be included in the output. Defaults to {'conf_mat'}.
 
     Returns:
-        Dict[str, float]: Dict with aggregated values.
+        dict[str, float]: Dict with aggregated values.
     """
     metrics = {}
     metric_names = outputs[0].keys()
@@ -482,15 +480,14 @@ class ONNXRuntimeAdapter:
         self.input_key = inputs[0].name
 
     @classmethod
-    def from_file(cls, path: str, providers: Optional[List[str]] = None
-                  ) -> 'ONNXRuntimeAdapter':
+    def from_file(cls, path: str,
+                  providers: list[str] | None = None) -> 'ONNXRuntimeAdapter':
         """Construct from file.
 
         Args:
-            path (str): Path to a .onnx file.
-            providers (Optional[List[str]]): ONNX-runtime execution
-                providers. See onnxruntime documentation for more details.
-                Defaults to None.
+            path: Path to a .onnx file.
+            providers: ONNX-runtime execution providers. See ``onnxruntime``
+                documentation for more details. Defaults to ``None``.
 
         Returns:
             ONNXRuntimeAdapter: An ONNXRuntimeAdapter instance.
@@ -504,7 +501,7 @@ class ONNXRuntimeAdapter:
         onnx_model = cls(ort_session)
         return onnx_model
 
-    def __call__(self, x: Union[torch.Tensor, np.ndarray]) -> torch.Tensor:
+    def __call__(self, x: torch.Tensor | np.ndarray) -> torch.Tensor:
         x = x.numpy()
         outputs = self.ort_session.run(None, {self.input_key: x})
         out = outputs[0]

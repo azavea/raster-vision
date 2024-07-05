@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Dict, Iterator
+from typing import TYPE_CHECKING, Iterator
 import logging
 
 from rastervision.core.data import (ChipClassificationLabels,
@@ -62,7 +62,7 @@ def predict_scene_od(learner: 'ObjectDetectionLearner', scene: 'Scene',
     ds = ObjectDetectionSlidingWindowGeoDataset(
         scene, size=chip_sz, stride=stride, transform=base_tf)
 
-    predictions: Iterator[Dict[str, 'np.ndarray']] = learner.predict_dataset(
+    predictions: Iterator[dict[str, 'np.ndarray']] = learner.predict_dataset(
         ds,
         raw_out=True,
         numpy_out=True,

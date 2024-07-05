@@ -1,5 +1,4 @@
-from typing import (TYPE_CHECKING, Sequence, Optional, List, Dict, Union,
-                    Tuple, Any)
+from typing import TYPE_CHECKING, Any, Sequence
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -32,11 +31,11 @@ class Visualizer(ABC):
     scale: float = 3.
 
     def __init__(self,
-                 class_names: List[str],
-                 class_colors: Optional[List[Union[str, RGBTuple]]] = None,
-                 transform: Optional[Dict] = None,
-                 channel_display_groups: Optional[Union[Dict[
-                     str, ChannelInds], Sequence[ChannelInds]]] = None):
+                 class_names: list[str],
+                 class_colors: list[str | RGBTuple] | None = None,
+                 transform: dict | None = None,
+                 channel_display_groups: dict[str, ChannelInds]
+                 | Sequence[ChannelInds] | None = None):
         """Constructor.
 
         Args:
@@ -79,8 +78,8 @@ class Visualizer(ABC):
     def plot_xyz(self,
                  axs,
                  x: Tensor,
-                 y: Optional[Sequence] = None,
-                 z: Optional[Sequence] = None,
+                 y: Sequence | None = None,
+                 z: Sequence | None = None,
                  plot_title: bool = True):
         """Plot image, ground truth labels, and predicted labels.
 
@@ -93,10 +92,10 @@ class Visualizer(ABC):
 
     def plot_batch(self,
                    x: Tensor,
-                   y: Optional[Sequence] = None,
-                   output_path: Optional[str] = None,
-                   z: Optional[Sequence] = None,
-                   batch_limit: Optional[int] = None,
+                   y: Sequence | None = None,
+                   output_path: str | None = None,
+                   z: Sequence | None = None,
+                   batch_limit: int | None = None,
                    show: bool = False):
         """Plot a whole batch in a grid using plot_xyz.
 
@@ -161,10 +160,10 @@ class Visualizer(ABC):
             self,
             fig: 'Figure',
             axs: Sequence,
-            plot_xyz_args: List[dict],
+            plot_xyz_args: list[dict],
             x: Tensor,
-            y: Optional[Sequence] = None,
-            z: Optional[Sequence] = None,
+            y: Sequence | None = None,
+            z: Sequence | None = None,
     ):
         # (N, c, h, w) --> (N, h, w, c)
         x = x.permute(0, 2, 3, 1)
@@ -184,7 +183,7 @@ class Visualizer(ABC):
 
     def get_channel_display_groups(
             self, nb_img_channels: int
-    ) -> Union[Dict[str, ChannelInds], Sequence[ChannelInds]]:
+    ) -> dict[str, ChannelInds] | Sequence[ChannelInds]:
         # The default channel_display_groups object depends on the number of
         # channels in the image. This number is not known when the Visualizer
         # is constructed which is why it needs to be created later.
@@ -192,7 +191,7 @@ class Visualizer(ABC):
             return self._channel_display_groups
         return get_default_channel_display_groups(nb_img_channels)
 
-    def get_collate_fn(self) -> Optional[callable]:
+    def get_collate_fn(self) -> callable | None:
         """Returns a custom collate_fn to use in DataLoader.
 
         None is returned if default collate_fn should be used.
@@ -202,7 +201,7 @@ class Visualizer(ABC):
         return None
 
     def get_batch(self, dataset: 'Dataset', batch_sz: int = 4,
-                  **kwargs) -> Tuple[Tensor, Any]:
+                  **kwargs) -> tuple[Tensor, Any]:
         """Generate a batch from a dataset.
 
         This is a convenience method for generating a batch of data to plot.
@@ -213,7 +212,7 @@ class Visualizer(ABC):
             **kwargs: Extra args for :class:`~torch.utils.data.DataLoader`.
 
         Returns:
-            Tuple[Tensor, Any]: (x, y) tuple where x is images and y is labels.
+            tuple[Tensor, Any]: (x, y) tuple where x is images and y is labels.
         """
         collate_fn = self.get_collate_fn()
         dl = DataLoader(dataset, batch_sz, collate_fn=collate_fn, **kwargs)

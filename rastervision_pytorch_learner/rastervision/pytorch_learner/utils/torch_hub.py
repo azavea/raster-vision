@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any
 from pathlib import Path
 from os.path import join, isdir, realpath
 import shutil
@@ -39,14 +39,14 @@ def _uri_to_dir_name(uri: str) -> str:
     return Path(uri).stem
 
 
-def get_hubconf_dir_from_cfg(cfg, parent: Optional[str] = '') -> str:
+def get_hubconf_dir_from_cfg(cfg, parent: str | None = '') -> str:
     """Determine destination directory name from an ExternalModuleConfig.
 
     If a parent path is provided, the dir name is appended to it.
 
     Args:
         cfg (ExternalModuleConfig): an ExternalModuleConfig
-        parent (str, optional): Parent path. Defaults to ''.
+        parent (str): Parent path. Defaults to ''.
 
     Returns:
         str: directory name or path
@@ -65,7 +65,7 @@ def get_hubconf_dir_from_cfg(cfg, parent: Optional[str] = '') -> str:
 def torch_hub_load_github(repo: str,
                           entrypoint: str,
                           *args,
-                          dst_dir: Optional[str] = None,
+                          dst_dir: str | None = None,
                           **kwargs) -> Any:
     """Load an entrypoint from a github repo using :func:`torch.hub.load`.
 
@@ -99,7 +99,7 @@ def torch_hub_load_github(repo: str,
 def torch_hub_load_uri(uri: str,
                        entrypoint: str,
                        *args,
-                       dst_dir: Optional[str] = None,
+                       dst_dir: str | None = None,
                        **kwargs) -> Any:
     """Load an entrypoint from a uri.
 

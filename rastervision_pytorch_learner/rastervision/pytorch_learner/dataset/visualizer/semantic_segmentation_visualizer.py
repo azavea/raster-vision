@@ -1,11 +1,11 @@
-from typing import TYPE_CHECKING, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Sequence
 
 import torch
 import numpy as np
 import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
 
-from rastervision.pytorch_learner.dataset.visualizer import Visualizer  # NOQA
+from rastervision.pytorch_learner.dataset.visualizer import Visualizer
 from rastervision.pytorch_learner.utils import (
     color_to_triple, plot_channel_groups, channel_groups_to_imgs)
 
@@ -20,8 +20,8 @@ class SemanticSegmentationVisualizer(Visualizer):
     def plot_xyz(self,
                  axs: Sequence,
                  x: torch.Tensor,
-                 y: Optional[Union[torch.Tensor, np.ndarray]] = None,
-                 z: Optional[torch.Tensor] = None,
+                 y: torch.Tensor | np.ndarray | None = None,
+                 z: torch.Tensor | None = None,
                  plot_title: bool = True) -> None:
         channel_groups = self.get_channel_display_groups(x.shape[1])
 
@@ -68,7 +68,7 @@ class SemanticSegmentationVisualizer(Visualizer):
                 loc='center left',
                 bbox_to_anchor=(1., 0.5))
 
-    def plot_gt(self, ax: 'Axes', y: Union[torch.Tensor, np.ndarray],
+    def plot_gt(self, ax: 'Axes', y: torch.Tensor | np.ndarray,
                 num_classes: int, cmap: 'Colormap', **kwargs):
         ax.imshow(
             y,
@@ -80,7 +80,7 @@ class SemanticSegmentationVisualizer(Visualizer):
         ax.set_xticks([])
         ax.set_yticks([])
 
-    def plot_pred(self, ax: 'Axes', z: Union[torch.Tensor, np.ndarray],
+    def plot_pred(self, ax: 'Axes', z: torch.Tensor | np.ndarray,
                   num_classes: int, cmap: 'Colormap', **kwargs):
         if z.ndim == 3:
             z = z.argmax(dim=0)

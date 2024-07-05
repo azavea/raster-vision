@@ -1,5 +1,5 @@
-from typing import (TYPE_CHECKING, Any, Callable, Dict, Iterable, List,
-                    Literal, Optional, Self, Sequence, Tuple, Union)
+from typing import (TYPE_CHECKING, Any, Callable, Iterable, Literal, Self,
+                    Sequence)
 import os
 from os.path import join, isdir
 from enum import Enum
@@ -45,7 +45,7 @@ augmentors = [
 ]
 
 # types
-RGBTuple = Tuple[int, int, int]
+RGBTuple = tuple[int, int, int]
 ChannelInds = Sequence[NonNegInt]
 
 
@@ -131,15 +131,16 @@ class Backbone(str, Enum):
 @register_config('external-module')
 class ExternalModuleConfig(Config):
     """Config describing an object to be loaded via Torch Hub."""
-    uri: Optional[NonEmptyStr] = Field(
+    uri: NonEmptyStr | None = Field(
         None,
         description=('Local uri of a zip file, or local uri of a directory,'
                      'or remote uri of zip file.'))
-    github_repo: Optional[Annotated[
-        str, StringConstraints(
-            strip_whitespace=True, pattern=r'.+/.+')]] = Field(
-                None, description='<repo-owner>/<repo-name>[:tag]')
-    name: Optional[NonEmptyStr] = Field(
+    github_repo: (
+        Annotated[str,
+                  StringConstraints(strip_whitespace=True, pattern=r'.+/.+')]
+        | None) = Field(
+            None, description='<repo-owner>/<repo-name>[:tag]')
+    name: NonEmptyStr | None = Field(
         None,
         description=
         'Name of the folder in which to extract/copy the definition files.')
@@ -168,16 +169,16 @@ class ExternalModuleConfig(Config):
 
     def build(self,
               save_dir: str,
-              hubconf_dir: Optional[str] = None,
-              ddp_rank: Optional[int] = None) -> Any:
+              hubconf_dir: str | None = None,
+              ddp_rank: int | None = None) -> Any:
         """Load an external module via torch.hub.
 
         Note: Loading a PyTorch module is the typical use case, but there are
         no type restrictions on the object loaded through torch.hub.
 
         Args:
-            save_dir (str, optional): The module def will be saved here.
-            hubconf_dir (str, optional): Path to existing definition.
+            save_dir (str): The module def will be saved here.
+            hubconf_dir (str): Path to existing definition.
                 If provided, the definition will not be fetched from the
                 external source but instead from this dir. Defaults to None.
 
@@ -236,7 +237,7 @@ class ModelConfig(Config):
         description=(
             'If True, use ImageNet weights. If False, use random initialization.'
         ))
-    init_weights: Optional[str] = Field(
+    init_weights: str | None = Field(
         None,
         description=('URI of PyTorch model weights used to initialize model. '
                      'If set, this supersedes the pretrained option.'))
@@ -246,7 +247,7 @@ class ModelConfig(Config):
             'If True, the keys in the state dict referenced by init_weights '
             'must match exactly. Setting this to False can be useful if you '
             'just want to load the backbone of a model.'))
-    external_def: Optional[ExternalModuleConfig] = Field(
+    external_def: ExternalModuleConfig | None = Field(
         None,
         description='If specified, the model will be built from the '
         'definition from this external source, using Torch Hub.')
@@ -262,19 +263,19 @@ class ModelConfig(Config):
     def build(self,
               num_classes: int,
               in_channels: int,
-              save_dir: Optional[str] = None,
-              hubconf_dir: Optional[str] = None,
-              ddp_rank: Optional[int] = None,
+              save_dir: str | None = None,
+              hubconf_dir: str | None = None,
+              ddp_rank: int | None = None,
               **kwargs) -> nn.Module:
         """Build and return a model based on the config.
 
         Args:
             num_classes (int): Number of classes.
-            in_channels (int, optional): Number of channels in the images that
+            in_channels (int): Number of channels in the images that
                 will be fed into the model. Defaults to 3.
-            save_dir (Optional[str], optional): Used for building external_def
+            save_dir (str|None): Used for building external_def
                 if specified. Defaults to None.
-            hubconf_dir (Optional[str], optional): Used for building
+            hubconf_dir (str|None): Used for building
                 external_def if specified. Defaults to None.
             **kwargs: Extra args for :meth:`.build_default_model`.
 
@@ -292,7 +293,7 @@ class ModelConfig(Config):
 
         Args:
             num_classes (int): Number of classes.
-            in_channels (int, optional): Number of channels in the images that
+            in_channels (int): Number of channels in the images that
                 will be fed into the model. Defaults to 3.
 
         Returns:
@@ -302,13 +303,13 @@ class ModelConfig(Config):
 
     def build_external_model(self,
                              save_dir: str,
-                             hubconf_dir: Optional[str] = None,
-                             ddp_rank: Optional[int] = None) -> nn.Module:
+                             hubconf_dir: str | None = None,
+                             ddp_rank: int | None = None) -> nn.Module:
         """Build and return an external model.
 
         Args:
             save_dir (str): The module def will be saved here.
-            hubconf_dir (Optional[str], optional): Path to existing definition.
+            hubconf_dir (str|None): Path to existing definition.
                 Defaults to None.
 
         Returns:
@@ -350,18 +351,18 @@ class SolverConfig(Config):
         description=
         ('If True, use triangular LR scheduler with a single cycle across all '
          'epochs with start and end LR being lr/10 and the peak being lr.'))
-    multi_stage: List = Field(
+    multi_stage: list[int] = Field(
         [], description=('List of epoch indices at which to divide LR by 10.'))
-    class_loss_weights: Optional[Sequence[float]] = Field(
+    class_loss_weights: Sequence[float] | None = Field(
         None, description=('Class weights for weighted loss.'))
-    ignore_class_index: Optional[int] = Field(
+    ignore_class_index: int | None = Field(
         None,
         description='If specified, this index is ignored when computing the '
         'loss. See pytorch documentation for nn.CrossEntropyLoss for more '
         'details. This can also be negative, in which case it is treated as a '
         'negative slice index i.e. -1 = last index, -2 = second-last index, '
         'and so on.')
-    external_loss_def: Optional[ExternalModuleConfig] = Field(
+    external_loss_def: ExternalModuleConfig | None = Field(
         None,
         description='If specified, the loss will be built from the definition '
         'from this external source, using Torch Hub.')
@@ -383,15 +384,15 @@ class SolverConfig(Config):
 
     def build_loss(self,
                    num_classes: int,
-                   save_dir: Optional[str] = None,
-                   hubconf_dir: Optional[str] = None) -> Callable:
+                   save_dir: str | None = None,
+                   hubconf_dir: str | None = None) -> Callable:
         """Build and return a loss function based on the config.
 
         Args:
             num_classes (int): Number of classes.
-            save_dir (Optional[str], optional): Used for building
+            save_dir (str|None): Used for building
                 external_loss_def if specified. Defaults to None.
-            hubconf_dir (Optional[str], optional): Used for building
+            hubconf_dir (str|None): Used for building
                 external_loss_def if specified. Defaults to None.
 
         Returns:
@@ -435,7 +436,7 @@ class SolverConfig(Config):
                              optimizer: optim.Optimizer,
                              train_ds_sz: int,
                              last_epoch: int = -1,
-                             **kwargs) -> Optional[_LRScheduler]:
+                             **kwargs) -> _LRScheduler | None:
         """Returns an LR scheduler that changes the LR each step.
 
         This is used to implement the "one cycle" schedule popularized by
@@ -476,7 +477,7 @@ class SolverConfig(Config):
     def build_epoch_scheduler(self,
                               optimizer: optim.Optimizer,
                               last_epoch: int = -1,
-                              **kwargs) -> Optional[_LRScheduler]:
+                              **kwargs) -> _LRScheduler | None:
         """Returns an LR scheduler that changes the LR each epoch.
 
         This is used to divide the learning rate by 10 at certain epochs.
@@ -507,7 +508,7 @@ class SolverConfig(Config):
 
 
 def get_default_channel_display_groups(
-        nb_img_channels: int) -> Dict[str, ChannelInds]:
+        nb_img_channels: int) -> dict[str, ChannelInds]:
     """Returns the default channel_display_groups object.
 
     See PlotOptions.channel_display_groups.
@@ -520,8 +521,8 @@ def get_default_channel_display_groups(
     return {'Input': list(range(num_display_channels))}
 
 
-def validate_channel_display_groups(groups: Optional[Union[Dict[
-        str, ChannelInds], Sequence[ChannelInds]]]):
+def validate_channel_display_groups(
+        groups: dict[str, ChannelInds] | Sequence[ChannelInds] | None):
     """Validate channel display groups object.
 
     See PlotOptions.channel_display_groups.
@@ -530,7 +531,7 @@ def validate_channel_display_groups(groups: Optional[Union[Dict[
         return None
     elif len(groups) == 0:
         raise ConfigError(
-            f'channel_display_groups cannot be empty. Set to None instead.')
+            'channel_display_groups cannot be empty. Set to None instead.')
     elif not isinstance(groups, dict):
         # if in list/tuple form, convert to dict s.t.
         # [(0, 1, 2), (4, 3, 5)] --> {
@@ -552,7 +553,7 @@ def validate_channel_display_groups(groups: Optional[Union[Dict[
 @register_config('plot_options')
 class PlotOptions(Config):
     """Config related to plotting."""
-    transform: Optional[dict] = Field(
+    transform: dict | None = Field(
         A.to_dict(MinMaxNormalize()),
         description='An Albumentations transform serialized as a dict that '
         'will be applied to each image before it is plotted. Mainly useful '
@@ -562,25 +563,26 @@ class PlotOptions(Config):
         'the plotting function. This default is useful for cases where the values after '
         'normalization are close to zero which makes the plot difficult to see.'
     )
-    channel_display_groups: Optional[Union[Dict[str, ChannelInds], Sequence[
-        ChannelInds]]] = Field(
-            None,
-            description=
-            ('Groups of image channels to display together as a subplot '
-             'when plotting the data and predictions. '
-             'Can be a list or tuple of groups (e.g. [(0, 1, 2), (3,)]) or a '
-             'dict containing title-to-group mappings '
-             '(e.g. {"RGB": [0, 1, 2], "IR": [3]}), '
-             'where each group is a list or tuple of channel indices and '
-             'title is a string that will be used as the title of the subplot '
-             'for that group.'))
+    channel_display_groups: (
+        dict[str, ChannelInds] | Sequence[ChannelInds] | None
+    ) = Field(
+        None,
+        description=(
+            'Groups of image channels to display together as a subplot '
+            'when plotting the data and predictions. '
+            'Can be a list or tuple of groups (e.g. [(0, 1, 2), (3,)]) or a '
+            'dict containing title-to-group mappings '
+            '(e.g. {"RGB": [0, 1, 2], "IR": [3]}), '
+            'where each group is a list or tuple of channel indices and '
+            'title is a string that will be used as the title of the subplot '
+            'for that group.'))
 
     # validators
     _tf = field_validator('transform')(validate_albumentation_transform)
 
     def update(self, **kwargs) -> None:
         super().update()
-        img_channels: Optional[int] = kwargs.get('img_channels')
+        img_channels: int | None = kwargs.get('img_channels')
         if self.channel_display_groups is None and img_channels is not None:
             self.channel_display_groups = get_default_channel_display_groups(
                 img_channels)
@@ -588,9 +590,8 @@ class PlotOptions(Config):
     @field_validator('channel_display_groups')
     @classmethod
     def validate_channel_display_groups(
-            cls, v: Optional[Union[Dict[str, Sequence[NonNegInt]], Sequence[
-                Sequence[NonNegInt]]]]
-    ) -> Optional[Dict[str, List[NonNegInt]]]:
+            cls, v: dict[str, ChannelInds] | Sequence[ChannelInds] | None
+    ) -> dict[str, ChannelInds] | None:
         return validate_channel_display_groups(v)
 
 
@@ -611,44 +612,44 @@ def data_config_upgrader(cfg_dict: dict, version: int) -> dict:
 class DataConfig(Config):
     """Config related to dataset for training and testing."""
     class_config: ClassConfig | None = Field(None, description='Class config.')
-    img_channels: Optional[PosInt] = Field(
+    img_channels: PosInt | None = Field(
         None, description='The number of channels of the training images.')
     img_sz: PosInt = Field(
         256,
         description=
         ('Length of a side of each image in pixels. This is the size to transform '
          'it to during training, not the size in the raw dataset.'))
-    train_sz: Optional[int] = Field(
+    train_sz: int | None = Field(
         None,
         description=
         ('If set, the number of training images to use. If fewer images exist, '
          'then an exception will be raised.'))
-    train_sz_rel: Optional[float] = Field(
+    train_sz_rel: float | None = Field(
         None, description='If set, the proportion of training images to use.')
     num_workers: int = Field(
         4,
         description='Number of workers to use when DataLoader makes batches.')
-    augmentors: List[str] = Field(
+    augmentors: list[str] = Field(
         default_augmentors,
         description='Names of albumentations augmentors to use for training '
         f'batches. Choices include: {augmentors}. Alternatively, a custom '
         'transform can be provided via the aug_transform option.')
-    base_transform: Optional[dict] = Field(
+    base_transform: dict | None = Field(
         None,
         description='An Albumentations transform serialized as a dict that '
         'will be applied to all datasets: training, validation, and test. '
         'This transformation is in addition to the resizing due to img_sz. '
         'This is useful for, for example, applying the same normalization to '
         'all datasets.')
-    aug_transform: Optional[dict] = Field(
+    aug_transform: dict | None = Field(
         None,
         description='An Albumentations transform serialized as a dict that '
         'will be applied as data augmentation to the training dataset. This '
         'transform is applied before base_transform. If provided, the '
         'augmentors option is ignored.')
-    plot_options: Optional[PlotOptions] = Field(
+    plot_options: PlotOptions | None = Field(
         PlotOptions(), description='Options to control plotting.')
-    preview_batch_limit: Optional[int] = Field(
+    preview_batch_limit: int | None = Field(
         None,
         description=
         ('Optional limit on the number of items in the preview plots produced '
@@ -690,7 +691,7 @@ class DataConfig(Config):
             self.plot_options.update(img_channels=self.img_channels)
         return self
 
-    def get_custom_albumentations_transforms(self) -> List[dict]:
+    def get_custom_albumentations_transforms(self) -> list[dict]:
         """Returns all custom transforms found in this config.
 
         This should return all serialized albumentations transforms with
@@ -710,11 +711,11 @@ class DataConfig(Config):
         ]
         return transforms_with_lambdas
 
-    def get_bbox_params(self) -> Optional[A.BboxParams]:
+    def get_bbox_params(self) -> A.BboxParams | None:
         """Returns BboxParams used by albumentations for data augmentation."""
         return None
 
-    def get_data_transforms(self) -> Tuple[A.BasicTransform, A.BasicTransform]:
+    def get_data_transforms(self) -> tuple[A.BasicTransform, A.BasicTransform]:
         """Get albumentations transform objects for data augmentation.
 
         Returns a 2-tuple of a "base" transform and an augmentation transform.
@@ -767,21 +768,21 @@ class DataConfig(Config):
 
         return base_transform, aug_transform
 
-    def build(self, tmp_dir: Optional[str] = None
-              ) -> Tuple[Dataset, Dataset, Dataset]:
+    def build(self,
+              tmp_dir: str | None = None) -> tuple[Dataset, Dataset, Dataset]:
         """Build and return train, val, and test datasets."""
         raise NotImplementedError()
 
     def build_dataset(self,
                       split: Literal['train', 'valid', 'test'],
-                      tmp_dir: Optional[str] = None) -> Dataset:
+                      tmp_dir: str | None = None) -> Dataset:
         """Build and return dataset for a single split."""
         raise NotImplementedError()
 
     def random_subset_dataset(self,
                               ds: Dataset,
-                              size: Optional[int] = None,
-                              fraction: Optional[Proportion] = None) -> Subset:
+                              size: int | None = None,
+                              fraction: Proportion | None = None) -> Subset:
         if size is None and fraction is None:
             return ds
         if size is not None and fraction is not None:
@@ -799,9 +800,9 @@ class DataConfig(Config):
 @register_config('image_data')
 class ImageDataConfig(DataConfig):
     """Config related to dataset for training and testing."""
-    data_format: Optional[str] = Field(
+    data_format: str | None = Field(
         None, description='Name of dataset format.')
-    uri: Optional[Union[str, List[str]]] = Field(
+    uri: str | list[str] | None = Field(
         None,
         description='One of the following:\n'
         '(1) a URI of a directory containing "train", "valid", and '
@@ -809,20 +810,20 @@ class ImageDataConfig(DataConfig):
         '(2) a URI of a zip file containing (1);\n'
         '(3) a list of (2);\n'
         '(4) a URI of a directory containing zip files containing (1).')
-    group_uris: Optional[List[Union[str, List[str]]]] = Field(
+    group_uris: list[str | list[str]] | None = Field(
         None,
         description=
         'This can be set instead of uri in order to specify groups of chips. '
         'Each element in the list is expected to be an object of the same '
         'form accepted by the uri field. The purpose of separating chips into '
         'groups is to be able to use the group_train_sz field.')
-    group_train_sz: Optional[Union[int, List[int]]] = Field(
+    group_train_sz: int | list[int] | None = Field(
         None,
         description='If group_uris is set, this can be used to specify the '
         'number of chips to use per group. Only applies to training chips. '
         'This can either be a single value that will be used for all groups '
         'or a list of values (one for each group).')
-    group_train_sz_rel: Optional[Union[Proportion, List[Proportion]]] = Field(
+    group_train_sz_rel: Proportion | list[Proportion] | None = Field(
         None,
         description='Relative version of group_train_sz. Must be a float '
         'in [0, 1]. If group_uris is set, this can be used to specify the '
@@ -860,8 +861,8 @@ class ImageDataConfig(DataConfig):
 
     def _build_dataset(self,
                        dirs: Iterable[str],
-                       tf: Optional[A.BasicTransform] = None
-                       ) -> Tuple[Dataset, Dataset, Dataset]:
+                       tf: A.BasicTransform | None = None
+                       ) -> tuple[Dataset, Dataset, Dataset]:
         """Make datasets for a single split.
 
         Args:
@@ -881,21 +882,21 @@ class ImageDataConfig(DataConfig):
                         train_dirs: Iterable[str],
                         val_dirs: Iterable[str],
                         test_dirs: Iterable[str],
-                        train_tf: Optional[A.BasicTransform] = None,
-                        val_tf: Optional[A.BasicTransform] = None,
-                        test_tf: Optional[A.BasicTransform] = None
-                        ) -> Tuple[Dataset, Dataset, Dataset]:
+                        train_tf: A.BasicTransform | None = None,
+                        val_tf: A.BasicTransform | None = None,
+                        test_tf: A.BasicTransform | None = None
+                        ) -> tuple[Dataset, Dataset, Dataset]:
         """Make training, validation, and test datasets.
 
         Args:
             train_dirs (str): Directories where training data is located.
             val_dirs (str): Directories where validation data is located.
             test_dirs (str): Directories where test data is located.
-            train_tf (Optional[A.BasicTransform], optional): Transform for the
+            train_tf (A.BasicTransform | None): Transform for the
                 training dataset. Defaults to None.
-            val_tf (Optional[A.BasicTransform], optional): Transform for the
+            val_tf (A.BasicTransform | None): Transform for the
                 validation dataset. Defaults to None.
-            test_tf (Optional[A.BasicTransform], optional): Transform for the
+            test_tf (A.BasicTransform | None): Transform for the
                 test dataset. Defaults to None.
 
         Returns:
@@ -910,7 +911,7 @@ class ImageDataConfig(DataConfig):
                        transform: A.BasicTransform) -> Dataset:
         raise NotImplementedError()
 
-    def build(self, tmp_dir: str) -> Tuple[Dataset, Dataset, Dataset]:
+    def build(self, tmp_dir: str) -> tuple[Dataset, Dataset, Dataset]:
 
         if self.group_uris is None:
             return self._get_datasets_from_uri(self.uri, tmp_dir=tmp_dir)
@@ -930,7 +931,7 @@ class ImageDataConfig(DataConfig):
 
     def build_dataset(self,
                       split: Literal['train', 'valid', 'test'],
-                      tmp_dir: Optional[str] = None) -> Dataset:
+                      tmp_dir: str | None = None) -> Dataset:
 
         if self.group_uris is None:
             ds = self._get_dataset_from_uri(
@@ -951,12 +952,12 @@ class ImageDataConfig(DataConfig):
 
         return ds
 
-    def _get_datasets_from_uri(self, uri: Union[str, List[str]], tmp_dir: str
-                               ) -> Tuple[Dataset, Dataset, Dataset]:
+    def _get_datasets_from_uri(self, uri: str | list[str], tmp_dir: str
+                               ) -> tuple[Dataset, Dataset, Dataset]:
         """Get image train, validation, & test datasets from a single zip file.
 
         Args:
-            uri (Union[str, List[str]]): Uri of a zip file containing the
+            uri (str | list[str]): Uri of a zip file containing the
                 images.
 
         Returns:
@@ -985,14 +986,13 @@ class ImageDataConfig(DataConfig):
             test_tf=test_tf)
         return train_ds, val_ds, test_ds
 
-    def _get_dataset_from_uri(self, uri: Union[str, List[str]],
+    def _get_dataset_from_uri(self, uri: str | list[str],
                               split: Literal['train', 'valid', 'test'],
                               tmp_dir: str) -> Dataset:
         """Get image dataset from a single zip file.
 
         Args:
-            uri (Union[str, List[str]]): Uri of a zip file containing the
-                images.
+            uri: Uri of a zip file containing the images.
 
         Returns:
             Training, validation, and test dataSets.
@@ -1011,13 +1011,12 @@ class ImageDataConfig(DataConfig):
         ds = self._build_dataset(dirs, tf)
         return ds
 
-    def _get_datasets_from_group_uris(
-            self,
-            uris: Union[str, List[str]],
-            tmp_dir: str,
-            group_train_sz: Optional[int] = None,
-            group_train_sz_rel: Optional[float] = None
-    ) -> Tuple[Dataset, Dataset, Dataset]:
+    def _get_datasets_from_group_uris(self,
+                                      uris: str | list[str],
+                                      tmp_dir: str,
+                                      group_train_sz: int | None = None,
+                                      group_train_sz_rel: float | None = None
+                                      ) -> tuple[Dataset, Dataset, Dataset]:
         train_ds_lst, valid_ds_lst, test_ds_lst = [], [], []
 
         group_sizes = None
@@ -1050,10 +1049,10 @@ class ImageDataConfig(DataConfig):
     def _get_dataset_from_group_uris(
             self,
             split: Literal['train', 'valid', 'test'],
-            uris: Union[str, List[str]],
+            uris: str | list[str],
             tmp_dir: str,
-            group_sz: Optional[int] = None,
-            group_sz_rel: Optional[float] = None) -> Dataset:
+            group_sz: int | None = None,
+            group_sz_rel: float | None = None) -> Dataset:
 
         group_sizes = None
         if group_sz is not None:
@@ -1076,16 +1075,14 @@ class ImageDataConfig(DataConfig):
         combined_dataset = ConcatDataset(per_uri_dataset)
         return combined_dataset
 
-    def get_data_dirs(self, uri: Union[str, List[str]],
-                      unzip_dir: str) -> List[str]:
+    def get_data_dirs(self, uri: str | list[str], unzip_dir: str) -> list[str]:
         """Extract data dirs from uri.
 
         Data dirs are directories containing  "train", "valid", and
         (optionally) "test" subdirectories.
 
         Args:
-            uri (Union[str, List[str]]): A URI or a list of URIs of one of the
-                following:
+            uri: A URI or a list of URIs of one of the following:
 
                 (1) a URI of a directory containing "train", "valid", and
                     (optionally) "test" subdirectories
@@ -1096,7 +1093,7 @@ class ImageDataConfig(DataConfig):
                 needed.
 
         Returns:
-            List[str]: Paths to directories that each contain contents of one
+            list[str]: Paths to directories that each contain contents of one
             zip file.
         """
 
@@ -1136,15 +1133,15 @@ class ImageDataConfig(DataConfig):
         data_dirs = self.unzip_data(zip_uris, unzip_dir)
         return data_dirs
 
-    def unzip_data(self, zip_uris: List[str], unzip_dir: str) -> List[str]:
+    def unzip_data(self, zip_uris: list[str], unzip_dir: str) -> list[str]:
         """Unzip dataset zip files.
 
         Args:
-            zip_uris (List[str]): A list of URIs of zip files:
+            zip_uris (list[str]): A list of URIs of zip files:
             unzip_dir (str): Directory where zip files will be extracted to.
 
         Returns:
-            List[str]: Paths to directories that each contain contents of one
+            list[str]: Paths to directories that each contain contents of one
             zip file.
         """
         data_dirs = []
@@ -1172,10 +1169,9 @@ class GeoDataConfig(DataConfig):
     See :mod:`rastervision.pytorch_learner.dataset.dataset`.
     """
 
-    scene_dataset: Optional['SceneDatasetConfig'] = Field(None, description='')
-    sampling: Union[WindowSamplingConfig, Dict[
-        str, WindowSamplingConfig]] = Field(
-            {}, description='Window sampling config.')
+    scene_dataset: 'SceneDatasetConfig | None' = Field(None, description='')
+    sampling: WindowSamplingConfig | dict[str, WindowSamplingConfig] = Field(
+        {}, description='Window sampling config.')
 
     def __repr_args__(self):
         ds_str = repr(self.scene_dataset)
@@ -1214,7 +1210,7 @@ class GeoDataConfig(DataConfig):
 
     def build_scenes(self,
                      scene_configs: Iterable['SceneConfig'],
-                     tmp_dir: Optional[str] = None) -> List[Scene]:
+                     tmp_dir: str | None = None) -> list[Scene]:
         """Build training, validation, and test scenes."""
         class_config = self.scene_dataset.class_config
         scenes = [
@@ -1225,9 +1221,9 @@ class GeoDataConfig(DataConfig):
 
     def _build_dataset(self,
                        split: Literal['train', 'valid', 'test'],
-                       tf: Optional[A.BasicTransform] = None,
-                       tmp_dir: Optional[str] = None,
-                       **kwargs) -> Tuple[Dataset, Dataset, Dataset]:
+                       tf: A.BasicTransform | None = None,
+                       tmp_dir: str | None = None,
+                       **kwargs) -> tuple[Dataset, Dataset, Dataset]:
         """Make training, validation, and test datasets.
 
         Args:
@@ -1263,25 +1259,25 @@ class GeoDataConfig(DataConfig):
         return combined_dataset
 
     def _build_datasets(self,
-                        tmp_dir: Optional[str] = None,
-                        train_tf: Optional[A.BasicTransform] = None,
-                        val_tf: Optional[A.BasicTransform] = None,
-                        test_tf: Optional[A.BasicTransform] = None,
-                        **kwargs) -> Tuple[Dataset, Dataset, Dataset]:
+                        tmp_dir: str | None = None,
+                        train_tf: A.BasicTransform | None = None,
+                        val_tf: A.BasicTransform | None = None,
+                        test_tf: A.BasicTransform | None = None,
+                        **kwargs) -> tuple[Dataset, Dataset, Dataset]:
         """Make training, validation, and test datasets.
 
         Args:
             tmp_dir (str): Temporary directory to be used for building scenes.
-            train_tf (Optional[A.BasicTransform], optional): Transform for the
+            train_tf (A.BasicTransform | None): Transform for the
                 training dataset. Defaults to None.
-            val_tf (Optional[A.BasicTransform], optional): Transform for the
+            val_tf (A.BasicTransform | None): Transform for the
                 validation dataset. Defaults to None.
-            test_tf (Optional[A.BasicTransform], optional): Transform for the
+            test_tf (A.BasicTransform | None): Transform for the
                 test dataset. Defaults to None.
             **kwargs: Kwargs to pass to :meth:`.scene_to_dataset`.
 
         Returns:
-            Tuple[Dataset, Dataset, Dataset]: PyTorch-compatiable training,
+            tuple[Dataset, Dataset, Dataset]: PyTorch-compatiable training,
             validation, and test datasets.
         """
         train_ds = self._build_dataset('train', train_tf, tmp_dir, **kwargs)
@@ -1291,7 +1287,7 @@ class GeoDataConfig(DataConfig):
 
     def scene_to_dataset(self,
                          scene: Scene,
-                         transform: Optional[A.BasicTransform] = None,
+                         transform: A.BasicTransform | None = None,
                          for_chipping: bool = False) -> Dataset:
         """Make a dataset from a single scene.
         """
@@ -1299,7 +1295,7 @@ class GeoDataConfig(DataConfig):
 
     def build_dataset(self,
                       split: Literal['train', 'valid', 'test'],
-                      tmp_dir: Optional[str] = None) -> Dataset:
+                      tmp_dir: str | None = None) -> Dataset:
 
         base_transform, aug_transform = self.get_data_transforms()
         if split == 'train':
@@ -1316,8 +1312,8 @@ class GeoDataConfig(DataConfig):
 
         return ds
 
-    def build(self, tmp_dir: Optional[str] = None,
-              for_chipping: bool = False) -> Tuple[Dataset, Dataset, Dataset]:
+    def build(self, tmp_dir: str | None = None,
+              for_chipping: bool = False) -> tuple[Dataset, Dataset, Dataset]:
         base_transform, aug_transform = self.get_data_transforms()
         if for_chipping:
             train_tf, val_tf, test_tf = None, None, None
@@ -1351,8 +1347,8 @@ def learner_config_upgrader(cfg_dict: dict, version: int) -> dict:
 @register_config('learner', upgrader=learner_config_upgrader)
 class LearnerConfig(Config):
     """Config for Learner."""
-    model: Optional[ModelConfig] = None
-    solver: Optional[SolverConfig] = None
+    model: ModelConfig | None = None
+    solver: SolverConfig | None = None
     data: DataConfig
 
     eval_train: bool = Field(
@@ -1370,7 +1366,7 @@ class LearnerConfig(Config):
         description='Save Tensorboard log files at the end of each epoch.')
     run_tensorboard: bool = Field(
         False, description='run Tensorboard server during training')
-    output_uri: Optional[str] = Field(
+    output_uri: str | None = Field(
         None, description='URI of where to save output')
     save_all_checkpoints: bool = Field(
         False,
@@ -1402,24 +1398,24 @@ class LearnerConfig(Config):
         return self
 
     def build(self,
-              tmp_dir: Optional[str] = None,
-              model_weights_path: Optional[str] = None,
-              model_def_path: Optional[str] = None,
-              loss_def_path: Optional[str] = None,
+              tmp_dir: str | None = None,
+              model_weights_path: str | None = None,
+              model_def_path: str | None = None,
+              loss_def_path: str | None = None,
               training: bool = True) -> 'Learner':
         """Returns a Learner instantiated using this Config.
 
         Args:
             tmp_dir (str): Root of temp dirs.
-            model_weights_path (str, optional): A local path to model weights.
+            model_weights_path (str): A local path to model weights.
                 Defaults to None.
-            model_def_path (str, optional): A local path to a directory with a
+            model_def_path (str): A local path to a directory with a
                 hubconf.py. If provided, the model definition is imported from
                 here. Defaults to None.
-            loss_def_path (str, optional): A local path to a directory with a
+            loss_def_path (str): A local path to a directory with a
                 hubconf.py. If provided, the loss function definition is
                 imported from here. Defaults to None.
-            training (bool, optional): Whether the model is to be used for
+            training (bool): Whether the model is to be used for
                 training or prediction. If False, the model is put in eval mode
                 and the loss function, optimizer, etc. are not initialized.
                 Defaults to True.

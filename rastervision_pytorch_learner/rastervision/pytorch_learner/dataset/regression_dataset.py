@@ -1,4 +1,4 @@
-from typing import Iterable, Tuple
+from typing import Iterable
 from os.path import join
 import logging
 import csv
@@ -29,7 +29,7 @@ class RegressionDataReader(Dataset):
         self.targets = [[float(row[i]) for i in class_inds] for row in rows]
         self.img_paths = [join(img_dir, row[0]) for row in rows]
 
-    def __getitem__(self, ind) -> Tuple[np.ndarray, np.ndarray]:
+    def __getitem__(self, ind) -> tuple[np.ndarray, np.ndarray]:
         img_path = self.img_paths[ind]
         targets = self.targets[ind]
         x = load_image(img_path)

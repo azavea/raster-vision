@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Callable, Iterable, List, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Callable, Iterable, Sequence
 from enum import Enum
 import logging
 
@@ -45,8 +45,8 @@ def reg_data_config_upgrader(cfg_dict, version):
 
 @register_config('regression_data', upgrader=reg_data_config_upgrader)
 class RegressionDataConfig(Config):
-    pos_class_names: List[str] = []
-    prob_class_names: List[str] = []
+    pos_class_names: list[str] = []
+    prob_class_names: list[str] = []
 
 
 @register_config('regression_image_data')
@@ -54,7 +54,7 @@ class RegressionImageDataConfig(RegressionDataConfig, ImageDataConfig):
     """Configure :class:`RegressionImageDatasets <.RegressionImageDataset>`."""
 
     data_format: RegressionDataFormat = RegressionDataFormat.csv
-    plot_options: Optional[RegressionPlotOptions] = Field(
+    plot_options: RegressionPlotOptions | None = Field(
         RegressionPlotOptions(), description='Options to control plotting.')
 
     def dir_to_dataset(self, data_dir: str,
@@ -71,15 +71,15 @@ class RegressionGeoDataConfig(RegressionDataConfig, GeoDataConfig):
     See :mod:`rastervision.pytorch_learner.dataset.regression_dataset`.
     """
 
-    plot_options: Optional[RegressionPlotOptions] = Field(
+    plot_options: RegressionPlotOptions | None = Field(
         RegressionPlotOptions(), description='Options to control plotting.')
 
-    def scene_to_dataset(self,
-                         scene: Scene,
-                         transform: Optional[A.BasicTransform] = None,
-                         for_chipping: bool = False
-                         ) -> Union[RegressionSlidingWindowGeoDataset,
-                                    RegressionRandomWindowGeoDataset]:
+    def scene_to_dataset(
+            self,
+            scene: Scene,
+            transform: A.BasicTransform | None = None,
+            for_chipping: bool = False
+    ) -> RegressionSlidingWindowGeoDataset | RegressionRandomWindowGeoDataset:
         if isinstance(self.sampling, dict):
             opts = self.sampling[scene.id]
         else:
@@ -125,8 +125,8 @@ class RegressionModel(nn.Module):
     def __init__(self,
                  backbone: nn.Module,
                  out_features: int,
-                 pos_out_inds: Optional[Sequence[int]] = None,
-                 prob_out_inds: Optional[Sequence[int]] = None,
+                 pos_out_inds: Sequence[int] | None = None,
+                 prob_out_inds: Sequence[int] | None = None,
                  **kwargs):
         super().__init__()
         self.backbone = backbone
@@ -160,9 +160,9 @@ class RegressionModelConfig(ModelConfig):
             self,
             num_classes: int,
             in_channels: int,
-            class_names: Optional[Sequence[str]] = None,
-            pos_class_names: Optional[Iterable[str]] = None,
-            prob_class_names: Optional[Iterable[str]] = None) -> nn.Module:
+            class_names: Sequence[str] | None = None,
+            pos_class_names: Iterable[str] | None = None,
+            prob_class_names: Iterable[str] | None = None) -> nn.Module:
         backbone_name = self.get_backbone_str()
         pretrained = self.pretrained
         out_features = num_classes
@@ -216,7 +216,7 @@ class RegressionModelConfig(ModelConfig):
 class RegressionLearnerConfig(LearnerConfig):
     """Configure a :class:`.RegressionLearner`."""
 
-    model: Optional[RegressionModelConfig]
+    model: RegressionModelConfig | None
 
     def build(self,
               tmp_dir,

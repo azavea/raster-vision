@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 import os
 from contextlib import AbstractContextManager
 import gc
@@ -32,8 +32,8 @@ class DDPContextManager(AbstractContextManager):  # pragma: no cover
 
     def __init__(self,
                  learner: 'Learner',
-                 rank: Optional[int] = None,
-                 world_size: Optional[int] = None) -> None:
+                 rank: int | None = None,
+                 world_size: int | None = None) -> None:
         """Constructor.
 
         Args:

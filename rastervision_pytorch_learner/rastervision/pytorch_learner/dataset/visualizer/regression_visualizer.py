@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional, Sequence
+from typing import TYPE_CHECKING, Sequence
 from textwrap import wrap
 
 import torch
@@ -20,7 +20,7 @@ class RegressionVisualizer(Visualizer):
                  axs: Sequence,
                  x: torch.Tensor,
                  y: int,
-                 z: Optional[int] = None,
+                 z: int | None = None,
                  plot_title: bool = True) -> None:
         channel_groups = self.get_channel_display_groups(x.shape[1])
 
@@ -59,7 +59,7 @@ class RegressionVisualizer(Visualizer):
                   ax: 'Axes',
                   class_names: Sequence[str],
                   z: torch.Tensor,
-                  y: Optional[torch.Tensor] = None):
+                  y: torch.Tensor | None = None):
         """Plot targets and predictions as a grouped horizontal bar plot."""
         # display targets and predictions as a grouped horizontal bar plot
         bar_thickness = 0.35 if y is not None else 0.70

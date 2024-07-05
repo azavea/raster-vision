@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 import warnings
 from os.path import join
 import logging
@@ -25,7 +25,7 @@ class RegressionLearner(Learner):
     def get_visualizer_class(self):
         return RegressionVisualizer
 
-    def build_model(self, model_def_path: Optional[str] = None) -> 'nn.Module':
+    def build_model(self, model_def_path: str | None = None) -> 'nn.Module':
         """Override to pass class_names, pos_class_names, and prob_class_names.
         """
         cfg = self.cfg

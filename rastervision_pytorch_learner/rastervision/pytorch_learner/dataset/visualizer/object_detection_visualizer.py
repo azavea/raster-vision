@@ -1,4 +1,4 @@
-from typing import (Sequence, Optional)
+from typing import Sequence
 
 import torch
 
@@ -18,8 +18,8 @@ class ObjectDetectionVisualizer(Visualizer):
     def plot_xyz(self,
                  axs: Sequence,
                  x: torch.Tensor,
-                 y: Optional[BoxList] = None,
-                 z: Optional[BoxList] = None,
+                 y: BoxList | None = None,
+                 z: BoxList | None = None,
                  plot_title: bool = True) -> None:
         channel_groups = self.get_channel_display_groups(x.shape[1])
         imgs = channel_groups_to_imgs(x, channel_groups)

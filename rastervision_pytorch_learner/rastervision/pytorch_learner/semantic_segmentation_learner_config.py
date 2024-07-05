@@ -1,4 +1,4 @@
-from typing import Callable, Optional
+from typing import Callable
 from os.path import join
 from enum import Enum
 import logging
@@ -113,7 +113,7 @@ class SemanticSegmentationGeoDataConfig(SemanticSegmentationDataConfig,
 
     def scene_to_dataset(self,
                          scene: Scene,
-                         transform: Optional[A.BasicTransform] = None,
+                         transform: A.BasicTransform | None = None,
                          for_chipping: bool = False) -> Dataset:
         if isinstance(self.sampling, dict):
             opts = self.sampling[scene.id]
@@ -212,7 +212,7 @@ class SemanticSegmentationModelConfig(ModelConfig):
 class SemanticSegmentationLearnerConfig(LearnerConfig):
     """Configure a :class:`.SemanticSegmentationLearner`."""
 
-    model: Optional[SemanticSegmentationModelConfig]
+    model: SemanticSegmentationModelConfig | None
 
     def build(self,
               tmp_dir=None,
