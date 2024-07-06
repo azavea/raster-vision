@@ -99,7 +99,7 @@ class TestClassEvaluationItem(unittest.TestCase):
         self.assertEqual(json['extra1'], 'extra1')
         self.assertEqual(json['extra2'], 'extra2')
 
-    def from_multiclass_conf_mat(self):
+    def test_from_multiclass_conf_mat(self):
         conf_mat = np.random.randint(100, size=(10, 10))
         item = ClassEvaluationItem.from_multiclass_conf_mat(
             class_id=3,
