@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING, Callable, Literal, Self
+from typing import TYPE_CHECKING, Literal, Self
+from collections.abc import Callable
 import inspect
 import logging
 
@@ -208,7 +209,7 @@ def build_config(
         x: some representation of Config(s)
 
     Returns:
-        Config: the corresponding Config(s)
+        The corresponding Config(s).
     """
     if isinstance(x, dict):
         new_x = {k: build_config(v) for k, v in x.items()}
@@ -321,7 +322,8 @@ def get_plugin(config_cls: type) -> str:
 
 def register_config(type_hint: str,
                     plugin: str | None = None,
-                    upgrader: Callable | None = None) -> Callable:
+                    upgrader: Callable[[dict, int], dict] | None = None
+                    ) -> Callable[[], Config]:
     """Class decorator used to register Config classes with registry.
 
     All Configs must be registered! Registering a Config does the following:
@@ -333,21 +335,19 @@ def register_config(type_hint: str,
         type_hint.
 
     Args:
-        type_hint (str): a type hint used to deserialize Configs. Must be
-            unique across all registered Configs.
-        plugin (str | None): the module path of the plugin where
-            the Config is defined. If None, will be inferred.
-            Defauilts to None.
-        upgrader (Callable | None): a function of the form
-            upgrade(config_dict, version) which returns the corresponding
-            config dict of version = version + 1. This can be useful for
-            maintaining backward compatibility by allowing old configs using an
-            outdated schema to be upgraded to the current schema.
-            Defaults to None.
+        type_hint: a type hint used to deserialize Configs. Must be unique
+            across all registered Configs.
+        plugin: the module path of the plugin where the ``Config`` is defined.
+            If ``None``, will be inferred. Defauilts to ``None``.
+        upgrader: a function of the form ``upgrade(config_dict, version)``
+            which returns the corresponding config dict of
+            ``version = version + 1``. This can be useful for maintaining
+            backward compatibility by allowing old configs using an outdated
+            schema to be upgraded to the current schema. Defaults to ``None``.
 
     Returns:
-        Callable: A function that returns a new class that is identical to the
-        input Config with an additional ``type_hint`` field.
+        A function that returns a new class that is identical to the input
+        ``Config`` with an additional ``type_hint`` field.
     """
 
     def _register_config(cls: type):

@@ -1,4 +1,5 @@
-from typing import Any, Callable
+from typing import Any
+from collections.abc import Callable
 import unittest
 from os.path import join
 from uuid import uuid4

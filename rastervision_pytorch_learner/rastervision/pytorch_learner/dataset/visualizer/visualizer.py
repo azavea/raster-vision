@@ -1,5 +1,6 @@
-from typing import TYPE_CHECKING, Any, Callable, Sequence
+from typing import TYPE_CHECKING, Any, Sequence
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 
 import numpy as np
 import torch

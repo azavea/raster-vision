@@ -1,4 +1,5 @@
-from typing import (TYPE_CHECKING, Callable, Iterable, Iterator)
+from typing import (TYPE_CHECKING, Iterable, Iterator)
+from collections.abc import Callable
 from copy import deepcopy
 
 from shapely.geometry import shape, mapping
@@ -38,7 +39,7 @@ def features_to_geojson(features: list[dict]) -> dict:
     return {'type': 'FeatureCollection', 'features': features}
 
 
-def map_features(func: Callable,
+def map_features(func: Callable[[dict], dict],
                  geojson: dict,
                  include_geom_types: Iterable[str] = [],
                  progressbar_kw: dict | None = None) -> dict:
@@ -66,13 +67,21 @@ def map_features(func: Callable,
     return features_to_geojson(features_out)
 
 
-def map_geoms(func: Callable,
+def map_geoms(func: Callable[['BaseGeometry', dict], dict],
               geojson: dict,
               include_geom_types: Iterable[str] = [],
               progressbar_kw: dict | None = None) -> dict:
-    """Map GeoJSON features to new features by applying func to geometries.
+    """Map GeoJSON features to new features by applying ``func`` to geometries.
 
-    Returns a new GeoJSON dict.
+    For each feature, the geometry is deserialized to a shapely geom, ``func``
+    is applied, and its output is serialized to a new feature.
+
+    ``func`` must be a function that takes a shapely geom and a keyword arg
+    named ``feature`` (to which the feature dict will be passed) and returns
+    a shapely geom.
+
+    Returns:
+        A new GeoJSON dict.
     """
 
     def feat_func(feature_in: dict) -> dict:
@@ -127,7 +136,7 @@ def geom_to_feature(geom: 'BaseGeometry',
     return feature
 
 
-def filter_features(func: Callable,
+def filter_features(func: Callable[[dict], bool],
                     geojson: dict,
                     progressbar_kw: dict | None = None) -> dict:
     """Filter GeoJSON features. Returns a new GeoJSON dict."""

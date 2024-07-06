@@ -1,13 +1,16 @@
-from typing import Any, Callable
-from pydantic import PositiveInt as PosInt
+from typing import Any
+from collections.abc import Callable
 from enum import Enum
 
+from pydantic import PositiveInt as PosInt
 import numpy as np
 import albumentations as A
-
 import torch
 
 from rastervision.pytorch_learner.object_detection_utils import BoxList
+
+TransformFunc = Callable[[tuple[np.ndarray, Any], A.BasicTransform], tuple[
+    np.ndarray, Any]]
 
 
 class TransformType(Enum):
@@ -230,7 +233,7 @@ def semantic_segmentation_transformer(
     return x, y
 
 
-TF_TYPE_TO_TF_FUNC: dict[TransformType, Callable] = {
+TF_TYPE_TO_TF_FUNC: dict[TransformType, TransformFunc] = {
     TransformType.noop: lambda x, tf: x,
     TransformType.classification: classification_transformer,
     TransformType.regression: regression_transformer,

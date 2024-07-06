@@ -1,4 +1,4 @@
-from typing import Callable
+from collections.abc import Callable
 import unittest
 
 from rastervision.pipeline.file_system import get_tmp_dir

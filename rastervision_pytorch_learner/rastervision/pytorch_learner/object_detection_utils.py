@@ -1,4 +1,5 @@
-from typing import Any, Callable, Sequence, Iterable
+from typing import Any, Sequence, Iterable
+from collections.abc import Callable
 from collections import defaultdict
 from os.path import join
 from operator import iand
@@ -143,8 +144,10 @@ class BoxList():
         else:
             return self.extras.get(name)
 
-    def _map_extras(self, func: Callable,
-                    cond: Callable = lambda k, v: True) -> dict:
+    def _map_extras(
+            self,
+            func: Callable[[str, Any], Any],
+            cond: Callable[[str, Any], bool] = lambda k, v: True) -> dict:
         new_extras = {}
         for k, v in self.extras.items():
             if cond(k, v):

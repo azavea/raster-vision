@@ -1,5 +1,5 @@
-from typing import (TYPE_CHECKING, Any, Callable, Iterable, Literal, Self,
-                    Sequence)
+from typing import (TYPE_CHECKING, Any, Iterable, Literal, Self, Sequence)
+from collections.abc import Callable
 import os
 from os.path import join, isdir
 from enum import Enum
@@ -382,18 +382,19 @@ class SolverConfig(Config):
                                   'with external_loss_def.')
         return self
 
-    def build_loss(self,
-                   num_classes: int,
-                   save_dir: str | None = None,
-                   hubconf_dir: str | None = None) -> Callable:
+    def build_loss(
+            self,
+            num_classes: int,
+            save_dir: str | None = None,
+            hubconf_dir: str | None = None) -> Callable[..., torch.Tensor]:
         """Build and return a loss function based on the config.
 
         Args:
-            num_classes (int): Number of classes.
-            save_dir (str|None): Used for building
-                external_loss_def if specified. Defaults to None.
-            hubconf_dir (str|None): Used for building
-                external_loss_def if specified. Defaults to None.
+            num_classes: Number of classes.
+            save_dir: Used for building ``external_loss_def`` if specified.
+                Defaults to ``None``.
+            hubconf_dir: Used for building ``external_loss_def`` if specified.
+                Defaults to ``None``.
 
         Returns:
             Loss function.

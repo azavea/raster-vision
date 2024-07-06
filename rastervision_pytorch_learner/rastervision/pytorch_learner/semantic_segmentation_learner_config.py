@@ -1,4 +1,4 @@
-from typing import Callable
+from collections.abc import Callable
 from os.path import join
 from enum import Enum
 import logging
@@ -179,8 +179,8 @@ class SemanticSegmentationModelConfig(ModelConfig):
         backbone_name = self.get_backbone_str()
         pretrained = self.pretrained
         weights = 'DEFAULT' if pretrained else None
-        model_factory_func: Callable = getattr(models.segmentation,
-                                               f'deeplabv3_{backbone_name}')
+        model_factory_func: Callable[..., nn.Module] = getattr(
+            models.segmentation, f'deeplabv3_{backbone_name}')
         model = model_factory_func(
             num_classes=num_classes,
             weights_backbone=weights,

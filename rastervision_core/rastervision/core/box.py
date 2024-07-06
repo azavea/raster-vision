@@ -1,4 +1,5 @@
-from typing import (TYPE_CHECKING, Callable, Literal, Self)
+from typing import (TYPE_CHECKING, Literal, Self)
+from collections.abc import Callable
 from pydantic import NonNegativeInt as NonNegInt, PositiveInt as PosInt
 import math
 import random
@@ -297,7 +298,7 @@ class Box:
         """
         return self.translate(dy=-bbox.ymin, dx=-bbox.xmin)
 
-    def reproject(self, transform_fn: Callable) -> Self:
+    def reproject(self, transform_fn: Callable[[tuple], tuple]) -> Self:
         """Reprojects this box based on a transform function.
 
         Args:

@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING, Callable, Iterable, Sequence
+from typing import TYPE_CHECKING, Iterable, Sequence
+from collections.abc import Callable
 from enum import Enum
 import logging
 

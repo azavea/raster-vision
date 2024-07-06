@@ -1,5 +1,6 @@
-from typing import (TYPE_CHECKING, Any, Callable, Iterator, Literal)
+from typing import (TYPE_CHECKING, Any, Iterator, Literal)
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from os.path import join, isfile, basename, isdir
 import warnings
 from time import perf_counter
@@ -94,7 +95,7 @@ class Learner(ABC):
                  valid_ds: 'Dataset | None' = None,
                  test_ds: 'Dataset | None' = None,
                  model: nn.Module | None = None,
-                 loss: Callable | None = None,
+                 loss: Callable[..., Tensor] | None = None,
                  optimizer: 'Optimizer | None' = None,
                  epoch_scheduler: '_LRScheduler | None' = None,
                  step_scheduler: '_LRScheduler | None' = None,
@@ -1291,7 +1292,8 @@ class Learner(ABC):
         if self.loss is not None and isinstance(self.loss, nn.Module):
             self.loss.to(self.device)
 
-    def build_loss(self, loss_def_path: str | None = None) -> Callable:
+    def build_loss(self,
+                   loss_def_path: str | None = None) -> Callable[..., Tensor]:
         """Build a loss Callable."""
         cfg = self.cfg
         loss = cfg.solver.build_loss(

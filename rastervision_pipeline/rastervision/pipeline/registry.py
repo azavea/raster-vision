@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING, Callable, Iterable
+from typing import TYPE_CHECKING, Iterable
+from collections.abc import Callable
 import inspect
 from click import Command
 
@@ -88,7 +89,8 @@ class Registry():
         """Get module path of plugin when Config class with type_hint is defined."""
         return self.type_hint_to_plugin[type_hint]
 
-    def get_upgrader(self, type_hint: str) -> Callable | None:
+    def get_upgrader(self,
+                     type_hint: str) -> Callable[[dict, int], dict] | None:
         """Get function that upgrades config dicts for type_hint."""
         return self.type_hint_to_upgrader.get(type_hint)
 
