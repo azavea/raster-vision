@@ -21,7 +21,7 @@ class Mock(MagicMock):
         return MagicMock()
 
 
-MOCK_MODULES = ['pyproj', 'h5py', 'osgeo']
+MOCK_MODULES = ['h5py', 'osgeo']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 # -- Allow Jinja templates in non-template .rst files -------------------------
@@ -124,7 +124,7 @@ autosummary_ignore_module_all = False
 autodoc_typehints = 'both'
 autodoc_class_signature = 'separated'
 autodoc_member_order = 'groupwise'
-autodoc_mock_imports = ['torch', 'torchvision', 'pycocotools', 'geopandas']
+autodoc_mock_imports = ['pycocotools']
 #########################
 
 #########################
