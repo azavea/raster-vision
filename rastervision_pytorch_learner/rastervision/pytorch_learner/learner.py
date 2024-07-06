@@ -1,4 +1,4 @@
-from typing import (TYPE_CHECKING, Any, Iterator, Literal)
+from typing import (TYPE_CHECKING, Any, Iterator, Literal, Self)
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from os.path import join, isfile, basename, isdir
@@ -40,7 +40,6 @@ from rastervision.pytorch_learner.utils import (
 from rastervision.pytorch_learner.dataset.visualizer import Visualizer
 
 if TYPE_CHECKING:
-    from typing import Self
     from torch.optim import Optimizer
     from torch.optim.lr_scheduler import _LRScheduler
     from torch.utils.data import Dataset, Sampler
@@ -266,7 +265,7 @@ class Learner(ABC):
                           cfg: 'LearnerConfig | None' = None,
                           training: bool = False,
                           use_onnx_model: bool | None = None,
-                          **kwargs) -> 'Self':
+                          **kwargs) -> Self:
         """Create a Learner from a model bundle.
 
         .. note::

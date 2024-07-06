@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, Self
 import logging
 
 import numpy as np
@@ -173,7 +173,7 @@ class GeoDataset(AlbumentationsDataset):
         raise NotImplementedError()
 
     @classmethod
-    def from_uris(cls, *args, **kwargs) -> 'GeoDataset':
+    def from_uris(cls, *args, **kwargs) -> Self:
         raise NotImplementedError()
 
 

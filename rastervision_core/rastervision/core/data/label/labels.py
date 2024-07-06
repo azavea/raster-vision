@@ -1,10 +1,9 @@
 """Defines the abstract Labels class."""
 
-from typing import TYPE_CHECKING, Any, Iterable
+from typing import TYPE_CHECKING, Any, Iterable, Self
 from abc import ABC, abstractmethod
 
 if TYPE_CHECKING:
-    from typing import Self
     from shapely.geometry import Polygon
     from rastervision.core.box import Box
 
@@ -17,14 +16,14 @@ class Labels(ABC):
     """
 
     @abstractmethod
-    def __add__(self, other: 'Self'):
+    def __add__(self, other: Self):
         """Add labels to these labels.
 
         Returns a concatenation of this and the other labels.
         """
 
     @abstractmethod
-    def filter_by_aoi(self, aoi_polygons: list['Polygon']) -> 'Self':
+    def filter_by_aoi(self, aoi_polygons: list['Polygon']) -> Self:
         """Return a copy of these labels filtered by given AOI polygons.
 
         Args:
@@ -42,7 +41,7 @@ class Labels(ABC):
 
     @classmethod
     @abstractmethod
-    def make_empty(cls) -> 'Self':
+    def make_empty(cls) -> Self:
         """Instantiate an empty instance of this class.
 
         Returns:
@@ -52,7 +51,7 @@ class Labels(ABC):
 
     @classmethod
     def from_predictions(cls, windows: Iterable['Box'],
-                         predictions: Iterable[Any]) -> 'Self':
+                         predictions: Iterable[Any]) -> Self:
         """Instantiate from windows and their corresponding predictions.
 
         This makes no assumptions about the type or format of the predictions.

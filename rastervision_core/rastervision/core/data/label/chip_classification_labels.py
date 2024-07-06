@@ -1,4 +1,4 @@
-from typing import (TYPE_CHECKING, Any, Iterable)
+from typing import (TYPE_CHECKING, Any, Iterable, Self)
 from dataclasses import dataclass
 
 import numpy as np
@@ -38,12 +38,11 @@ class ChipClassificationLabels(Labels):
     def __len__(self) -> int:
         return len(self.cell_to_label)
 
-    def __eq__(self, other: 'ChipClassificationLabels') -> bool:
+    def __eq__(self, other: Self) -> bool:
         return (isinstance(other, ChipClassificationLabels)
                 and self.cell_to_label == other.cell_to_label)
 
-    def __add__(self, other: 'ChipClassificationLabels'
-                ) -> 'ChipClassificationLabels':
+    def __add__(self, other: Self) -> Self:
         result = ChipClassificationLabels()
         result.extend(self)
         result.extend(other)
@@ -67,7 +66,7 @@ class ChipClassificationLabels(Labels):
         return super().from_predictions(windows, predictions)
 
     @classmethod
-    def make_empty(cls) -> 'ChipClassificationLabels':
+    def make_empty(cls) -> Self:
         return ChipClassificationLabels()
 
     def filter_by_aoi(self, aoi_polygons: Iterable['Polygon']):
@@ -141,7 +140,7 @@ class ChipClassificationLabels(Labels):
         """Return list of class_ids and scores for all cells."""
         return list(self.cell_to_label.values())
 
-    def extend(self, labels: 'ChipClassificationLabels') -> None:
+    def extend(self, labels: Self) -> None:
         """Adds cells contained in labels.
 
         Args:

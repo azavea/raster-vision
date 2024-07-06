@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Sequence
+from typing import TYPE_CHECKING, Self, Sequence
 
 import numpy as np
 
@@ -98,7 +98,7 @@ class StatsTransformer(RasterTransformer):
                             raster_sources: list['RasterSource'],
                             sample_prob: float | None = 0.1,
                             max_stds: float = 3.,
-                            chip_sz: int = 300) -> 'StatsTransformer':
+                            chip_sz: int = 300) -> Self:
         """Build with stats from the given raster sources.
 
         Args:
@@ -123,7 +123,7 @@ class StatsTransformer(RasterTransformer):
         return stats_transformer
 
     @classmethod
-    def from_stats_json(cls, uri: str, **kwargs) -> 'StatsTransformer':
+    def from_stats_json(cls, uri: str, **kwargs) -> Self:
         """Build with stats from a JSON file.
 
         The file is expected to be in the same format as written by
@@ -141,8 +141,7 @@ class StatsTransformer(RasterTransformer):
         return stats_transformer
 
     @classmethod
-    def from_raster_stats(cls, stats: RasterStats,
-                          **kwargs) -> 'StatsTransformer':
+    def from_raster_stats(cls, stats: RasterStats, **kwargs) -> Self:
         """Build with stats from a :class:`.RasterStats` instance.
 
         The file is expected to be in the same format as written by

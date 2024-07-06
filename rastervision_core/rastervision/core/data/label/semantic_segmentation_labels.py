@@ -1,4 +1,4 @@
-from typing import (TYPE_CHECKING, Any, Iterable, Sequence)
+from typing import (TYPE_CHECKING, Any, Iterable, Self, Sequence)
 from abc import abstractmethod
 
 import numpy as np
@@ -32,8 +32,7 @@ class SemanticSegmentationLabels(Labels):
         self.dtype = dtype
 
     @abstractmethod
-    def __add__(self, other: 'SemanticSegmentationLabels'
-                ) -> 'SemanticSegmentationLabels':
+    def __add__(self, other: Self) -> Self:
         """Merge self with other labels."""
 
     def __setitem__(self, window: Box, values: np.ndarray) -> None:
@@ -95,7 +94,7 @@ class SemanticSegmentationLabels(Labels):
         return self.extent.get_windows(size, size, **kwargs)
 
     def filter_by_aoi(self, aoi_polygons: list['Polygon'], null_class_id: int,
-                      **kwargs) -> 'SemanticSegmentationLabels':
+                      **kwargs) -> Self:
         """Keep only the values that lie inside the AOI.
 
         This is an inplace operation.
@@ -156,7 +155,7 @@ class SemanticSegmentationLabels(Labels):
 
     @classmethod
     def make_empty(cls, extent: Box, num_classes: int,
-                   smooth: bool = False) -> 'SemanticSegmentationLabels':
+                   smooth: bool = False) -> Self:
         """Instantiate an empty instance.
 
         Args:
@@ -183,14 +182,13 @@ class SemanticSegmentationLabels(Labels):
                 extent=extent, num_classes=num_classes)
 
     @classmethod
-    def from_predictions(
-            cls,
-            windows: Iterable['Box'],
-            predictions: Iterable[Any],
-            extent: Box,
-            num_classes: int,
-            smooth: bool = False,
-            crop_sz: int | None = None) -> 'SemanticSegmentationLabels':
+    def from_predictions(cls,
+                         windows: Iterable['Box'],
+                         predictions: Iterable[Any],
+                         extent: Box,
+                         num_classes: int,
+                         smooth: bool = False,
+                         crop_sz: int | None = None) -> Self:
         """Instantiate from windows and their corresponding predictions.
 
         Args:
@@ -272,8 +270,7 @@ class SemanticSegmentationDiscreteLabels(SemanticSegmentationLabels):
         # track which pixels have been hit at all
         self.hit_mask = np.zeros((self.height, self.width), dtype=bool)
 
-    def __add__(self, other: 'SemanticSegmentationDiscreteLabels'
-                ) -> 'SemanticSegmentationDiscreteLabels':
+    def __add__(self, other: Self) -> Self:
         """Merge self with other labels by adding the pixel counts."""
         if self.extent != other.extent:
             raise ValueError('Cannot add labels with unqeual extents.')
@@ -281,7 +278,7 @@ class SemanticSegmentationDiscreteLabels(SemanticSegmentationLabels):
         self.pixel_counts += other.pixel_counts
         return self
 
-    def __eq__(self, other: 'SemanticSegmentationDiscreteLabels') -> bool:
+    def __eq__(self, other: Self) -> bool:
         if not isinstance(other, SemanticSegmentationDiscreteLabels):
             return False
         if self.extent != other.extent:
@@ -350,8 +347,7 @@ class SemanticSegmentationDiscreteLabels(SemanticSegmentationLabels):
         self.pixel_counts[class_id, y0:y1, x0:x1][mask] = 1
 
     @classmethod
-    def make_empty(cls, extent: Box,
-                   num_classes: int) -> 'SemanticSegmentationDiscreteLabels':
+    def make_empty(cls, extent: Box, num_classes: int) -> Self:
         """Instantiate an empty instance."""
         return cls(extent=extent, num_classes=num_classes)
 
@@ -361,8 +357,7 @@ class SemanticSegmentationDiscreteLabels(SemanticSegmentationLabels):
                          predictions: Iterable[Any],
                          extent: Box,
                          num_classes: int,
-                         crop_sz: int | None = None
-                         ) -> 'SemanticSegmentationDiscreteLabels':
+                         crop_sz: int | None = None) -> Self:
         labels = cls.make_empty(extent, num_classes)
         labels.add_predictions(windows, predictions, crop_sz=crop_sz)
         return labels
@@ -452,8 +447,7 @@ class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
             (self.num_classes, self.height, self.width), dtype=self.dtype)
         self.pixel_hits = np.zeros((self.height, self.width), dtype=dtype_hits)
 
-    def __add__(self, other: 'SemanticSegmentationSmoothLabels'
-                ) -> 'SemanticSegmentationSmoothLabels':
+    def __add__(self, other: Self) -> Self:
         """Merge self with other by adding pixel scores and hits."""
         if self.extent != other.extent:
             raise ValueError('Cannot add labels with unqeual extents.')
@@ -462,7 +456,7 @@ class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
         self.pixel_hits += other.pixel_hits
         return self
 
-    def __eq__(self, other: 'SemanticSegmentationSmoothLabels') -> bool:
+    def __eq__(self, other: Self) -> bool:
         if not isinstance(other, SemanticSegmentationSmoothLabels):
             return False
         if self.extent != other.extent:
@@ -529,19 +523,17 @@ class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
         self.pixel_hits[y0:y1, x0:x1][mask] = 1
 
     @classmethod
-    def make_empty(cls, extent: Box,
-                   num_classes: int) -> 'SemanticSegmentationSmoothLabels':
+    def make_empty(cls, extent: Box, num_classes: int) -> Self:
         """Instantiate an empty instance."""
         return cls(extent=extent, num_classes=num_classes)
 
     @classmethod
-    def from_predictions(
-            cls,
-            windows: Iterable['Box'],
-            predictions: Iterable[Any],
-            extent: Box,
-            num_classes: int,
-            crop_sz: int | None = None) -> 'SemanticSegmentationSmoothLabels':
+    def from_predictions(cls,
+                         windows: Iterable['Box'],
+                         predictions: Iterable[Any],
+                         extent: Box,
+                         num_classes: int,
+                         crop_sz: int | None = None) -> Self:
         labels = cls.make_empty(extent, num_classes)
         labels.add_predictions(windows, predictions, crop_sz=crop_sz)
         return labels

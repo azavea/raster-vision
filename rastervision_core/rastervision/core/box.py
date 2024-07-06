@@ -15,6 +15,7 @@ from rastervision.core.utils.misc import (calculate_required_padding,
 
 if TYPE_CHECKING:
     from shapely.geometry import MultiPolygon
+    from shapely.geometry.base import BaseGeometry
 
 
 class BoxSizeError(ValueError):
@@ -226,8 +227,8 @@ class Box:
             return False
         return True
 
-    @staticmethod
-    def from_npbox(npbox):
+    @classmethod
+    def from_npbox(cls, npbox: np.ndarray) -> Self:
         """Return new Box based on npbox format.
 
         Args:
@@ -235,14 +236,14 @@ class Box:
         """
         return Box(*npbox)
 
-    @staticmethod
-    def from_shapely(shape):
+    @classmethod
+    def from_shapely(cls, shape: 'BaseGeometry') -> Self:
         """Instantiate from the bounds of a shapely geometry."""
         xmin, ymin, xmax, ymax = shape.bounds
         return Box(ymin, xmin, ymax, xmax)
 
     @classmethod
-    def from_rasterio(self, rio_window: RioWindow) -> Self:
+    def from_rasterio(cls, rio_window: RioWindow) -> Self:
         """Instantiate from a rasterio window."""
         yslice, xslice = rio_window.toslices()
         return Box(yslice.start, xslice.start, yslice.stop, xslice.stop)

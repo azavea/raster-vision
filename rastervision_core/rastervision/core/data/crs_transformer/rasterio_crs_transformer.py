@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any
+from typing import Any, Self
 from pyproj import Transformer
 
 import numpy as np
@@ -8,9 +8,6 @@ from rasterio import Affine
 
 from rastervision.core.data.crs_transformer import (CRSTransformer,
                                                     IdentityCRSTransformer)
-
-if TYPE_CHECKING:
-    from typing import Self
 
 
 class RasterioCRSTransformer(CRSTransformer):
@@ -107,8 +104,7 @@ class RasterioCRSTransformer(CRSTransformer):
     def from_dataset(cls,
                      dataset: Any,
                      map_crs: str | None = 'epsg:4326',
-                     **kwargs
-                     ) -> 'IdentityCRSTransformer | RasterioCRSTransformer':
+                     **kwargs) -> 'IdentityCRSTransformer | Self':
         """Build from rasterio dataset.
 
         Args:
@@ -132,7 +128,7 @@ class RasterioCRSTransformer(CRSTransformer):
 
     @classmethod
     def from_uri(cls, uri: str, map_crs: str | None = 'epsg:4326',
-                 **kwargs) -> 'Self':
+                 **kwargs) -> 'IdentityCRSTransformer | Self':
         """Build from raster URI.
 
         Args:

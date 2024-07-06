@@ -1,5 +1,5 @@
 """Defines ``ClassEvaluationItem``."""
-
+from typing import Self
 import numpy as np
 
 from rastervision.core.evaluation import EvaluationItem
@@ -55,8 +55,7 @@ class ClassEvaluationItem(EvaluationItem):
 
     @classmethod
     def from_multiclass_conf_mat(cls, conf_mat: np.ndarray, class_id: int,
-                                 class_name: str,
-                                 **kwargs) -> 'ClassEvaluationItem':
+                                 class_name: str, **kwargs) -> Self:
         """Construct from a multi-class confusion matrix and a target class ID.
 
         Args:

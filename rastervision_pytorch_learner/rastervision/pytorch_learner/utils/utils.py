@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Sequence, Iterable, Container
+from typing import TYPE_CHECKING, Any, Container, Iterable, Self, Sequence
 from os.path import basename, join, isfile
 import logging
 
@@ -480,8 +480,7 @@ class ONNXRuntimeAdapter:
         self.input_key = inputs[0].name
 
     @classmethod
-    def from_file(cls, path: str,
-                  providers: list[str] | None = None) -> 'ONNXRuntimeAdapter':
+    def from_file(cls, path: str, providers: list[str] | None = None) -> Self:
         """Construct from file.
 
         Args:
