@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from rastervision.pipeline.config import register_config, Field
 from rastervision.core.data.vector_transformer import (VectorTransformerConfig,
@@ -24,8 +24,8 @@ class ShiftTransformerConfig(VectorTransformerConfig):
         True,
         descriptions='Whether to round shifted pixel values to integers.')
 
-    def build(self, class_config: Optional['ClassConfig'] = None
-              ) -> ShiftTransformer:
+    def build(self,
+              class_config: 'ClassConfig | None' = None) -> ShiftTransformer:
         return ShiftTransformer(
             x_shift=self.x_shift,
             y_shift=self.y_shift,

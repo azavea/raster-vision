@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Dict, Optional
+from typing import TYPE_CHECKING
 from copy import deepcopy
 import logging
 
@@ -27,10 +27,10 @@ class ClassInferenceTransformer(VectorTransformer):
     """
 
     def __init__(self,
-                 default_class_id: Optional[int],
-                 class_config: Optional['ClassConfig'] = None,
-                 class_id_to_filter: Optional[Dict[int, list]] = None,
-                 class_name_mapping: Optional[dict[str, str]] = None):
+                 default_class_id: int | None,
+                 class_config: 'ClassConfig | None' = None,
+                 class_id_to_filter: dict[int, list] | None = None,
+                 class_name_mapping: dict[str, str] | None = None):
         """Constructor.
 
         Args:
@@ -74,11 +74,10 @@ class ClassInferenceTransformer(VectorTransformer):
     @staticmethod
     def infer_feature_class_id(
             feature: dict,
-            default_class_id: Optional[int],
-            class_config: Optional['ClassConfig'] = None,
-            class_id_to_filter: Optional[Dict[int, list]] = None,
-            class_name_mapping: Optional[dict[str, str]] = None
-    ) -> Optional[int]:
+            default_class_id: int | None,
+            class_config: 'ClassConfig | None' = None,
+            class_id_to_filter: dict[int, list] | None = None,
+            class_name_mapping: dict[str, str] | None = None) -> int | None:
         """Infer the class ID for a GeoJSON feature.
 
         Rules:
@@ -115,7 +114,7 @@ class ClassInferenceTransformer(VectorTransformer):
                 ``dict(car="vehicle", truck="vehicle")``. Defaults to ``None``.
 
         Returns:
-            Optional[int]: Inferred class ID.
+            int | None: Inferred class ID.
         """
         if class_name_mapping is not None and class_config is None:
             raise ValueError(
@@ -146,7 +145,7 @@ class ClassInferenceTransformer(VectorTransformer):
 
     def transform(self,
                   geojson: dict,
-                  crs_transformer: Optional['CRSTransformer'] = None) -> dict:
+                  crs_transformer: 'CRSTransformer | None' = None) -> dict:
         """Add class_id to feature properties and drop features with no class.
 
         For each feature in geojson, the class_id is inferred and is set into

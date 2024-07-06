@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
 from rastervision.core.data.utils import listify_uris, get_polygons_from_uris
@@ -7,54 +7,53 @@ if TYPE_CHECKING:
     from rastervision.core.data import ClassConfig, Scene
 
 
-def make_ss_scene(image_uri: Union[str, List[str]],
-                  label_raster_uri: Optional[Union[str, List[str]]] = None,
-                  class_config: Optional['ClassConfig'] = None,
-                  label_vector_uri: Optional[str] = None,
-                  aoi_uri: Union[str, List[str]] = [],
-                  label_vector_default_class_id: Optional[int] = None,
+def make_ss_scene(image_uri: str | list[str],
+                  label_raster_uri: str | list[str] | None = None,
+                  class_config: 'ClassConfig | None' = None,
+                  label_vector_uri: str | None = None,
+                  aoi_uri: str | list[str] = [],
+                  label_vector_default_class_id: int | None = None,
                   image_raster_source_kw: dict = {},
                   label_raster_source_kw: dict = {},
                   label_vector_source_kw: dict = {},
-                  scene_id: Optional[str] = None) -> 'Scene':
+                  scene_id: str | None = None) -> 'Scene':
     """Create a semantic segmentation scene from image and label URIs.
 
     This is a convenience method. For more fine-grained control, it is
     recommended to use the default constructor.
 
     Args:
-        image_uri (Union[str, List[str]]): URI or list of URIs of GeoTIFFs to
-            use as the source of image data.
-        label_raster_uri (Optional[Union[str, List[str]]], optional): URI or
-            list of URIs of GeoTIFFs to use as the source of segmentation label
-            data. If the labels are in the form of GeoJSONs, use
-            label_vector_uri instead. Defaults to None.
-        label_vector_uri (Optional[str], optional):  URI of GeoJSON file to use
-            as the source of segmentation label data. If the labels are in the
-            form of GeoTIFFs, use label_raster_uri instead. Defaults to None.
-        class_config (Optional[ClassConfig]): The ClassConfig. Must be
-            non-None if creating a scene without a LabelSource.
-            Defaults to None.
-        aoi_uri (Union[str, List[str]], optional): URI or list of URIs of
-            GeoJSONs that specify the area-of-interest. If provided, the
-            dataset will only access data from this area. Defaults to [].
-        label_vector_default_class_id (Optional[int], optional): If using
-            label_vector_uri and all polygons in that file belong to the same
-            class and they do not contain a `class_id` property, then use this
-            argument to map all of the polygons to the appropriate class ID.
-            See docs for ClassInferenceTransformer for more details.
-            Defaults to None.
-        image_raster_source_kw (dict, optional): Additional arguments to pass
-            to the RasterioSource used for image data. See docs for
-            RasterioSource for more details. Defaults to {}.
-        label_raster_source_kw (dict, optional): Additional arguments to pass
-            to the RasterioSource used for label data, if label_raster_uri is
-            used. See docs for RasterioSource for more details. Defaults to {}.
-        label_vector_source_kw (dict, optional): Additional arguments to pass
-            to the GeoJSONVectorSource used for label data, if label_vector_uri
-            is used. See docs for GeoJSONVectorSource for more details.
-            Defaults to {}.
-        scene_id (Optional[str]): Optional scene ID. If None, will be randomly
+        image_uri: URI or list of URIs of GeoTIFFs to use as the source of
+            image data.
+        label_raster_uri: URI or list of URIs of GeoTIFFs to use as the source
+            of segmentation label data. If the labels are in the form of
+            GeoJSONs, use ``label_vector_uri`` instead. Defaults to ``None``.
+        label_vector_uri:  URI of GeoJSON file to use as the source of
+            segmentation label data. If the labels are in the form of GeoTIFFs,
+            use ``label_raster_uri`` instead. Defaults to ``None``.
+        class_config: The ``ClassConfig``. Can be ``None`` if not using any
+            labels.
+        aoi_uri: URI or list of URIs of GeoJSONs that specify the
+            area-of-interest. If provided, the dataset will only access data
+            from this area. Defaults to ``[]``.
+        label_vector_default_class_id: If using ``label_vector_uri`` and all
+            polygons in that file belong to the same class and they do not
+            contain a ``class_id`` property, then use this argument to map all
+            of the polygons to the appropriate class ID. See docs for
+            :class:`.ClassInferenceTransformer` for more details.
+            Defaults to ``None``.
+        image_raster_source_kw: Additional arguments to pass to the
+            :class:`.RasterioSource` used for image data. See docs for
+            :class:`.RasterioSource` for more details. Defaults to ``{}``.
+        label_raster_source_kw: Additional arguments to pass
+            to the :class:`.RasterioSource` used for label data, if
+            ``label_raster_uri`` is used. See docs for :class:`.RasterioSource`
+            for more details. Defaults to ``{}``.
+        label_vector_source_kw: Additional arguments to pass to the
+            :class:`.GeoJSONVectorSource` used for label data, if
+            ``label_vector_uri`` is used. See docs for
+            :class:`.GeoJSONVectorSource` for more details. Defaults to ``{}``.
+        scene_id: Optional scene ID. If None, will be randomly
             generated. Defaults to None.
 
     Raises:
@@ -123,51 +122,50 @@ def make_ss_scene(image_uri: Union[str, List[str]],
     return scene
 
 
-def make_cc_scene(image_uri: Union[str, List[str]],
-                  label_vector_uri: Optional[str] = None,
-                  class_config: Optional['ClassConfig'] = None,
-                  aoi_uri: Union[str, List[str]] = [],
-                  label_vector_default_class_id: Optional[int] = None,
+def make_cc_scene(image_uri: str | list[str],
+                  label_vector_uri: str | None = None,
+                  class_config: 'ClassConfig | None' = None,
+                  aoi_uri: str | list[str] = [],
+                  label_vector_default_class_id: int | None = None,
                   image_raster_source_kw: dict = {},
                   label_vector_source_kw: dict = {},
                   label_source_kw: dict = {},
-                  scene_id: Optional[str] = None) -> 'Scene':
+                  scene_id: str | None = None) -> 'Scene':
     """Create a chip classification scene from image and label URIs.
 
     This is a convenience method. For more fine-grained control, it is
     recommended to use the default constructor.
 
     Args:
-        image_uri (Union[str, List[str]]): URI or list of URIs of GeoTIFFs to
-            use as the source of image data.
-        label_vector_uri (Optional[str], optional):  URI of GeoJSON file to use
-            as the source of segmentation label data. Defaults to None.
-        class_config (Optional[ClassConfig]): The ClassConfig. Must be
-            non-None if creating a scene without a LabelSource.
-            Defaults to None.
-        aoi_uri (Union[str, List[str]], optional): URI or list of URIs of
-            GeoJSONs that specify the area-of-interest. If provided, the
-            dataset will only access data from this area. Defaults to [].
-        label_vector_default_class_id (Optional[int], optional): If using
-            label_vector_uri and all polygons in that file belong to the same
-            class and they do not contain a `class_id` property, then use this
-            argument to map all of the polygons to the appropriate class ID.
-            See docs for ClassInferenceTransformer for more details.
-            Defaults to None.
-        image_raster_source_kw (dict, optional): Additional arguments to pass
-            to the RasterioSource used for image data. See docs for
-            RasterioSource for more details. Defaults to {}.
-        label_vector_source_kw (dict, optional): Additional arguments to pass
-            to the GeoJSONVectorSourceConfig used for label data, if
-            label_vector_uri is set. See docs for GeoJSONVectorSourceConfig
-            for more details. Defaults to {}.
-        label_source_kw (dict, optional): Additional arguments to pass
-            to the ChipClassificationLabelSourceConfig used for label data, if
-            label_vector_uri is set. See docs for
-            ChipClassificationLabelSourceConfig for more details.
-            Defaults to {}.
-        scene_id (Optional[str]): Optional scene ID. If None, will be randomly
-            generated. Defaults to None.
+        image_uri: URI or list of URIs of GeoTIFFs to use as the source of
+            image data.
+        label_vector_uri:  URI of GeoJSON file to use as the source of
+            segmentation label data. Defaults to ``None``.
+        class_config: The ClassConfig. Must be non-``None`` if creating a scene
+            without a ``LabelSource``. Defaults to ``None``.
+        aoi_uri: URI or list of URIs of GeoJSONs that specify the
+            area-of-interest. If provided, the dataset will only access data
+            from this area. Defaults to ``[]``.
+        label_vector_default_class_id: If using ``label_vector_uri`` and all
+            polygons in that file belong to the same class and they do not
+            contain a `class_id` property, then use this argument to map all of
+            the polygons to the appropriate class ID. See docs for
+            :class:`.ClassInferenceTransformer` for more details.
+            Defaults to ``None``.
+        image_raster_source_kw: Additional arguments to pass to the
+            :class:`.RasterioSource` used for image data. See docs for
+            :class:`.RasterioSource` for more details. Defaults to ``{}``.
+        label_vector_source_kw: Additional arguments to pass to the
+            :class:`.GeoJSONVectorSource` used for label data, if
+            ``label_vector_uri`` is used. See docs for
+            :class:`.GeoJSONVectorSource` for more details. Defaults to ``{}``.
+        label_source_kw: Additional arguments to pass to the
+            :class:`.ChipClassificationLabelSourceConfig` used for label data,
+            if ``label_vector_uri`` is set. See docs for
+            :class:`.ChipClassificationLabelSourceConfig` for more details.
+            Defaults to ``{}``.
+        scene_id: Optional scene ID. If ``None``, will be randomly
+            generated. Defaults to ``None``.
 
     Returns:
         Scene: A chip classification scene.
@@ -212,50 +210,50 @@ def make_cc_scene(image_uri: Union[str, List[str]],
     return scene
 
 
-def make_od_scene(image_uri: Union[str, List[str]],
-                  label_vector_uri: Optional[str] = None,
-                  class_config: Optional['ClassConfig'] = None,
-                  aoi_uri: Union[str, List[str]] = [],
-                  label_vector_default_class_id: Optional[int] = None,
+def make_od_scene(image_uri: str | list[str],
+                  label_vector_uri: str | None = None,
+                  class_config: 'ClassConfig | None' = None,
+                  aoi_uri: str | list[str] = [],
+                  label_vector_default_class_id: int | None = None,
                   image_raster_source_kw: dict = {},
                   label_vector_source_kw: dict = {},
                   label_source_kw: dict = {},
-                  scene_id: Optional[str] = None) -> 'Scene':
+                  scene_id: str | None = None) -> 'Scene':
     """Create an object detection scene from image and label URIs.
 
     This is a convenience method. For more fine-grained control, it is
     recommended to use the default constructor.
 
     Args:
-        image_uri (Union[str, List[str]]): URI or list of URIs of GeoTIFFs to
-            use as the source of image data.
-        label_vector_uri (Optional[str], optional):  URI of GeoJSON file to use
-            as the source of segmentation label data. Defaults to None.
-        class_config (Optional[ClassConfig]): The ClassConfig. Must be
-            non-None if creating a scene without a LabelSource.
-            Defaults to None.
-        aoi_uri (Union[str, List[str]], optional): URI or list of URIs of
+        image_uri: URI or list of URIs of GeoTIFFs to use as the source of
+            image data.
+        label_vector_uri:  URI of GeoJSON file to use as the source of label.
+            Defaults to ``None``.
+        class_config: The ClassConfig. Must be non-None if creating a scene
+            without a ``LabelSource``. Defaults to ``None``.
+        aoi_uri: URI or list of URIs of
             GeoJSONs that specify the area-of-interest. If provided, the
-            dataset will only access data from this area. Defaults to [].
-        label_vector_default_class_id (Optional[int], optional): If using
+            dataset will only access data from this area. Defaults to ``[]``.
+        label_vector_default_class_id: If using
             label_vector_uri and all polygons in that file belong to the same
             class and they do not contain a `class_id` property, then use this
             argument to map all of the polygons to the appropriate class ID.
             See docs for ClassInferenceTransformer for more details.
-            Defaults to None.
-        image_raster_source_kw (dict, optional): Additional arguments to pass
-            to the RasterioSource used for image data. See docs for
-            RasterioSource for more details. Defaults to {}.
-        label_vector_source_kw (dict, optional): Additional arguments to pass
-            to the GeoJSONVectorSourceConfig used for label data, if
-            label_vector_uri is set. See docs for GeoJSONVectorSourceConfig
-            for more details. Defaults to {}.
-        label_source_kw (dict, optional): Additional arguments to pass
-            to the ObjectDetectionLabelSourceConfig used for label data, if
+            Defaults to ``None``.
+        image_raster_source_kw: Additional arguments to pass
+            to the :class:`.RasterioSource` used for image data. See docs for
+            :class:`.RasterioSource` for more details. Defaults to ``{}``.
+        label_vector_source_kw: Additional arguments to pass
+            to the :class:`.GeoJSONVectorSourceConfig` used for label data, if
             label_vector_uri is set. See docs for
-            ObjectDetectionLabelSourceConfig for more details.
-            Defaults to {}.
-        scene_id (Optional[str]): Optional scene ID. If None, will be randomly
+            :class:`.GeoJSONVectorSourceConfig` for more details.
+            Defaults to ``{}``.
+        label_source_kw: Additional arguments to pass
+            to the :class:`.ObjectDetectionLabelSourceConfig` used for label data, if
+            label_vector_uri is set. See docs for
+            :class:`.ObjectDetectionLabelSourceConfig` for more details.
+            Defaults to ``{}``.
+        scene_id: Optional scene ID. If None, will be randomly
             generated. Defaults to None.
 
     Returns:

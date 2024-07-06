@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 from abc import ABC, abstractmethod
 
 if TYPE_CHECKING:
@@ -24,7 +24,7 @@ class LabelStore(ABC):
 
     @property
     @abstractmethod
-    def bbox(self) -> Optional['Box']:
+    def bbox(self) -> 'Box | None':
         """Bounding box applied to the source."""
 
     @property

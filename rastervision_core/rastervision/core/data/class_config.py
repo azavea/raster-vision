@@ -1,4 +1,4 @@
-from typing import List, Optional, Self, Tuple, Union
+from typing import Self
 
 from rastervision.pipeline.config import (Config, register_config, ConfigError,
                                           Field, model_validator)
@@ -12,17 +12,17 @@ DEFAULT_NULL_CLASS_COLOR = 'black'
 class ClassConfig(Config):
     """Configure class information for a machine learning task."""
 
-    names: List[str] = Field(
+    names: list[str] = Field(
         ...,
         description='Names of classes. The i-th class in this list will have '
         'class ID = i.')
-    colors: Optional[List[Union[str, Tuple]]] = Field(
+    colors: list[str | tuple] | None = Field(
         None,
         description=
         ('Colors used to visualize classes. Can be color strings accepted by '
          'matplotlib or RGB tuples. If None, a random color will be auto-generated '
          'for each class.'))
-    null_class: Optional[str] = Field(
+    null_class: str | None = Field(
         None,
         description='Optional name of class in `names` to use as the null '
         'class. This is used in semantic segmentation to represent the label '
@@ -121,7 +121,7 @@ class ClassConfig(Config):
         return len(self.names)
 
     @property
-    def color_triples(self) -> List[Tuple[float, float, float]]:
+    def color_triples(self) -> list[tuple[float, float, float]]:
         """Class colors in a normalized form."""
         color_triples = [normalize_color(c) for c in self.colors]
         return color_triples

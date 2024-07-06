@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Sequence
 
 from tqdm.auto import tqdm
 
@@ -11,27 +11,25 @@ if TYPE_CHECKING:
 PROGRESSBAR_DELAY_SEC = 5
 
 
-def boxes_to_geojson(
-        boxes: Sequence['Box'],
-        class_ids: Sequence[int],
-        crs_transformer: 'CRSTransformer',
-        class_config: 'ClassConfig',
-        scores: Optional[Sequence[Union[float, Sequence[float]]]] = None,
-        bbox: Optional['Box'] = None) -> dict:
+def boxes_to_geojson(boxes: Sequence['Box'],
+                     class_ids: Sequence[int],
+                     crs_transformer: 'CRSTransformer',
+                     class_config: 'ClassConfig',
+                     scores: Sequence[float | Sequence[float]] | None = None,
+                     bbox: 'Box | None' = None) -> dict:
     """Convert boxes and associated data into a GeoJSON dict.
 
     Args:
-        boxes (Sequence[Box]): List of Box in pixel row/col format.
-        class_ids (Sequence[int]): List of int (one for each box)
-        crs_transformer (CRSTransformer): CRSTransformer used to convert pixel
-            coords to map coords in the GeoJSON.
-        class_config (ClassConfig): ClassConfig
-        scores (Optional[Sequence[Union[float, Sequence[float]]]], optional):
-            Optional list of score or scores. If floats (one for each box),
+        boxes: List of Box in pixel row/col format.
+        class_ids: List of int (one for each box)
+        crs_transformer: CRSTransformer used to convert pixel coords to map
+            coords in the GeoJSON.
+        class_config: ClassConfig
+        scores: Optional list of score or scores. If floats (one for each box),
             property name will be "score". If lists of floats, property name
-            will be "scores". Defaults to None.
-        bbox (Optional[Box]): User-specified crop of the extent. Must be
-            provided if the corresponding RasterSource has bbox != extent.
+            will be "scores". Defaults to ``None``.
+        bbox: User-specified crop of the extent. Must be provided if the
+            corresponding :class:`.RasterSource` has ``bbox != extent``.
 
     Returns:
         dict: Serialized GeoJSON.

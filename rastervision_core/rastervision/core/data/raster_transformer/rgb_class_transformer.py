@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING
 
 import numpy as np
 
@@ -39,12 +39,12 @@ class RGBClassTransformer(RasterTransformer):
 
     def transform(self,
                   chip: np.ndarray,
-                  channel_order: Optional[List[int]] = None) -> np.ndarray:
+                  channel_order: list[int] | None = None) -> np.ndarray:
         """Transform RGB array to array of class IDs or vice versa.
 
         Args:
             chip (np.ndarray): Numpy array of shape (H, W, 3).
-            channel_order (Optional[List[int]], optional): List of indices of
+            channel_order (list[int] | None): List of indices of
                 channels that were extracted from the raw imagery.
                 Defaults to None.
 

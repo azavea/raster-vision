@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from rastervision.core.data.raster_source import (RasterizedSource)
 from rastervision.core.data.vector_source import (VectorSourceConfig)
@@ -65,7 +65,7 @@ class RasterizedSourceConfig(Config):
     def build(self,
               class_config: 'ClassConfig',
               crs_transformer: 'CRSTransformer',
-              bbox: Optional['Box'] = None) -> RasterizedSource:
+              bbox: 'Box | None' = None) -> RasterizedSource:
         vector_source = self.vector_source.build(class_config, crs_transformer)
         return RasterizedSource(
             vector_source=vector_source,

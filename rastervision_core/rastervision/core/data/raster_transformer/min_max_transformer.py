@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 import numpy as np
 
 from rastervision.core.data.raster_transformer import RasterTransformer
@@ -10,7 +8,7 @@ class MinMaxTransformer(RasterTransformer):
 
     def transform(self,
                   chip: np.ndarray,
-                  channel_order: Optional[List[int]] = None) -> np.ndarray:
+                  channel_order: list[int] | None = None) -> np.ndarray:
         c = chip.shape[-1]
         pixels = chip.reshape(-1, c)
         channel_mins = pixels.min(axis=0)

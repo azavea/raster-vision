@@ -1,7 +1,5 @@
 """Defines ``ClassEvaluationItem``."""
 
-from typing import Optional
-
 import numpy as np
 
 from rastervision.core.evaluation import EvaluationItem
@@ -33,7 +31,7 @@ class ClassEvaluationItem(EvaluationItem):
                  tp: int,
                  fp: int,
                  fn: int,
-                 tn: Optional[int] = None,
+                 tn: int | None = None,
                  **kwargs):
         """Constructor.
 
@@ -43,7 +41,7 @@ class ClassEvaluationItem(EvaluationItem):
             tp (int): True positive count.
             fp (int): False positive count.
             fn (int): False negative count.
-            tn (Optional[int], optional): True negative count.
+            tn (int | None): True negative count.
                 Defaults to None.
             **kwargs: Additional data can be provided as keyword arguments.
                 These will be included in the dict returned by ``to_json()``.
@@ -110,11 +108,11 @@ class ClassEvaluationItem(EvaluationItem):
         return self.conf_mat[1, 1]
 
     @property
-    def true_neg(self) -> Optional[int]:
+    def true_neg(self) -> int | None:
         """True negative count.
 
         Returns:
-            Optional[int]: Count as int if available. Otherwise, None.
+            int | None: Count as int if available. Otherwise, None.
         """
         tn = self.conf_mat[0, 0]
         if tn < 0:
@@ -144,7 +142,7 @@ class ClassEvaluationItem(EvaluationItem):
         return self.recall
 
     @property
-    def specificity(self) -> Optional[float]:
+    def specificity(self) -> float | None:
         """``TN / (TN + FP)``"""
         if self.true_neg is None:
             return None

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from rastervision.pipeline.file_system import json_to_file
 from rastervision.core.data.label import ChipClassificationLabels
@@ -20,7 +20,7 @@ class ChipClassificationGeoJSONStore(LabelStore):
                  uri: str,
                  class_config: 'ClassConfig',
                  crs_transformer: 'CRSTransformer',
-                 bbox: Optional['Box'] = None):
+                 bbox: 'Box | None' = None):
         """Constructor.
 
         Args:
@@ -28,7 +28,7 @@ class ChipClassificationGeoJSONStore(LabelStore):
             class_config: ClassConfig
             crs_transformer: CRSTransformer to convert from map coords in label
                 in GeoJSON file to pixel coords.
-            bbox (Optional[Box], optional): User-specified crop of the extent.
+            bbox (Box | None): User-specified crop of the extent.
                 If provided, only labels falling inside it are returned by
                 :meth:`.ChipClassificationGeoJSONStore.get_labels`. Must be
                 provided if the corresponding RasterSource has bbox != extent.

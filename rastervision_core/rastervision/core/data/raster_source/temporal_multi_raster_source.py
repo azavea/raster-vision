@@ -1,4 +1,4 @@
-from typing import Any, Optional, Sequence, Tuple
+from typing import Any, Sequence
 
 from pydantic import NonNegativeInt as NonNegInt
 import numpy as np
@@ -17,7 +17,7 @@ class TemporalMultiRasterSource(MultiRasterSource):
                  primary_source_idx: NonNegInt = 0,
                  force_same_dtype: bool = False,
                  raster_transformers: Sequence = [],
-                 bbox: Optional[Box] = None):
+                 bbox: Box | None = None):
         """Constructor.
 
         Args:
@@ -30,7 +30,7 @@ class TemporalMultiRasterSource(MultiRasterSource):
                 conversion is done, just a quick cast. Use with caution.
             raster_transformers (Sequence): Sequence of transformers.
                 Defaults to [].
-            bbox (Optional[Box]): User-specified crop of the extent.
+            bbox (Box | None): User-specified crop of the extent.
                 If given, the primary raster source's bbox is set to this.
                 If None, the full extent available in the source file of the
                 primary raster source is used.
@@ -77,15 +77,14 @@ class TemporalMultiRasterSource(MultiRasterSource):
             'Create raster sources by calling MultiRasterSource.from_stac() '
             'on each Item and then pass them to TemporalMultiRasterSource.')
 
-    def _get_chip(self,
-                  window: Box,
-                  out_shape: Optional[Tuple[int, int]] = None) -> np.ndarray:
+    def _get_chip(self, window: Box,
+                  out_shape: tuple[int, int] | None = None) -> np.ndarray:
         """Get chip w/o applying channel_order and transformers.
 
         Args:
             window (Box): The window for which to get the chip, in pixel
                 coordinates.
-            out_shape (Optional[Tuple[int, int]]): (height, width) to resize
+            out_shape (tuple[int, int] | None): (height, width) to resize
                 the chip to.
 
         Returns:
@@ -95,9 +94,8 @@ class TemporalMultiRasterSource(MultiRasterSource):
         chip = np.stack(sub_chips)
         return chip
 
-    def get_chip(self,
-                 window: Box,
-                 out_shape: Optional[Tuple[int, int]] = None) -> np.ndarray:
+    def get_chip(self, window: Box,
+                 out_shape: tuple[int, int] | None = None) -> np.ndarray:
         """Return the transformed chip in the window.
 
         Get processed chips from sub raster sources (with their respective
@@ -107,7 +105,7 @@ class TemporalMultiRasterSource(MultiRasterSource):
         Args:
             window (Box): The window for which to get the chip, in pixel
                 coordinates.
-            out_shape (Optional[Tuple[int, int]]): (height, width) to resize
+            out_shape (tuple[int, int] | None): (height, width) to resize
                 the chip to.
 
         Returns:
@@ -136,5 +134,5 @@ class TemporalMultiRasterSource(MultiRasterSource):
         return chip
 
     @property
-    def shape(self) -> Tuple[int, int, int, int]:
+    def shape(self) -> tuple[int, int, int, int]:
         return (len(self.raster_sources), *self.primary_source.shape)

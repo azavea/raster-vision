@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 class ChannelOrderError(Exception):
-    def __init__(self, channel_order: List[int], num_channels_raw: int):
+    def __init__(self, channel_order: list[int], num_channels_raw: int):
         self.channel_order = channel_order
         self.num_channels_raw = num_channels_raw
         msg = (f'The channel_order ({channel_order}) contains an '
@@ -28,10 +28,10 @@ class RasterSource(ABC):
     """
 
     def __init__(self,
-                 channel_order: Optional[List[int]],
+                 channel_order: list[int] | None,
                  num_channels_raw: int,
                  bbox: Box,
-                 raster_transformers: List['RasterTransformer'] = []):
+                 raster_transformers: list['RasterTransformer'] = []):
         """Constructor.
 
         Args:
@@ -60,7 +60,7 @@ class RasterSource(ABC):
         return len(self.channel_order)
 
     @property
-    def shape(self) -> Tuple[int, int, int]:
+    def shape(self) -> tuple[int, int, int]:
         """Shape of the raster as a (height, width, num_channels) tuple."""
         H, W = self.bbox.size
         return H, W, self.num_channels
@@ -98,12 +98,12 @@ class RasterSource(ABC):
     @abstractmethod
     def _get_chip(self,
                   window: 'Box',
-                  out_shape: Optional[Tuple[int, int]] = None) -> 'np.ndarray':
+                  out_shape: tuple[int, int] | None = None) -> 'np.ndarray':
         """Return raw chip without applying channel_order or transforms.
 
         Args:
             window (Box): The window for which to get the chip.
-            out_shape (Optional[Tuple[int, int]]): (height, width) to resize
+            out_shape (tuple[int, int] | None): (height, width) to resize
                 the chip to.
 
         Returns:
@@ -123,9 +123,8 @@ class RasterSource(ABC):
 
         return chip
 
-    def get_chip(self,
-                 window: 'Box',
-                 out_shape: Optional[Tuple[int, int]] = None) -> 'np.ndarray':
+    def get_chip(self, window: 'Box',
+                 out_shape: tuple[int, int] | None = None) -> 'np.ndarray':
         """Return the transformed chip in the window.
 
         Get a raw chip, extract subset of channels using channel_order, and then apply
@@ -133,7 +132,7 @@ class RasterSource(ABC):
 
         Args:
             window (Box): The window for which to get the chip.
-            out_shape (Optional[Tuple[int, int]]): (height, width) to resize
+            out_shape (tuple[int, int] | None): (height, width) to resize
                 the chip to.
 
         Returns:
@@ -165,8 +164,7 @@ class RasterSource(ABC):
 
     def get_raw_chip(self,
                      window: 'Box',
-                     out_shape: Optional[Tuple[int, int]] = None
-                     ) -> 'np.ndarray':
+                     out_shape: tuple[int, int] | None = None) -> 'np.ndarray':
         """Return raw chip without applying channel_order or transforms.
 
         Args:
@@ -179,7 +177,7 @@ class RasterSource(ABC):
 
     def resize(self,
                chip: 'np.ndarray',
-               out_shape: Optional[Tuple[int, int]] = None) -> 'np.ndarray':
+               out_shape: tuple[int, int] | None = None) -> 'np.ndarray':
         out_shape = chip.shape[:-3] + out_shape
         out = resize(chip, out_shape, preserve_range=True, anti_aliasing=True)
         out = out.round(6).astype(chip.dtype)

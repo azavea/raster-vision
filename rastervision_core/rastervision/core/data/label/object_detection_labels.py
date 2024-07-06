@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Dict, Iterable, List, Optional
+from typing import TYPE_CHECKING, Iterable
 import numpy as np
 from shapely.geometry import shape
 
@@ -51,7 +51,7 @@ class ObjectDetectionLabels(Labels):
         return (isinstance(other, ObjectDetectionLabels)
                 and self.to_dict() == other.to_dict())
 
-    def __setitem__(self, window: Box, item: Dict[str, np.ndarray]):
+    def __setitem__(self, window: Box, item: dict[str, np.ndarray]):
         boxes = item['boxes']
         boxes = ObjectDetectionLabels.local_to_global(boxes, window)
         class_ids = item['class_ids']
@@ -112,7 +112,7 @@ class ObjectDetectionLabels(Labels):
 
     @staticmethod
     def from_geojson(geojson: dict,
-                     bbox: Optional[Box] = None,
+                     bbox: Box | None = None,
                      ioa_thresh: float = 0.8,
                      clip: bool = True) -> 'ObjectDetectionLabels':
         """Convert GeoJSON to ObjectDetectionLabels object.
@@ -121,8 +121,8 @@ class ObjectDetectionLabels(Labels):
         bit" outside the bbox.
 
         Args:
-            geojson: (dict) normalized GeoJSON (see VectorSource)
-            bbox: (Box) in pixel coords
+            geojson: normalized GeoJSON (see VectorSource)
+            bbox: in pixel coords
 
         Returns:
             ObjectDetectionLabels
@@ -145,7 +145,7 @@ class ObjectDetectionLabels(Labels):
                 labels, bbox, ioa_thresh=ioa_thresh, clip=clip)
         return labels
 
-    def get_boxes(self) -> List[Box]:
+    def get_boxes(self) -> list[Box]:
         """Return list of Boxes."""
         return [Box.from_npbox(npbox) for npbox in self.boxlist.get()]
 
@@ -236,8 +236,8 @@ class ObjectDetectionLabels(Labels):
         """Return subset of labels that overlap with window.
 
         Args:
-            labels: ObjectDetectionLabels
-            window: Box
+            labels: Labels
+            window: Window
             ioa_thresh: The minimum intersection-over-area (IOA) for a box to
                 be considered as overlapping. For each box, IOA is defined as
                 the area of the intersection of the box with the window over
@@ -257,12 +257,7 @@ class ObjectDetectionLabels(Labels):
     def concatenate(
             labels1: 'ObjectDetectionLabels',
             labels2: 'ObjectDetectionLabels') -> 'ObjectDetectionLabels':
-        """Return concatenation of labels.
-
-        Args:
-            labels1: ObjectDetectionLabels
-            labels2: ObjectDetectionLabels
-        """
+        """Return concatenation of labels."""
         new_boxlist = concatenate([labels1.to_boxlist(), labels2.to_boxlist()])
         return ObjectDetectionLabels.from_boxlist(new_boxlist)
 
@@ -271,7 +266,7 @@ class ObjectDetectionLabels(Labels):
             labels: 'ObjectDetectionLabels',
             score_thresh: float,
             merge_thresh: float,
-            max_output_size: Optional[int] = None) -> 'ObjectDetectionLabels':
+            max_output_size: int | None = None) -> 'ObjectDetectionLabels':
         """Remove duplicate boxes via non-maximum suppression.
 
         Args:
@@ -279,8 +274,8 @@ class ObjectDetectionLabels(Labels):
             score_thresh: Prune boxes with score less than this threshold.
             merge_thresh: Prune boxes with intersection-over-union (IOU)
                 greater than this threshold.
-            max_output_size (int): Maximum number of retained boxes.
-                If None, this is set to ``len(abels)``. Defaults to None.
+            max_output_size: Maximum number of retained boxes. If ``None``,
+                this is set to ``len(abels)``. Defaults to ``None``.
 
         Returns:
             ObjectDetectionLabels: Pruned labels.
@@ -298,15 +293,15 @@ class ObjectDetectionLabels(Labels):
              uri: str,
              class_config: 'ClassConfig',
              crs_transformer: 'CRSTransformer',
-             bbox: Optional[Box] = None) -> None:
+             bbox: Box | None = None) -> None:
         """Save labels as a GeoJSON file.
 
         Args:
-            uri (str): URI of the output file.
-            class_config (ClassConfig): ClassConfig to map class IDs to names.
-            crs_transformer (CRSTransformer): CRSTransformer to convert from
+            uri: URI of the output file.
+            class_config: ClassConfig to map class IDs to names.
+            crs_transformer: CRSTransformer to convert from
                 pixel-coords to map-coords before saving.
-            bbox (Optional[Box]): User-specified crop of the extent. Must be
+            bbox: User-specified crop of the extent. Must be
                 provided if the corresponding RasterSource has bbox != extent.
         """
         from rastervision.core.data import ObjectDetectionGeoJSONStore

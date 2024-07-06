@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING
 from os.path import join
 import logging
 
@@ -27,8 +27,8 @@ class Predictor():
                  model_bundle_uri: str,
                  tmp_dir: str,
                  update_stats: bool = False,
-                 channel_order: Optional[List[int]] = None,
-                 scene_group: Optional[str] = None):
+                 channel_order: list[int] | None = None,
+                 scene_group: str | None = None):
         """Creates a new Predictor.
 
         Args:
@@ -95,7 +95,7 @@ class Predictor():
 
         self.pipeline = None
 
-    def predict(self, image_uris: List[str], label_uri: str) -> None:
+    def predict(self, image_uris: list[str], label_uri: str) -> None:
         """Generate predictions for the given image.
 
         Args:
@@ -142,7 +142,7 @@ class ScenePredictor:
     def __init__(self,
                  model_bundle_uri: str,
                  predict_options: 'str | dict | PredictOptions | None' = None,
-                 tmp_dir: Optional[str] = None):
+                 tmp_dir: str | None = None):
         """Creates a new Predictor.
 
         Args:

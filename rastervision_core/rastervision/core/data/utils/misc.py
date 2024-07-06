@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, List, Optional, Sequence, Tuple, Union
+from typing import TYPE_CHECKING, Any, Sequence
 import logging
 
 import numpy as np
@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 def color_to_triple(
-        color: Optional[Union[str, Sequence]] = None) -> Tuple[int, int, int]:
+        color: str | Sequence | None = None) -> tuple[int, int, int]:
     """Given a PIL ImageColor string, return a triple of integers
     representing the red, green, and blue values.
 
@@ -57,7 +57,7 @@ def color_to_integer(color: str) -> int:
 
 
 def normalize_color(
-        color: Union[str, tuple, list]) -> Tuple[float, float, float]:
+        color: str | tuple | list | None) -> tuple[float, float, float]:
     """Convert color representation to a float 3-tuple with values in [0-1]."""
     if isinstance(color, str):
         color = color_to_triple(color)
@@ -87,19 +87,19 @@ def all_equal(it: list):
     return it.count(it[0]) == len(it)
 
 
-def listify_uris(uris: Union[str, List[str]]) -> List[str]:
+def listify_uris(uris: str | list[str]) -> list[str]:
     """Convert to URI to list if needed."""
     if isinstance(uris, (list, tuple)):
         pass
     elif isinstance(uris, str):
         uris = [uris]
     else:
-        raise TypeError(f'Expected str or List[str], but got {type(uris)}.')
+        raise TypeError(f'Expected str or list[str], but got {type(uris)}.')
     return uris
 
 
 def match_bboxes(raster_source: 'RasterSource',
-                 label_source: Union['LabelSource', 'LabelStore']) -> None:
+                 label_source: 'LabelSource | LabelStore') -> None:
     """Set ``label_souce`` bbox equal to ``raster_source`` bbox.
 
     Logs a warning if ``raster_source`` and ``label_source`` extents don't
@@ -107,7 +107,7 @@ def match_bboxes(raster_source: 'RasterSource',
 
     Args:
         raster_source (RasterSource): Source of imagery for a scene.
-        label_source (Union[LabelSource, LabelStore]): Source of labels for a
+        label_source (LabelSource | LabelStore): Source of labels for a
             scene. Can be a ``LabelStore``.
     """
     crs_tf_img = raster_source.crs_transformer
@@ -126,21 +126,21 @@ def match_bboxes(raster_source: 'RasterSource',
     label_source.set_bbox(bbox_label_pixel)
 
 
-def parse_array_slices_2d(key: Union[tuple, slice],
-                          extent: Box) -> Tuple[Box, List[Optional[Any]]]:
+def parse_array_slices_2d(key: tuple | slice,
+                          extent: Box) -> tuple[Box, list[Any | None]]:
     """Parse 2D array-indexing inputs into a Box and slices."""
     return parse_array_slices_Nd(key, extent, dims=2, h_dim=0, w_dim=1)
 
 
-def parse_array_slices_Nd(key: Union[tuple, slice],
+def parse_array_slices_Nd(key: tuple | slice,
                           extent: Box,
                           dims: int = 3,
                           h_dim: int = -3,
-                          w_dim: int = -2) -> Tuple[Box, List[Optional[Any]]]:
+                          w_dim: int = -2) -> tuple[Box, list[Any | None]]:
     """Parse multi-dim array-indexing inputs into a Box and slices.
 
     Args:
-        key (Union[tuple, slice]): Input to __getitem__.
+        key (tuple | slice): Input to __getitem__.
         extent (Box): Extent of the raster/label source being indexed.
         dims (int): Total available indexable dims. Defaults to 3.
         h_dim (int): Index of height dim. Defaults to -3.
@@ -156,7 +156,7 @@ def parse_array_slices_Nd(key: Union[tuple, slice],
         NotImplementedError: If input contains negative values.
 
     Returns:
-        Tuple[Box, list]: A Box representing the h and w slices and a list
+        tuple[Box, list]: A Box representing the h and w slices and a list
             containing slices/index-values for all the dims.
     """
     if isinstance(key, slice):

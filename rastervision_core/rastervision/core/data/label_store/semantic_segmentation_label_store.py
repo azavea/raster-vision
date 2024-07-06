@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional, Sequence, Tuple
+from typing import TYPE_CHECKING, Sequence
 from os.path import join
 import logging
 
@@ -34,53 +34,54 @@ class SemanticSegmentationLabelStore(LabelStore):
     and can optionally vectorize predictions and store them as GeoJSON files.
     """
 
-    def __init__(
-            self,
-            uri: str,
-            crs_transformer: CRSTransformer,
-            class_config: ClassConfig,
-            bbox: Optional[Box] = None,
-            tmp_dir: Optional[str] = None,
-            vector_outputs: Optional[Sequence['VectorOutputConfig']] = None,
-            save_as_rgb: bool = False,
-            discrete_output: bool = True,
-            smooth_output: bool = False,
-            smooth_as_uint8: bool = False,
-            rasterio_block_size: int = 512):
+    def __init__(self,
+                 uri: str,
+                 crs_transformer: CRSTransformer,
+                 class_config: ClassConfig,
+                 bbox: Box | None = None,
+                 tmp_dir: str | None = None,
+                 vector_outputs: 'Sequence[VectorOutputConfig] | None' = None,
+                 save_as_rgb: bool = False,
+                 discrete_output: bool = True,
+                 smooth_output: bool = False,
+                 smooth_as_uint8: bool = False,
+                 rasterio_block_size: int = 512):
         """Constructor.
 
         Args:
-            uri (str): Path to directory where the predictions are/will be
-                stored. Smooth scores will be saved as "uri/scores.tif",
-                discrete labels will be stored as "uri/labels.tif", and vector
-                outputs will be saved in "uri/vector_outputs/".
-            crs_transformer (CRSTransformer): CRS transformer for correctly
-                mapping from pixel coords to map coords.
-            class_config (ClassConfig): Class config.
-            bbox (Optional[Box], optional): User-specified crop of the extent.
+            uri: Path to directory where the predictions are/will be
+                stored. Smooth scores will be saved as ``"uri/scores.tif"``,
+                discrete labels will be stored as ``"uri/labels.tif"``, and
+                vector outputs will be saved in ``"uri/vector_outputs/"``.
+            crs_transformer: CRS transformer for correctly mapping from pixel
+                coords to map coords.
+            class_config: Class config.
+            bbox: User-specified crop of the extent.
                 If provided, only labels falling inside it are returned by
                 :meth:`.SemanticSegmentationLabelStore.get_labels`. Must be
-                provided if the corresponding RasterSource has bbox != extent.
-            tmp_dir (Optional[str], optional): Temporary directory to use. If
-                None, will be auto-generated. Defaults to None.
-            vector_outputs (Optional[Sequence[VectorOutputConfig]], optional):
+                provided if the corresponding ``RasterSource`` has
+                ``bbox != extent``.
+            tmp_dir: Temporary directory to use. If ``None``, will be
+                auto-generated. Defaults to ``None``.
+            vector_outputs:
                 List of VectorOutputConfig's containing vectorization
                 configuration information. Only classes for which a
-                VectorOutputConfig is specified will be saved as vectors.
-                If None, no vector outputs will be produced. Defaults to None.
-            save_as_rgb (bool, optional): If True, saves labels as an RGB
-                image, using the class-color mapping in the class_config.
-                Defaults to False.
-            discrete_output (bool, optional): If True, saves labels as a raster
-                of class IDs (one band). Defaults to False.
-            smooth_output (bool, optional): If True, saves labels as a raster
-                of class scores (one band for each class). Defaults to False.
-            smooth_as_uint8 (bool, optional): If True, stores smooth class
-                scores as np.uint8 (0-255) values rather than as np.float32
-                discrete labels, to help save memory/disk space.
-                Defaults to False.
-            rasterio_block_size (int, optional): Value to set blockxsize and
-                blockysize to. Defaults to 512.
+                ``VectorOutputConfig`` is specified will be saved as vectors.
+                If ``None``, no vector outputs will be produced.
+                Defaults to ``None``.
+            save_as_rgb: If ``True``, saves labels as an RGB
+                image, using the class-color mapping in the ``class_config``.
+                Defaults to ``False``.
+            discrete_output: If ``True``, saves labels as a raster
+                of class IDs (one band). Defaults to ``False``.
+            smooth_output: If ``True``, saves labels as a raster
+                of class scores (one band for each class). Defaults to ``False``.
+            smooth_as_uint8: If ``True``, stores smooth class
+                scores as ``np.uint8`` (0-255) values rather than as
+                ``np.float32`` discrete labels, to help save memory/disk space.
+                Defaults to ``False``.
+            rasterio_block_size: Value to set ``blockxsize`` and ``blockysize``
+                to. Defaults to ``512``.
         """
         self.root_uri = uri
 
@@ -191,7 +192,7 @@ class SemanticSegmentationLabelStore(LabelStore):
 
     def save(self,
              labels: SemanticSegmentationLabels,
-             profile: Optional[dict] = None) -> None:
+             profile: dict | None = None) -> None:
         """Save labels to disk.
 
         More info on rasterio IO:
@@ -335,8 +336,8 @@ class SemanticSegmentationLabelStore(LabelStore):
     def _clip_to_extent(self,
                         extent: Box,
                         window: Box,
-                        arr: Optional[np.ndarray] = None
-                        ) -> Tuple[Box, Optional[np.ndarray]]:
+                        arr: np.ndarray | None = None
+                        ) -> tuple[Box, np.ndarray | None]:
         clipped_window = window.intersection(extent)
         if arr is not None:
             h, w = clipped_window.size

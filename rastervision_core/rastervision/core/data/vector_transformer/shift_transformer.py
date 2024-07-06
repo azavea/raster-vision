@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 import numpy as np
 
 from shapely.ops import transform
@@ -32,7 +32,7 @@ class ShiftTransformer(VectorTransformer):
 
     def transform(self,
                   geojson: dict,
-                  crs_transformer: Optional['CRSTransformer'] = None) -> dict:
+                  crs_transformer: 'CRSTransformer | None' = None) -> dict:
 
         # https://gis.stackexchange.com/questions/2951/algorithm-for-offsetting-a-latitude-longitude-by-some-amount-of-meters  # noqa
         def shift(x, y, z=None):

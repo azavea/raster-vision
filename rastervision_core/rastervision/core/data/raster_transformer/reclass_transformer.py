@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Dict, List, Optional
+from typing import TYPE_CHECKING
 from rastervision.core.data.raster_transformer import RasterTransformer
 
 if TYPE_CHECKING:
@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 class ReclassTransformer(RasterTransformer):
     """Maps class IDs in a label raster to other values."""
 
-    def __init__(self, mapping: Dict[int, int]):
+    def __init__(self, mapping: dict[int, int]):
         """Construct a new ReclassTransformer.
 
         Args:
@@ -18,7 +18,7 @@ class ReclassTransformer(RasterTransformer):
 
     def transform(self,
                   chip: 'np.ndarray',
-                  channel_order: Optional[List[int]] = None):
+                  channel_order: list[int] | None = None):
         """Transform a chip.
 
         Reclassify a label raster using the given mapping.

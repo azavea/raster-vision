@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 from os.path import join
 
 from rastervision.pipeline.config import register_config, Field
@@ -26,7 +26,7 @@ def stats_transformer_config_upgrader(cfg_dict: dict, version: int) -> dict:
 class StatsTransformerConfig(RasterTransformerConfig):
     """Configure a :class:`.StatsTransformer`."""
 
-    stats_uri: Optional[str] = Field(
+    stats_uri: str | None = Field(
         None,
         description='The URI of the output of the StatsAnalyzer. '
         'If None, and this Config is inside an RVPipeline, '
@@ -37,8 +37,8 @@ class StatsTransformerConfig(RasterTransformerConfig):
         'to "train_scenes".')
 
     def update(self,
-               pipeline: Optional['RVPipelineConfig'] = None,
-               scene: Optional['SceneConfig'] = None) -> None:
+               pipeline: 'RVPipelineConfig | None' = None,
+               scene: 'SceneConfig | None' = None) -> None:
         if pipeline is not None and self.stats_uri is None:
             self.stats_uri = join(pipeline.analyze_uri, 'stats',
                                   self.scene_group, 'stats.json')

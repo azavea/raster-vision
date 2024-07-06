@@ -1,5 +1,4 @@
-from typing import (TYPE_CHECKING, Iterable, Iterator, Optional, Sequence,
-                    Tuple, Union)
+from typing import (TYPE_CHECKING, Iterable, Iterator, Sequence)
 
 import numpy as np
 from tqdm.auto import tqdm
@@ -17,17 +16,16 @@ class RasterStats:
     """Band-wise means and standard deviations."""
 
     def __init__(self,
-                 means: Optional[np.ndarray] = None,
-                 stds: Optional[np.ndarray] = None,
-                 counts: Optional[np.ndarray] = None):
+                 means: np.ndarray | None = None,
+                 stds: np.ndarray | None = None,
+                 counts: np.ndarray | None = None):
         """Constructor.
 
         Args:
-            means (Optional[np.ndarray]): Band means. Defaults to None.
-            stds (Optional[np.ndarray]): Band standard deviations.
-                Defaults to None.
-            counts (Optional[np.ndarray]): Band pixel counts (used to compute
-                the specified means and stds). Defaults to None.
+            means: Band means. Defaults to ``None``.
+            stds: Band standard deviations. Defaults to ``None``.
+            counts: Band pixel counts (used to compute the specified means and
+                stds). Defaults to ``None``.
         """
         self.means = means
         self.stds = stds
@@ -46,10 +44,10 @@ class RasterStats:
 
     def compute(self,
                 raster_sources: Sequence['RasterSource'],
-                sample_prob: Optional[float] = None,
+                sample_prob: float | None = None,
                 chip_sz: int = 300,
-                stride: Optional[int] = None,
-                nodata_value: Optional[float] = 0) -> None:
+                stride: int | None = None,
+                nodata_value: float | None = 0) -> None:
         """Compute the mean and stds over all the raster_sources.
 
         This ignores NODATA values if nodata_value is not None.
@@ -64,11 +62,11 @@ class RasterStats:
         stats.
 
         Args:
-            raster_sources Sequence['RasterSource']: List of RasterSources.
-            sample_prob (Optional[float]): Pixel sampling probability. See
-                notes above. Defaults to None.
-            nodata_value (Optional[float]): NODATA value. If set, these pixels
-                will be ignored when computing stats.
+            raster_sources: List of RasterSources.
+            sample_prob: Pixel sampling probability. See notes above.
+                Defaults to ``None``.
+            nodata_value: NODATA value. If set, these pixels will be ignored
+                when computing stats.
         """
         if sample_prob is None:
             if stride is None:
@@ -99,10 +97,10 @@ class RasterStats:
     def compute_from_chips(
             self,
             chips: Iterable[np.ndarray],
-            running_mean: Optional[np.ndarray] = None,
-            running_var: Optional[np.ndarray] = None,
-            running_count: Optional[np.ndarray] = None) -> Union[Tuple[
-                None, None, None], Tuple[np.ndarray, np.ndarray, np.ndarray]]:
+            running_mean: np.ndarray | None = None,
+            running_var: np.ndarray | None = None,
+            running_count: np.ndarray | None = None
+    ) -> tuple[None, None, None] | tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Compute running mean and var from chips in stream."""
         with tqdm(chips, desc='Analyzing chips') as bar:
             for chip in bar:
@@ -117,10 +115,10 @@ class RasterStats:
 
     def compute_from_pixels(self,
                             pixels: np.ndarray,
-                            running_mean: Optional[np.ndarray] = None,
-                            running_var: Optional[np.ndarray] = None,
-                            running_count: Optional[np.ndarray] = None
-                            ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+                            running_mean: np.ndarray | None = None,
+                            running_var: np.ndarray | None = None,
+                            running_count: np.ndarray | None = None
+                            ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Update running mean and var from pixel values."""
         running_stats = [running_mean, running_var, running_count]
         has_running_stats = any(s is not None for s in running_stats)
@@ -156,7 +154,7 @@ class RasterStats:
         json_to_file(stats_dict, stats_uri)
 
     @property
-    def vars(self) -> Optional[np.ndarray]:
+    def vars(self) -> np.ndarray | None:
         """Channel variances, if self.stds is set."""
         if self.stds is None:
             return None
@@ -214,7 +212,7 @@ def sliding_chip_stream(
         raster_sources: Iterable['RasterSource'],
         chip_sz: int,
         stride: int,
-        nodata_value: Optional[float] = 0) -> Iterator[np.ndarray]:
+        nodata_value: float | None = 0) -> Iterator[np.ndarray]:
     """Get stream of chips using a sliding window."""
     for raster_source in raster_sources:
         windows = raster_source.extent.get_windows(chip_sz, stride)
@@ -225,11 +223,10 @@ def sliding_chip_stream(
             yield chip
 
 
-def random_chip_stream(
-        raster_sources: Iterable['RasterSource'],
-        chip_sz: int,
-        sample_prob: float,
-        nodata_value: Optional[float] = 0) -> Iterator[np.ndarray]:
+def random_chip_stream(raster_sources: Iterable['RasterSource'],
+                       chip_sz: int,
+                       sample_prob: float,
+                       nodata_value: float | None = 0) -> Iterator[np.ndarray]:
     """Get random stream of chips."""
     for raster_source in raster_sources:
         extent = raster_source.extent
@@ -251,7 +248,7 @@ def random_chip_stream(
 
 def get_chip(raster_source: 'RasterSource',
              window: 'Box',
-             nodata_value: Optional[float] = 0) -> Optional[np.ndarray]:
+             nodata_value: float | None = 0) -> np.ndarray | None:
     """Return chip or None if all values are NODATA."""
     chip = raster_source.get_raw_chip(window).astype(float)
 

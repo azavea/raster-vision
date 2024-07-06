@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Union
+from typing import TYPE_CHECKING
 from rastervision.core.data.vector_source import (VectorSourceConfig,
                                                   GeoJSONVectorSource)
 from rastervision.pipeline.config import register_config, Field
@@ -22,7 +22,7 @@ def geojson_vector_source_config_upgrader(cfg_dict: dict,
 class GeoJSONVectorSourceConfig(VectorSourceConfig):
     """Configure a :class:`.GeoJSONVectorSource`."""
 
-    uris: Union[str, List[str]] = Field(
+    uris: str | list[str] = Field(
         ..., description='URI(s) of GeoJSON file(s).')
 
     def build(self,

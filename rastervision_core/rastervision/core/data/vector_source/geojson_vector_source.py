@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING
 import logging
 
 import geopandas as gpd
@@ -18,21 +18,21 @@ class GeoJSONVectorSource(VectorSource):
     """A :class:`.VectorSource` for reading GeoJSON files."""
 
     def __init__(self,
-                 uris: Union[str, List[str]],
+                 uris: str | list[str],
                  crs_transformer: 'CRSTransformer',
-                 vector_transformers: List['VectorTransformer'] = [],
-                 bbox: Optional[Box] = None):
+                 vector_transformers: list['VectorTransformer'] = [],
+                 bbox: Box | None = None):
         """Constructor.
 
         Args:
-            uris (Union[str, List[str]]): URI(s) of the GeoJSON file(s).
-            crs_transformer: A ``CRSTransformer`` to convert
-                between map and pixel coords. Normally this is obtained from a
+            uris: URI(s) of the GeoJSON file(s).
+            crs_transformer: A ``CRSTransformer`` to convert between map and
+                pixel coords. Normally this is obtained from a
                 :class:`.RasterSource`.
             vector_transformers: ``VectorTransformers`` for transforming
                 geometries. Defaults to ``[]``.
-            bbox (Optional[Box]): User-specified crop of the extent. If None,
-                the full extent available in the source file is used.
+            bbox: User-specified crop of the extent. If ``None``, the full
+                extent available in the source file is used.
         """
         self.uris = listify_uris(uris)
         super().__init__(

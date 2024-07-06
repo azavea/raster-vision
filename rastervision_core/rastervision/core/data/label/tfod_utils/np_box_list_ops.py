@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Bounding Box List operations for Numpy BoxLists."""
-from typing import List, Optional, Tuple
 
 from tqdm.auto import trange
 import numpy as np
@@ -93,7 +92,7 @@ def ioa(boxlist1: NpBoxList, boxlist2: NpBoxList) -> np.ndarray:
 
 def gather(boxlist: NpBoxList,
            indices: np.ndarray,
-           fields: Optional[List[str]] = None) -> NpBoxList:
+           fields: list[str] | None = None) -> NpBoxList:
     """Gather boxes from BoxList according to indices and return new BoxList.
 
     By default, gather returns boxes corresponding to the input index list, as
@@ -104,7 +103,7 @@ def gather(boxlist: NpBoxList,
     Args:
         boxlist (BoxList): BoxList holding N boxes.
         indices (np.ndarray): A 1-d numpy array of type int.
-        fields (Optional[List[str]]): List of fields to also gather from. If
+        fields (list[str] | None): List of fields to also gather from. If
             None, all fields are gathered from. Pass an empty fields list to
             only gather the box coordinates. Defaults to None.
 
@@ -137,7 +136,7 @@ def sort_by_field(boxlist: NpBoxList,
     Args:
         boxlist (BoxList): A BoxList holding N boxes.
         field (str): A BoxList field for sorting and reordering the BoxList.
-        order (SortOrder, optional): 'descend' or 'ascend'. Default is descend.
+        order (SortOrder): 'descend' or 'ascend'. Default is descend.
 
     Returns:
         BoxList: A sorted BoxList with the field in the specified order.
@@ -408,7 +407,7 @@ def prune_non_overlapping_boxes(boxlist1: NpBoxList,
 
 
 def prune_outside_window(boxlist: NpBoxList,
-                         window: np.ndarray) -> Tuple[NpBoxList, np.ndarray]:
+                         window: np.ndarray) -> tuple[NpBoxList, np.ndarray]:
     """Prunes bounding boxes that fall outside a given window.
 
     This function prunes bounding boxes that even partially fall outside the
@@ -422,7 +421,7 @@ def prune_outside_window(boxlist: NpBoxList,
             [ymin, xmin, ymax, xmax] of the window.
 
     Returns:
-        Tuple[BoxList, np.ndarray]: Pruned Boxlist of length <= M_in and
+        tuple[BoxList, np.ndarray]: Pruned Boxlist of length <= M_in and
         an array of shape [M_out] indexing the valid bounding boxes in the
         input tensor.
     """
@@ -444,8 +443,8 @@ def prune_outside_window(boxlist: NpBoxList,
     return pruned_boxlist, valid_indices
 
 
-def concatenate(boxlists: List[NpBoxList],
-                fields: Optional[List[str]] = None) -> NpBoxList:
+def concatenate(boxlists: list[NpBoxList],
+                fields: list[str] | None = None) -> NpBoxList:
     """Concatenate list of BoxLists.
 
     This op concatenates a list of input BoxLists into a larger BoxList. It also
@@ -453,8 +452,8 @@ def concatenate(boxlists: List[NpBoxList],
     are equal except for the first dimension.
 
     Args:
-        boxlists (List[BoxList]): List of BoxList objects.
-        fields (Optional[List[str]]): Optional list of fields to also
+        boxlists (list[BoxList]): List of BoxList objects.
+        fields (list[str] | None): Optional list of fields to also
             concatenate. If None, all fields from the first BoxList in the
             list are included in the concatenation. Defaults to None.
 

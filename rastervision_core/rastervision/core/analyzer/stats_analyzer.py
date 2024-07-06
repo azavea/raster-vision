@@ -1,4 +1,4 @@
-from typing import Iterable, Optional
+from typing import Iterable
 
 from rastervision.core.analyzer import Analyzer
 from rastervision.core.raster_stats import RasterStats
@@ -9,10 +9,10 @@ class StatsAnalyzer(Analyzer):
     """Compute imagery statistics of scenes."""
 
     def __init__(self,
-                 stats_uri: Optional[str] = None,
+                 stats_uri: str | None = None,
                  sample_prob: float = 0.1,
                  chip_sz: int = 300,
-                 nodata_value: Optional[float] = 0):
+                 nodata_value: float | None = 0):
         self.stats_uri = stats_uri
         self.sample_prob = sample_prob
         self.chip_sz = chip_sz

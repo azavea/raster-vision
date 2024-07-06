@@ -1,11 +1,11 @@
-from typing import (TYPE_CHECKING, Any, Dict, Iterable, List, Optional,
-                    Sequence, Tuple)
+from typing import (TYPE_CHECKING, Any, Iterable)
 from dataclasses import dataclass
 
 import numpy as np
 
 from rastervision.core.box import Box
 from rastervision.core.data.label import Labels
+from rastervision.core.utils.types import Vector
 
 if TYPE_CHECKING:
     from rastervision.core.data import (ClassConfig, CRSTransformer)
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 @dataclass
 class ClassificationLabel:
     class_id: int
-    scores: Optional[Sequence[float]] = None
+    scores: Vector | None = None
 
     def __iter__(self):
         return iter((self.class_id, self.scores))
@@ -25,8 +25,8 @@ class ChipClassificationLabels(Labels):
     """Represents a spatial grid of cells associated with classes."""
 
     def __init__(self,
-                 cell_to_label: Optional[Dict[Box, Tuple[int, Optional[
-                     Sequence[float]]]]] = None):
+                 cell_to_label: dict[Box, tuple[int, Vector | None]]
+                 | None = None):
         if cell_to_label is None:
             cell_to_label = {}
 
@@ -55,8 +55,7 @@ class ChipClassificationLabels(Labels):
     def __getitem__(self, cell: Box) -> ClassificationLabel:
         return self.cell_to_label[cell]
 
-    def __setitem__(self, window: Box,
-                    value: Tuple[int, Optional[Sequence[float]]]):
+    def __setitem__(self, window: Box, value: tuple[int, Vector | None]):
         class_id, scores = value
         self.set_cell(window, class_id, scores=scores)
 
@@ -85,32 +84,28 @@ class ChipClassificationLabels(Labels):
     def set_cell(self,
                  cell: Box,
                  class_id: int,
-                 scores: Optional['np.ndarray'] = None) -> None:
+                 scores: 'np.ndarray | Vector | None' = None) -> None:
         """Set cell and its class_id.
 
         Args:
-            cell: (Box)
-            class_id: int
-            scores: 1d numpy array of probabilities for each class
+            cell: Cell whose ID to set.
+            class_id: Class ID.
+            scores: 1d numpy array of probabilities for each class.
         """
         if scores is not None:
-            scores = list(map(lambda x: float(x), list(scores)))
+            scores = list(map(float, scores))
         class_id = int(class_id)
         self.cell_to_label[cell] = ClassificationLabel(class_id, scores)
 
     def get_cell_class_id(self, cell: Box) -> int:
-        """Return class_id for a cell.
-
-        Args:
-            cell: (Box)
-        """
+        """Return class_id for a cell."""
         result = self.cell_to_label.get(cell)
         if result is not None:
             return result.class_id
         else:
             return None
 
-    def get_cell_scores(self, cell: Box) -> Optional[Sequence[float]]:
+    def get_cell_scores(self, cell: Box) -> Vector | None:
         """Return scores for a cell.
 
         Args:
@@ -130,19 +125,19 @@ class ChipClassificationLabels(Labels):
         """
         return ChipClassificationLabels({cell: self[cell]})
 
-    def get_cells(self) -> List[Box]:
+    def get_cells(self) -> list[Box]:
         """Return list of all cells (list of Box)."""
         return list(self.cell_to_label.keys())
 
-    def get_class_ids(self) -> List[int]:
+    def get_class_ids(self) -> list[int]:
         """Return list of class_ids for all cells."""
         return [label.class_id for label in self.cell_to_label.values()]
 
-    def get_scores(self) -> List[Optional[Sequence[float]]]:
+    def get_scores(self) -> list[Vector | None]:
         """Return list of scores for all cells."""
         return [label.scores for label in self.cell_to_label.values()]
 
-    def get_values(self) -> List[ClassificationLabel]:
+    def get_values(self) -> list[ClassificationLabel]:
         """Return list of class_ids and scores for all cells."""
         return list(self.cell_to_label.values())
 
@@ -159,16 +154,16 @@ class ChipClassificationLabels(Labels):
              uri: str,
              class_config: 'ClassConfig',
              crs_transformer: 'CRSTransformer',
-             bbox: Optional[Box] = None) -> None:
+             bbox: Box | None = None) -> None:
         """Save labels as a GeoJSON file.
 
         Args:
-            uri (str): URI of the output file.
-            class_config (ClassConfig): ClassConfig to map class IDs to names.
-            crs_transformer (CRSTransformer): CRSTransformer to convert from
-                pixel-coords to map-coords before saving.
-            bbox (Optional[Box]): User-specified crop of the extent. Must be
-                provided if the corresponding RasterSource has bbox != extent.
+            uri: URI of the output file.
+            class_config: ClassConfig to map class IDs to names.
+            crs_transformer: CRSTransformer to convert from pixel-coords to
+                map-coords before saving.
+            bbox: User-specified crop of the extent. Must be provided if the
+                corresponding RasterSource has bbox != extent.
         """
         from rastervision.core.data import ChipClassificationGeoJSONStore
 

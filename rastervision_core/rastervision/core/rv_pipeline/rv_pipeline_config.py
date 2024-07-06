@@ -1,4 +1,4 @@
-from typing import (TYPE_CHECKING, List, Optional, Self)
+from typing import TYPE_CHECKING, Self
 from os.path import join
 
 from rastervision.pipeline.pipeline_config import PipelineConfig
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 class PredictOptions(Config):
     chip_sz: int = Field(
         300, description='Size of predictions chips in pixels.')
-    stride: Optional[int] = Field(
+    stride: int | None = Field(
         None,
         description='Stride of the sliding window for generating chips.'
         'Defaults to ``chip_sz``.')
@@ -65,47 +65,47 @@ class RVPipelineConfig(PipelineConfig):
         'Dataset containing train, validation, and optional test scenes.')
     backend: BackendConfig = Field(
         ..., description='Backend to use for interfacing with ML library.')
-    evaluators: List[EvaluatorConfig] = Field(
+    evaluators: list[EvaluatorConfig] = Field(
         [],
         description=(
             'Evaluators to run during analyzer command. If list is empty '
             'the default evaluator is added.'))
-    analyzers: List[AnalyzerConfig] = Field(
+    analyzers: list[AnalyzerConfig] = Field(
         [],
         description=
         ('Analyzers to run during analyzer command. A StatsAnalyzer will be added '
          'automatically if any scenes have a RasterTransformer.'))
 
-    analyze_uri: Optional[str] = Field(
+    analyze_uri: str | None = Field(
         None,
         description=
         'URI for output of analyze. If None, will be auto-generated.')
-    chip_uri: Optional[str] = Field(
+    chip_uri: str | None = Field(
         None,
         description='URI for output of chip. If None, will be auto-generated.')
-    train_uri: Optional[str] = Field(
+    train_uri: str | None = Field(
         None,
         description='URI for output of train. If None, will be auto-generated.'
     )
-    predict_uri: Optional[str] = Field(
+    predict_uri: str | None = Field(
         None,
         description=
         'URI for output of predict. If None, will be auto-generated.')
-    eval_uri: Optional[str] = Field(
+    eval_uri: str | None = Field(
         None,
         description='URI for output of eval. If None, will be auto-generated.')
-    bundle_uri: Optional[str] = Field(
+    bundle_uri: str | None = Field(
         None,
         description='URI for output of bundle. If None, will be auto-generated.'
     )
-    source_bundle_uri: Optional[str] = Field(
+    source_bundle_uri: str | None = Field(
         None,
         description='If provided, the model will be loaded from this bundle '
         'for the train stage. Useful for fine-tuning.')
 
-    chip_options: Optional[ChipOptions] = Field(
+    chip_options: ChipOptions | None = Field(
         None, description='Config for chip stage.')
-    predict_options: Optional[PredictOptions] = Field(
+    predict_options: PredictOptions | None = Field(
         None, description='Config for predict stage.')
 
     def update(self):

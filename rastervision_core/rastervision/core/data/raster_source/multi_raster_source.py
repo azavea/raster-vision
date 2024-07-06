@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional, Sequence, Self, Tuple
+from typing import TYPE_CHECKING, Sequence, Self
 
 from pydantic import NonNegativeInt as NonNegInt
 import numpy as np
@@ -171,7 +171,7 @@ class MultiRasterSource(RasterSource):
         return self.raster_sources[self.primary_source_idx]
 
     @property
-    def shape(self) -> Tuple[int, ...]:
+    def shape(self) -> tuple[int, ...]:
         """Shape of the raster as a (..., H, W, C) tuple."""
         *shape, _ = self.primary_source.shape
         return (*shape, self.num_channels)
@@ -186,7 +186,7 @@ class MultiRasterSource(RasterSource):
 
     def _get_sub_chips(self,
                        window: Box,
-                       out_shape: Optional[Tuple[int, int]] = None
+                       out_shape: tuple[int, int] | None = None
                        ) -> list[np.ndarray]:
         """Return chips from sub raster sources as a list.
 
@@ -204,20 +204,17 @@ class MultiRasterSource(RasterSource):
                 reference chip from the primary sub raster source
 
         Args:
-            window (Box): The window for which to get the chip, in pixel
-                coordinates.
-            out_shape (Optional[Tuple[int, int]]): (height, width) to resize
-                the chip to.
+            window: The window for which to get the chip, in pixel coordinates.
+            out_shape: (height, width) to resize the chip to.
 
         Returns:
-            List[np.ndarray]: List of chips from each sub raster source.
+            List of chips from each sub raster source.
         """
 
-        def get_chip(
-                rs: RasterSource,
-                window: Box,
-                map: bool = False,
-                out_shape: Optional[Tuple[int, int]] = None) -> np.ndarray:
+        def get_chip(rs: RasterSource,
+                     window: Box,
+                     map: bool = False,
+                     out_shape: tuple[int, int] | None = None) -> np.ndarray:
             if map:
                 func = rs.get_chip_by_map_window
             else:
@@ -244,27 +241,25 @@ class MultiRasterSource(RasterSource):
 
         return sub_chips
 
-    def _get_chip(self,
-                  window: Box,
-                  out_shape: Optional[Tuple[int, int]] = None) -> np.ndarray:
+    def _get_chip(self, window: Box,
+                  out_shape: tuple[int, int] | None = None) -> np.ndarray:
         """Get chip w/o applying channel_order and transformers.
 
         Args:
             window (Box): The window for which to get the chip, in pixel
                 coordinates.
-            out_shape (Optional[Tuple[int, int]]): (height, width) to resize
+            out_shape (tuple[int, int] | None): (height, width) to resize
                 the chip to.
 
         Returns:
-            [height, width, channels] numpy array
+            Array of shape (height, width, channels).
         """
         sub_chips = self._get_sub_chips(window, out_shape=out_shape)
         chip = np.concatenate(sub_chips, axis=-1)
         return chip
 
-    def get_chip(self,
-                 window: Box,
-                 out_shape: Optional[Tuple[int, int]] = None) -> np.ndarray:
+    def get_chip(self, window: Box,
+                 out_shape: tuple[int, int] | None = None) -> np.ndarray:
         """Return the transformed chip in the window.
 
         Get processed chips from sub raster sources (with their respective
@@ -272,13 +267,11 @@ class MultiRasterSource(RasterSource):
         channel dimension, apply channel_order, followed by transformations.
 
         Args:
-            window (Box): The window for which to get the chip, in pixel
-                coordinates.
-            out_shape (Optional[Tuple[int, int]]): (height, width) to resize
-                the chip to.
+            window: The window for which to get the chip, in pixel coordinates.
+            out_shape: (height, width) to resize the chip to.
 
         Returns:
-            np.ndarray with shape [height, width, channels]
+            Array of shape (height, width, channels).
         """
         sub_chips = self._get_sub_chips(window, out_shape=out_shape)
         chip = np.concatenate(sub_chips, axis=-1)

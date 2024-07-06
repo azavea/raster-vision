@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from rastervision.pipeline.config import Config, register_config
 
@@ -16,11 +16,11 @@ class LabelSourceConfig(Config):
     def build(self,
               class_config: 'ClassConfig',
               crs_transformer: 'CRSTransformer',
-              bbox: Optional['Box'] = None,
-              tmp_dir: Optional[str] = None) -> 'LabelSource':
+              bbox: 'Box | None' = None,
+              tmp_dir: str | None = None) -> 'LabelSource':
         raise NotImplementedError()
 
     def update(self,
-               pipeline: Optional['RVPipelineConfig'] = None,
-               scene: Optional['SceneConfig'] = None) -> None:
+               pipeline: 'RVPipelineConfig | None' = None,
+               scene: 'SceneConfig | None' = None) -> None:
         pass

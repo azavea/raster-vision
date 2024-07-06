@@ -1,6 +1,6 @@
 """Defines the abstract Labels class."""
 
-from typing import TYPE_CHECKING, Any, Iterable, List
+from typing import TYPE_CHECKING, Any, Iterable
 from abc import ABC, abstractmethod
 
 if TYPE_CHECKING:
@@ -24,7 +24,7 @@ class Labels(ABC):
         """
 
     @abstractmethod
-    def filter_by_aoi(self, aoi_polygons: List['Polygon']) -> 'Self':
+    def filter_by_aoi(self, aoi_polygons: list['Polygon']) -> 'Self':
         """Return a copy of these labels filtered by given AOI polygons.
 
         Args:

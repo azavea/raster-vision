@@ -1,5 +1,4 @@
-from typing import (TYPE_CHECKING, Callable, Dict, Iterable, Iterator, List,
-                    Optional, Union)
+from typing import (TYPE_CHECKING, Callable, Iterable, Iterator)
 from copy import deepcopy
 
 from shapely.geometry import shape, mapping
@@ -17,8 +16,7 @@ MULTI_GEOM_TYPES = {'MultiPolygon', 'MultiPoint', 'MultiLineString'}
 PROGRESSBAR_DELAY_SEC = 5
 
 
-def geometry_to_feature(mapping: dict,
-                        properties: Optional[dict] = None) -> dict:
+def geometry_to_feature(mapping: dict, properties: dict | None = None) -> dict:
     """Convert a serialized geometry to a serialized GeoJSON feature."""
     already_a_feature = mapping.get('type') == 'Feature'
     if already_a_feature:
@@ -35,7 +33,7 @@ def geometries_to_geojson(geometries: Iterable[dict]) -> dict:
     return features_to_geojson(features)
 
 
-def features_to_geojson(features: List[dict]) -> dict:
+def features_to_geojson(features: list[dict]) -> dict:
     """Convert GeoJSON-like mapping of Features to a FeatureCollection."""
     return {'type': 'FeatureCollection', 'features': features}
 
@@ -43,7 +41,7 @@ def features_to_geojson(features: List[dict]) -> dict:
 def map_features(func: Callable,
                  geojson: dict,
                  include_geom_types: Iterable[str] = [],
-                 progressbar_kw: Optional[dict] = None) -> dict:
+                 progressbar_kw: dict | None = None) -> dict:
     """Map GeoJSON features to new features. Returns a new GeoJSON dict."""
     features_in = geojson['features']
 
@@ -71,7 +69,7 @@ def map_features(func: Callable,
 def map_geoms(func: Callable,
               geojson: dict,
               include_geom_types: Iterable[str] = [],
-              progressbar_kw: Optional[dict] = None) -> dict:
+              progressbar_kw: dict | None = None) -> dict:
     """Map GeoJSON features to new features by applying func to geometries.
 
     Returns a new GeoJSON dict.
@@ -106,7 +104,7 @@ def geojson_to_geoms(geojson: dict) -> Iterator['BaseGeometry']:
 
 
 def geoms_to_geojson(geoms: Iterable['BaseGeometry'],
-                     properties: Optional[Iterable[dict]] = None) -> dict:
+                     properties: Iterable[dict] | None = None) -> dict:
     """Serialize shapely geometries to GeoJSON."""
     with tqdm(
             geoms,
@@ -122,7 +120,7 @@ def geoms_to_geojson(geoms: Iterable['BaseGeometry'],
 
 
 def geom_to_feature(geom: 'BaseGeometry',
-                    properties: Optional[dict] = None) -> dict:
+                    properties: dict | None = None) -> dict:
     """Serialize a single shapely geometry to a GeoJSON Feature."""
     geometry = mapping(geom)
     feature = geometry_to_feature(geometry, properties=properties)
@@ -131,7 +129,7 @@ def geom_to_feature(geom: 'BaseGeometry',
 
 def filter_features(func: Callable,
                     geojson: dict,
-                    progressbar_kw: Optional[dict] = None) -> dict:
+                    progressbar_kw: dict | None = None) -> dict:
     """Filter GeoJSON features. Returns a new GeoJSON dict."""
     features_in = geojson['features']
 
@@ -160,7 +158,7 @@ def is_empty_feature(f: dict) -> bool:
     Returns:
         bool: Whether the feature contains any geometry.
     """
-    g: Optional[dict] = f.get('geometry')
+    g: dict | None = f.get('geometry')
     if not g:
         return True
     no_geometries = not g.get('geometries')
@@ -194,7 +192,7 @@ def split_multi_geometries(geojson: dict) -> dict:
         dict: FeatureCollection without multi-part geometries.
     """
 
-    def split_geom(geom: 'BaseGeometry') -> List['BaseGeometry']:
+    def split_geom(geom: 'BaseGeometry') -> list['BaseGeometry']:
         # Split GeometryCollection into list of geoms.
         if geom.geom_type == 'GeometryCollection':
             geoms = list(geom.geoms)
@@ -286,26 +284,25 @@ def simplify_polygons(geojson: dict) -> dict:
 
 def buffer_geoms(geojson: dict,
                  geom_type: str,
-                 class_bufs: Dict[int, Optional[float]] = {},
-                 default_buf: Optional[float] = 1) -> dict:
+                 class_bufs: dict[int, float | None] = {},
+                 default_buf: float | None = 1) -> dict:
     """Buffer geometries.
 
     Geometries in features without a class_id property will be ignored.
 
     Args:
-        geojson (dict): A GeoJSON-like mapping of a FeatureCollection.
-        geom_type (str): Shapely geometry type to apply the buffering to. Other
+        geojson: A GeoJSON-like mapping of a FeatureCollection.
+        geom_type: Shapely geometry type to apply the buffering to. Other
             types of geometries will not be affected.
-        class_bufs (Dict[int, Optional[float]]): Optional
-            mapping from class ID to buffer distance (in pixel units) for
-            geom_type geometries.
+        class_bufs: Optional mapping from class ID to buffer distance
+            (in pixel units) for geom_type geometries.
 
     Returns:
         dict: FeatureCollection with buffered geometries.
     """
 
     def buffer_geom(geom: 'BaseGeometry',
-                    feature: Optional[dict] = None) -> 'BaseGeometry':
+                    feature: dict | None = None) -> 'BaseGeometry':
         has_class_id = (('properties' in feature)
                         and ('class_id' in feature['properties']))
         if has_class_id:
@@ -338,10 +335,10 @@ def all_geoms_valid(geojson: dict):
     return all(g.is_valid for g in geoms)
 
 
-def get_polygons_from_uris(uris: Union[str, List[str]],
+def get_polygons_from_uris(uris: str | list[str],
                            crs_transformer: 'CRSTransformer',
-                           bbox: Optional['Box'] = None,
-                           map_coords: bool = False) -> List['BaseGeometry']:
+                           bbox: 'Box | None' = None,
+                           map_coords: bool = False) -> list['BaseGeometry']:
     """Load and return polygons (in pixel coords) from one or more URIs."""
 
     # use local imports to avoid circular import problems

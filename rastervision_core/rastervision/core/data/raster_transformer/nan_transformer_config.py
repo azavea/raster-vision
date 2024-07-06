@@ -1,5 +1,3 @@
-from typing import Optional
-
 from rastervision.pipeline.config import register_config, Field
 from rastervision.core.data.raster_transformer.raster_transformer_config import (  # noqa
     RasterTransformerConfig)
@@ -11,7 +9,7 @@ from rastervision.core.data.raster_transformer.nan_transformer import (  # noqa
 class NanTransformerConfig(RasterTransformerConfig):
     """Configure a :class:`.NanTransformer`."""
 
-    to_value: Optional[float] = Field(
+    to_value: float | None = Field(
         0.0, description=('Turn all NaN values into this value.'))
 
     def build(self):

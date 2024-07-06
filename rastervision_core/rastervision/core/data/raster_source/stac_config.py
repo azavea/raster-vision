@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING
 
 from rastervision.pipeline.config import (Config, Field, register_config)
 from rastervision.pipeline.file_system.utils import file_to_json
@@ -12,7 +12,7 @@ class STACItemConfig(Config):
     """Specify a raster via a STAC Item."""
 
     uri: str = Field(..., description='URI to a JSON-serialized STAC Item.')
-    assets: Optional[List[str]] = Field(
+    assets: list[str] | None = Field(
         None,
         description=
         'Subset of assets to use. This should be a list of asset keys')
@@ -32,7 +32,7 @@ class STACItemCollectionConfig(Config):
 
     uri: str = Field(
         ..., description='URI to a JSON-serialized STAC ItemCollection.')
-    assets: Optional[List[str]] = Field(
+    assets: list[str] | None = Field(
         None,
         description=
         'Subset of assets to use. This should be a list of asset keys')
@@ -47,7 +47,7 @@ class STACItemCollectionConfig(Config):
         return items
 
 
-def subset_assets(item: 'Item', assets: List[str]) -> 'Item':
+def subset_assets(item: 'Item', assets: list[str]) -> 'Item':
     """Return a copy of the Item with assets subsetted."""
     item = item.clone()
     src_assets = item.assets

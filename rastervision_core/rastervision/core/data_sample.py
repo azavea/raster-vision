@@ -1,4 +1,4 @@
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 from dataclasses import dataclass
 
 from numpy import ndarray
@@ -10,7 +10,7 @@ from rastervision.core.box import Box
 class DataSample:
     """A chip and labels along with metadata."""
     chip: ndarray
-    label: Optional[Any] = None
-    split: Optional[Literal['train', 'valid', 'test']] = None
-    scene_id: Optional[str] = None
-    window: Optional[Box] = None
+    label: Any | None = None
+    split: Literal['train', 'valid', 'test'] | None = None
+    scene_id: str | None = None
+    window: Box | None = None

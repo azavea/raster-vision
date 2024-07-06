@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional, Tuple
+from typing import TYPE_CHECKING
 import logging
 
 from rasterio.features import rasterize
@@ -63,18 +63,18 @@ class RasterizedSource(RasterSource):
     def __init__(self,
                  vector_source: 'VectorSource',
                  background_class_id: int,
-                 bbox: Optional['Box'] = None,
+                 bbox: 'Box | None' = None,
                  all_touched: bool = False,
-                 raster_transformers: List['RasterTransformer'] = []):
+                 raster_transformers: list['RasterTransformer'] = []):
         """Constructor.
 
         Args:
             vector_source (VectorSource): The VectorSource to rasterize.
             background_class_id (int): The class_id to use for any background
                 pixels, ie. pixels not covered by a polygon.
-            bbox (Optional[Box], optional): User-specified crop of the extent.
+            bbox (Box | None): User-specified crop of the extent.
                 If None, the full extent available in the source file is used.
-            all_touched (bool, optional): If True, all pixels touched by
+            all_touched (bool): If True, all pixels touched by
                 geometries will be burned in. If false, only pixels whose
                 center is within the polygon or that are selected by
                 Bresenham's line algorithm will be burned in.
@@ -107,7 +107,7 @@ class RasterizedSource(RasterSource):
 
     def _get_chip(self,
                   window: 'Box',
-                  out_shape: Optional[Tuple[int, int]] = None) -> np.ndarray:
+                  out_shape: tuple[int, int] | None = None) -> np.ndarray:
         """Return the chip located in the window.
 
         Polygons falling within the window are rasterized using their

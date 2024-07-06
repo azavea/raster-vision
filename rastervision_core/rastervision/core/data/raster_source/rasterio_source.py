@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, List, Optional, Sequence, Tuple, Union
+from typing import TYPE_CHECKING, Any, Sequence
 import logging
 
 import numpy as np
@@ -39,30 +39,30 @@ class RasterioSource(RasterSource):
     """
 
     def __init__(self,
-                 uris: Union[str, List[str]],
-                 raster_transformers: List['RasterTransformer'] = [],
+                 uris: str | list[str],
+                 raster_transformers: list['RasterTransformer'] = [],
                  allow_streaming: bool = False,
-                 channel_order: Optional[Sequence[int]] = None,
-                 bbox: Optional[Box] = None,
-                 tmp_dir: Optional[str] = None):
+                 channel_order: Sequence[int] | None = None,
+                 bbox: Box | None = None,
+                 tmp_dir: str | None = None):
         """Constructor.
 
         Args:
-            uris (Union[str, List[str]]): One or more URIs of images. If more
-                than one, the images will be mosaiced together using GDAL.
-            raster_transformers (List['RasterTransformer']): RasterTransformers
-                to use to transform chips after they are read.
-            allow_streaming (bool): If True, read data without downloading the
-                entire file first. Defaults to False.
-            channel_order (Optional[Sequence[int]]): List of indices of
-                channels to extract from raw imagery. Can be a subset of the
-                available channels. If None, all channels available in the
-                image will be read. Defaults to None.
-            bbox (Optional[Box], optional): User-specified crop of the extent.
-                If None, the full extent available in the source file is used.
-            tmp_dir (Optional[str]): Directory to use for storing the VRT
-                (needed if multiple uris or allow_streaming=True). If None,
-                will be auto-generated. Defaults to None.
+            uris: One or more URIs of images. If more than one, the images will
+                be mosaiced together using GDAL.
+            raster_transformers: RasterTransformers to use to transform chips
+                after they are read.
+            allow_streaming: If ``True``, read data without downloading the
+                entire file first. Defaults to ``False``.
+            channel_order: List of indices of channels to extract from raw
+                imagery. Can be a subset of the available channels. If
+                ``None``, all channels available in the image will be read.
+                Defaults to ``None``.
+            bbox: User-specified crop of the extent. If ``None``, the full
+                extent available in the source file is used.
+            tmp_dir: Directory to use for storing the VRT (needed if multiple
+                ``uris`` or ``allow_streaming=True``). If ``None``,
+                will be auto-generated. Defaults to ``None``.
         """
         self.uris = listify_uris(uris)
         self.allow_streaming = allow_streaming
@@ -139,8 +139,7 @@ class RasterioSource(RasterSource):
         self._dtype = test_chip.dtype
         self._num_channels = test_chip.shape[-1]
 
-    def download_data(self,
-                      vrt_dir: Optional[str] = None,
+    def download_data(self, vrt_dir: str | None = None,
                       stream: bool = False) -> str:
         """Download any data needed for this raster source.
 
@@ -158,8 +157,8 @@ class RasterioSource(RasterSource):
 
     def _get_chip(self,
                   window: Box,
-                  bands: Optional[Sequence[int]] = None,
-                  out_shape: Optional[Tuple[int, ...]] = None) -> np.ndarray:
+                  bands: Sequence[int] | None = None,
+                  out_shape: tuple[int, ...] | None = None) -> np.ndarray:
         window = window.to_global_coords(self.bbox)
         chip = read_window(
             self.image_dataset,
@@ -172,20 +171,18 @@ class RasterioSource(RasterSource):
 
     def get_chip(self,
                  window: Box,
-                 bands: Optional[Union[Sequence[int], slice]] = None,
-                 out_shape: Optional[Tuple[int, ...]] = None) -> np.ndarray:
+                 bands: Sequence[int] | slice | None = None,
+                 out_shape: tuple[int, ...] | None = None) -> np.ndarray:
         """Read a chip specified by a window from the file.
 
         Args:
-            window (Box): Bounding box of chip in pixel coordinates.
-            bands (Optional[Union[Sequence[int], slice]], optional): Subset of
-                bands to read. Note that this will be applied on top of the
-                channel_order (if specified). So if this is an RGB image and
-                channel_order=[2, 1, 0], then using bands=[0] will return the
-                B-channel. Defaults to None.
-            out_shape (Optional[Tuple[int, ...]], optional): (height, width) of
-                the output chip. If None, no resizing is done.
-                Defaults to None.
+            window: Bounding box of chip in pixel coordinates.
+            bands: Subset of bands to read. Note that this will be applied on
+                top of the ``channel_order`` (if specified). E.g. if this is an
+                RGB image and ``channel_order=[2, 1, 0]``, then ``bands=[0]``
+                will return the B-channel. Defaults to ``None``.
+            out_shape: (height, width) of the output chip. If ``None``, no
+                resizing is done. Defaults to ``None``.
 
         Returns:
             np.ndarray: A chip of shape (height, width, channels).

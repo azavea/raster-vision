@@ -1,5 +1,3 @@
-from typing import List, Union
-
 from rastervision.core.box import Box
 from rastervision.core.data.raster_source import RasterSourceConfig, RasterioSource
 from rastervision.pipeline.config import ConfigError, Field, register_config
@@ -26,7 +24,7 @@ def rasterio_source_config_upgrader(cfg_dict: dict,
 class RasterioSourceConfig(RasterSourceConfig):
     """Configure a :class:`.RasterioSource`."""
 
-    uris: Union[str, List[str]] = Field(
+    uris: str | list[str] = Field(
         ...,
         description='One or more image URIs that comprise the imagery for a '
         'scene. The format of each file can be any that can be read by '
