@@ -1,4 +1,3 @@
-from typing import Optional
 from os.path import join
 
 from rastervision.core.data.label_store import (LabelStoreConfig,
@@ -10,7 +9,7 @@ from rastervision.pipeline.config import register_config, Field
 class ChipClassificationGeoJSONStoreConfig(LabelStoreConfig):
     """Configure a :class:`.ChipClassificationGeoJSONStore`."""
 
-    uri: Optional[str] = Field(
+    uri: str | None = Field(
         None,
         description=
         ('URI of GeoJSON file with predictions. If None, and this Config is part of '

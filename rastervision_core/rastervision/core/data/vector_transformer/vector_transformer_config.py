@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from rastervision.pipeline.config import Config, register_config
 
@@ -14,8 +14,8 @@ class VectorTransformerConfig(Config):
     """Configure a :class:`.VectorTransformer`."""
 
     def update(self,
-               pipeline: Optional['RVPipelineConfig'] = None,
-               scene: Optional['SceneConfig'] = None) -> None:
+               pipeline: 'RVPipelineConfig | None' = None,
+               scene: 'SceneConfig | None' = None) -> None:
         pass
 
     @abstractmethod

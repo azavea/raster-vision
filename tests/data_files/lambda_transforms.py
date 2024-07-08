@@ -6,14 +6,14 @@ if TYPE_CHECKING:
     import numpy as np
 
 
-def ndvi(rgb_nir: 'np.array', **kwargs) -> 'np.array':
+def ndvi(rgb_nir: 'np.ndarray', **kwargs) -> 'np.ndarray':
     red = rgb_nir[..., 0]
     nir = rgb_nir[..., 3]
     ndvi = (nir - red) / (nir + red)
     return ndvi
 
 
-def swap(image: 'np.array', **kwargs) -> 'np.array':
+def swap(image: 'np.ndarray', **kwargs) -> 'np.ndarray':
     return image[..., [3, 4, 5, 0, 1, 2]]
 
 

@@ -1,4 +1,3 @@
-from typing import List, Optional
 from urllib.parse import urlparse
 import logging
 from itertools import islice
@@ -50,7 +49,7 @@ def is_label_item(item: Item) -> bool:
     return False
 
 
-def get_linked_image_item(label_item: Item) -> Optional[Item]:
+def get_linked_image_item(label_item: Item) -> Item | None:
     """Find link in the item that has "rel" == "source" and return its
     "target" item. If no such link, return None. If multiple such links,
     raise an exception."""
@@ -63,7 +62,7 @@ def get_linked_image_item(label_item: Item) -> Optional[Item]:
     return image_item
 
 
-def parse_stac(stac_uri: str, item_limit: Optional[int] = None) -> List[dict]:
+def parse_stac(stac_uri: str, item_limit: int | None = None) -> list[dict]:
     """Parse a STAC catalog JSON file to extract label URIs, images URIs,
     and AOIs.
 
@@ -74,7 +73,7 @@ def parse_stac(stac_uri: str, item_limit: Optional[int] = None) -> List[dict]:
         stac_uri (str): Path to the STAC catalog JSON file.
 
     Returns:
-        List[dict]: A list of dicts with keys: "label_uri", "image_uris",
+        list[dict]: A list of dicts with keys: "label_uri", "image_uris",
         "label_bbox", "image_bbox", "bboxes_intersect", and "aoi_geometry".
         Each dict corresponds to one label item and its associated image
         assets in the STAC catalog.
@@ -100,7 +99,7 @@ def parse_stac(stac_uri: str, item_limit: Optional[int] = None) -> List[dict]:
     for label_item, image_item in zip(label_items, image_items):
         label_uri: str = list(label_item.assets.values())[0].href
         label_bbox = box(*label_item.bbox)
-        aoi_geometry: Optional[dict] = label_item.geometry
+        aoi_geometry: dict | None = label_item.geometry
 
         if image_item is not None:
             image_assets = [
@@ -126,8 +125,8 @@ def parse_stac(stac_uri: str, item_limit: Optional[int] = None) -> List[dict]:
     return out
 
 
-def read_stac(uri: str, extract_dir: Optional[str] = None,
-              **kwargs) -> List[dict]:
+def read_stac(uri: str, extract_dir: str | None = None,
+              **kwargs) -> list[dict]:
     """Parse the contents of a STAC catalog.
 
     The file is downloaded if needed. If it is a zip file, it is unzipped and
@@ -136,7 +135,7 @@ def read_stac(uri: str, extract_dir: Optional[str] = None,
     Args:
         uri (str): Either a URI to a STAC catalog JSON file or a URI to a zip
             file containing a STAC catalog JSON file.
-        extract_dir (Optional[str]): Dir to extract to, if URI is a zip file.
+        extract_dir (str | None): Dir to extract to, if URI is a zip file.
             If None, a temporary dir will be used. Defaults to None.
         **kwargs: Extra args for :func:`.parse_stac`.
 
@@ -145,7 +144,7 @@ def read_stac(uri: str, extract_dir: Optional[str] = None,
         Exception: If multiple catalog.json's are found inside the zip file.
 
     Returns:
-        List[dict]: A list of dicts with keys: "label_uri", "image_uris",
+        list[dict]: A list of dicts with keys: "label_uri", "image_uris",
         "label_bbox", "image_bbox", "bboxes_intersect", and "aoi_geometry".
         Each dict corresponds to one label item and its associated image
         assets in the STAC catalog.

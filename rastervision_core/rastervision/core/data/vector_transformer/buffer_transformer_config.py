@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Dict, Optional
+from typing import TYPE_CHECKING
 
 from rastervision.pipeline.config import register_config, Field
 from rastervision.core.data.vector_transformer import (VectorTransformerConfig,
@@ -19,7 +19,7 @@ class BufferTransformerConfig(VectorTransformerConfig):
         ...,
         description='The geometry type to apply this transform to. '
         'E.g. "LineString", "Point", "Polygon".')
-    class_bufs: Dict[int, Optional[float]] = Field(
+    class_bufs: dict[int, float | None] = Field(
         {},
         description='Mapping from class IDs to buffer amounts (in pixels). '
         'If a class ID is not found in the mapping, the value specified by '
@@ -28,13 +28,13 @@ class BufferTransformerConfig(VectorTransformerConfig):
         'class and the geom won\'t get converted to a Polygon. Not converting '
         'to Polygon is incompatible with the currently available '
         'LabelSources, but may be useful in the future.')
-    default_buf: Optional[float] = Field(
+    default_buf: float | None = Field(
         1,
         description='Default buffer to apply to classes not in class_bufs. '
         'If None, no buffering will be applied to the geoms of those classes.')
 
-    def build(self, class_config: Optional['ClassConfig'] = None
-              ) -> BufferTransformer:
+    def build(self,
+              class_config: 'ClassConfig | None' = None) -> BufferTransformer:
         return BufferTransformer(
             self.geom_type,
             class_bufs=self.class_bufs,

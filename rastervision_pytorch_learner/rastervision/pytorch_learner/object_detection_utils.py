@@ -1,5 +1,5 @@
-from typing import (Any, Callable, Optional, Sequence, Tuple, Iterable, List,
-                    Dict, Union)
+from typing import Any, Iterable, Self, Sequence
+from collections.abc import Callable
 from collections import defaultdict
 from os.path import join
 from operator import iand
@@ -20,8 +20,8 @@ from rastervision.pipeline.file_system import json_to_file, get_tmp_dir
 from rastervision.pytorch_learner.utils.utils import ONNXRuntimeAdapter
 
 
-def get_coco_gt(targets: Iterable['BoxList'],
-                num_class_ids: int) -> Dict[str, List[dict]]:
+def get_coco_gt(targets: Iterable[Self],
+                num_class_ids: int) -> dict[str, list[dict]]:
     images = []
     annotations = []
     ann_id = 1
@@ -60,7 +60,7 @@ def get_coco_gt(targets: Iterable['BoxList'],
     return coco
 
 
-def get_coco_preds(outputs: Iterable['BoxList']) -> List[dict]:
+def get_coco_preds(outputs: Iterable[Self]) -> list[dict]:
     preds = []
     for img_id, output in enumerate(outputs, 1):
         boxes = output.convert_boxes('xywh').float().tolist()
@@ -144,8 +144,10 @@ class BoxList():
         else:
             return self.extras.get(name)
 
-    def _map_extras(self, func: Callable,
-                    cond: Callable = lambda k, v: True) -> dict:
+    def _map_extras(
+            self,
+            func: Callable[[str, Any], Any],
+            cond: Callable[[str, Any], bool] = lambda k, v: True) -> dict:
         new_extras = {}
         for k, v in self.extras.items():
             if cond(k, v):
@@ -155,13 +157,13 @@ class BoxList():
 
         return new_extras
 
-    def copy(self) -> 'BoxList':
+    def copy(self) -> Self:
         return BoxList(
             self.boxes.copy(),
             **self._map_extras(lambda k, v: v.copy()),
             cond=lambda k, v: torch.is_tensor(v))
 
-    def to(self, *args, **kwargs) -> 'BoxList':
+    def to(self, *args, **kwargs) -> Self:
         """Recursively apply :meth:`torch.Tensor.to` to Tensors.
 
         Args:
@@ -188,7 +190,7 @@ class BoxList():
         return len(self.boxes)
 
     @staticmethod
-    def cat(box_lists: Iterable['BoxList']) -> 'BoxList':
+    def cat(box_lists: Iterable[Self]) -> Self:
         boxes = []
         extras = defaultdict(list)
         for bl in box_lists:
@@ -200,7 +202,7 @@ class BoxList():
             extras[k] = torch.cat(v)
         return BoxList(boxes, **extras)
 
-    def equal(self, other: 'BoxList') -> bool:
+    def equal(self, other: Self) -> bool:
         if len(other) != len(self):
             return False
 
@@ -216,20 +218,20 @@ class BoxList():
         other_tups = set([tuple([x.item() for x in row]) for row in cat_arr])
         return self_tups == other_tups
 
-    def ind_filter(self, inds: Sequence[int]) -> 'BoxList':
+    def ind_filter(self, inds: Sequence[int]) -> Self:
         boxes = self.boxes[inds]
         extras = self._map_extras(
             func=lambda k, v: v[inds], cond=lambda k, v: torch.is_tensor(v))
         return BoxList(boxes, **extras)
 
-    def score_filter(self, score_thresh: float = 0.25) -> 'BoxList':
+    def score_filter(self, score_thresh: float = 0.25) -> Self:
         scores = self.extras.get('scores')
         if scores is not None:
             return self.ind_filter(scores > score_thresh)
         else:
             raise ValueError('must have scores as key in extras')
 
-    def clip_boxes(self, img_height: int, img_width: int) -> 'BoxList':
+    def clip_boxes(self, img_height: int, img_width: int) -> Self:
         boxes = clip_boxes_to_image(self.boxes, (img_height, img_width))
         return BoxList(boxes, **self.extras)
 
@@ -241,7 +243,7 @@ class BoxList():
                                 self.get_field('class_ids'), iou_thresh)
         return self.ind_filter(good_inds)
 
-    def scale(self, yscale: float, xscale: float) -> 'BoxList':
+    def scale(self, yscale: float, xscale: float) -> Self:
         """Scale box coords by the given scaling factors."""
         dtype = self.boxes.dtype
         boxes = self.boxes.float()
@@ -250,7 +252,7 @@ class BoxList():
         self.boxes = boxes.to(dtype=dtype)
         return self
 
-    def pin_memory(self) -> 'BoxList':
+    def pin_memory(self) -> Self:
         self.boxes = self.boxes.pin_memory()
         for k, v in self.extras.items():
             if torch.is_tensor(v):
@@ -261,10 +263,10 @@ class BoxList():
         return pformat(dict(boxes=self.boxes, **self.extras))
 
 
-def collate_fn(data: Iterable[Sequence]) -> Tuple[torch.Tensor, List[BoxList]]:
+def collate_fn(data: Iterable[Sequence]) -> tuple[torch.Tensor, list[BoxList]]:
     imgs = [d[0] for d in data]
     x = torch.stack(imgs)
-    y: List[BoxList] = [d[1] for d in data]
+    y: list[BoxList] = [d[1] for d in data]
     return x, y
 
 
@@ -274,16 +276,16 @@ def draw_boxes(x: torch.Tensor, y: BoxList, class_names: Sequence[str],
     image."""
     boxes = y.boxes
     class_ids: np.ndarray = y.get_field('class_ids').numpy()
-    scores: Optional[torch.Tensor] = y.get_field('scores')
+    scores: torch.Tensor | None = y.get_field('scores')
 
     if len(boxes) > 0:
-        box_annotations: List[str] = np.array(class_names)[class_ids].tolist()
+        box_annotations: list[str] = np.array(class_names)[class_ids].tolist()
         if scores is not None:
             box_annotations = [
                 f'{ann} | {score:.2f}'
                 for ann, score in zip(box_annotations, scores)
             ]
-        box_colors: List[Union[str, Tuple[int, ...]]] = [
+        box_colors: list[str | tuple[int, ...]] = [
             tuple(c) if not isinstance(c, str) else c
             for c in np.array(class_colors)[class_ids]
         ]
@@ -321,7 +323,7 @@ class TorchVisionODAdapter(nn.Module):
 
         Args:
             model (nn.Module): A torchvision object detection model.
-            ignored_output_inds (Iterable[int], optional): Class labels to exclude.
+            ignored_output_inds (Iterable[int]): Class labels to exclude.
                 Defaults to [0].
         """
         super().__init__()
@@ -330,17 +332,15 @@ class TorchVisionODAdapter(nn.Module):
 
     def forward(self,
                 input: torch.Tensor,
-                targets: Optional[Iterable[BoxList]] = None
-                ) -> Union[Dict[str, Any], List[BoxList]]:
+                targets: Iterable[BoxList] | None = None
+                ) -> dict[str, Any] | list[BoxList]:
         """Forward pass.
 
         Args:
-            input (Tensor[batch_size, in_channels, in_height, in_width]): batch
-                of images.
-            targets (Optional[Iterable[BoxList]], optional): In training mode,
-                should be Iterable[BoxList]], with each BoxList having a
-                'class_ids' field. In eval mode, should be None. Defaults to
-                None.
+            input: batch of images.
+            targets: In training mode, should be ``Iterable[BoxList]]``, with
+                each ``BoxList`` having a ``'class_ids'`` field. In eval mode,
+                should be None. Defaults to ``None``.
 
         Returns:
             In training mode, returns a dict of losses. In eval mode, returns a
@@ -404,7 +404,7 @@ class TorchVisionODAdapter(nn.Module):
 class ONNXRuntimeAdapterForFasterRCNN(ONNXRuntimeAdapter):
     """TorchVision Faster RCNN model exported as ONNX"""
 
-    def __call__(self, x: Union[torch.Tensor, np.ndarray]) -> torch.Tensor:
+    def __call__(self, x: torch.Tensor | np.ndarray) -> torch.Tensor:
         N, *_ = x.shape
         x = x.numpy()
         outputs = self.ort_session.run(None, dict(x=x))

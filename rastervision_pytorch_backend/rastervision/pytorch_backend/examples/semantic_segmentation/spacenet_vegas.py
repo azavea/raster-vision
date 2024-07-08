@@ -1,4 +1,3 @@
-from typing import Optional
 import re
 import random
 import os
@@ -101,7 +100,7 @@ class VegasBuildings(SpacenetConfig):
 
 def build_scene(spacenet_cfg: SpacenetConfig,
                 id: str,
-                channel_order: Optional[list] = None) -> SceneConfig:
+                channel_order: list | None = None) -> SceneConfig:
     image_uri = spacenet_cfg.get_raster_source_uri(id)
     label_uri = spacenet_cfg.get_geojson_uri(id)
 
@@ -148,11 +147,11 @@ def get_config(runner,
         raw_uri (str): Directory where the raw data resides
         root_uri (str): Directory where all the output will be written.
         target (str): "buildings" | "roads". Defaults to "buildings".
-        nochip (bool, optional): If True, read directly from the TIFF during
+        nochip (bool): If True, read directly from the TIFF during
             training instead of from pre-generated chips. The analyze and chip
             commands should not be run, if this is set to True. Defaults to
             True.
-        test (bool, optional): If True, does the following simplifications:
+        test (bool): If True, does the following simplifications:
             (1) Uses only a small subset of training and validation scenes.
             (2) Trains for only 2 epochs.
             Defaults to False.

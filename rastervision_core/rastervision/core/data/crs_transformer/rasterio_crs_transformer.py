@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Optional, Union
+from typing import Any, Self
 from pyproj import Transformer
 
 import numpy as np
@@ -8,9 +8,6 @@ from rasterio import Affine
 
 from rastervision.core.data.crs_transformer import (CRSTransformer,
                                                     IdentityCRSTransformer)
-
-if TYPE_CHECKING:
-    from typing import Self
 
 
 class RasterioCRSTransformer(CRSTransformer):
@@ -66,7 +63,8 @@ class RasterioCRSTransformer(CRSTransformer):
         """
         return out
 
-    def _map_to_pixel(self, map_point):
+    def _map_to_pixel(self, map_point: tuple[float, float] | np.ndarray
+                      ) -> tuple[int, int] | np.ndarray:
         """Transform point from map to pixel-based coordinates.
 
         Args:
@@ -84,7 +82,8 @@ class RasterioCRSTransformer(CRSTransformer):
         pixel_point = (col, row)
         return pixel_point
 
-    def _pixel_to_map(self, pixel_point):
+    def _pixel_to_map(self, pixel_point: tuple[int, int] | np.ndarray
+                      ) -> tuple[float, float] | np.ndarray:
         """Transform point from pixel to map-based coordinates.
 
         Args:
@@ -102,14 +101,15 @@ class RasterioCRSTransformer(CRSTransformer):
         return map_point
 
     @classmethod
-    def from_dataset(
-            cls, dataset: Any, map_crs: Optional[str] = 'epsg:4326', **kwargs
-    ) -> Union[IdentityCRSTransformer, 'RasterioCRSTransformer']:
+    def from_dataset(cls,
+                     dataset: Any,
+                     map_crs: str | None = 'epsg:4326',
+                     **kwargs) -> 'IdentityCRSTransformer | Self':
         """Build from rasterio dataset.
 
         Args:
-            dataset (Any): Rasterio dataset.
-            map_crs (Optional[str]): Target map CRS. Defaults to 'epsg:4326'.
+            dataset: Rasterio dataset.
+            map_crs: Target map CRS. Defaults to 'epsg:4326'.
             **kwargs: Extra args for :meth:`.__init__`.
         """
         transform = dataset.transform
@@ -127,13 +127,13 @@ class RasterioCRSTransformer(CRSTransformer):
         return cls(transform, image_crs, map_crs, **kwargs)
 
     @classmethod
-    def from_uri(cls, uri: str, map_crs: Optional[str] = 'epsg:4326',
-                 **kwargs) -> 'Self':
+    def from_uri(cls, uri: str, map_crs: str | None = 'epsg:4326',
+                 **kwargs) -> 'IdentityCRSTransformer | Self':
         """Build from raster URI.
 
         Args:
-            uri (Any): Raster URI.
-            map_crs (Optional[str]): Target map CRS. Defaults to 'epsg:4326'.
+            uri: Raster URI.
+            map_crs: Target map CRS. Defaults to 'epsg:4326'.
             **kwargs: Extra args for :meth:`.__init__`.
         """
         with rio.open(uri) as ds:

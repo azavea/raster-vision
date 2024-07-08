@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional, Tuple
+from typing import TYPE_CHECKING
 
 from rastervision.pipeline.config import (Config, register_config, Field,
                                           ConfigError)
@@ -33,24 +33,23 @@ def rs_config_upgrader(cfg_dict: dict,
 class RasterSourceConfig(Config):
     """Configure a :class:`.RasterSource`."""
 
-    channel_order: Optional[List[int]] = Field(
+    channel_order: list[int] | None = Field(
         None,
         description=
         'The sequence of channel indices to use when reading imagery.')
-    transformers: List[RasterTransformerConfig] = []
-    bbox: Optional[Tuple[int, int, int, int]] = Field(
+    transformers: list[RasterTransformerConfig] = []
+    bbox: tuple[int, int, int, int] | None = Field(
         None,
         description='User-specified bbox in pixel coords in the form '
         '(ymin, xmin, ymax, xmax). Useful for cropping the raster source so '
         'that only part of the raster is read from.')
 
-    def build(self,
-              tmp_dir: Optional[str] = None,
+    def build(self, tmp_dir: str | None = None,
               use_transformers: bool = True) -> 'RasterSource':
         raise NotImplementedError()
 
     def update(self,
-               pipeline: Optional['RVPipelineConfig'] = None,
-               scene: Optional['SceneConfig'] = None) -> None:
+               pipeline: 'RVPipelineConfig | None' = None,
+               scene: 'SceneConfig | None' = None) -> None:
         for t in self.transformers:
             t.update(pipeline, scene)

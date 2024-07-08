@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Iterable, Optional
+from typing import TYPE_CHECKING, Iterable
 from abc import (abstractmethod)
 import logging
 
@@ -17,7 +17,7 @@ class ClassificationEvaluator(Evaluator):
 
     def __init__(self,
                  class_config: 'ClassConfig',
-                 output_uri: Optional[str] = None):
+                 output_uri: str | None = None):
         self.class_config = class_config
         self.output_uri = output_uri
 
@@ -26,7 +26,7 @@ class ClassificationEvaluator(Evaluator):
         pass
 
     def process(self, scenes: Iterable['Scene'],
-                tmp_dir: Optional[str] = None) -> None:
+                tmp_dir: str | None = None) -> None:
         if self.output_uri is not None:
             evaluation_global = self.create_evaluation()
             for scene in scenes:

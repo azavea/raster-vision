@@ -1,6 +1,5 @@
 from abc import (ABC, abstractmethod)
 from datetime import datetime
-from typing import Optional, List
 
 from rastervision.pipeline import registry_ as registry
 
@@ -135,7 +134,7 @@ class FileSystem(ABC):
 
     @staticmethod
     @abstractmethod
-    def last_modified(uri: str) -> Optional[datetime]:
+    def last_modified(uri: str) -> datetime | None:
         """Get the last modified date of a file.
 
         Args:
@@ -148,7 +147,7 @@ class FileSystem(ABC):
 
     @staticmethod
     @abstractmethod
-    def list_paths(uri: str, ext: Optional[str] = None) -> List[str]:
+    def list_paths(uri: str, ext: str | None = None) -> list[str]:
         """List paths rooted at URI.
 
         Optionally only includes paths with a certain file extension.

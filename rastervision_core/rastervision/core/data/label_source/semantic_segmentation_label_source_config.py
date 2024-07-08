@@ -1,5 +1,3 @@
-from typing import Union
-
 from rastervision.core.data.raster_source import (RasterSourceConfig,
                                                   RasterizedSourceConfig)
 from rastervision.core.data.label_source import (
@@ -21,7 +19,7 @@ def ss_label_source_config_upgrader(cfg_dict: dict,
 class SemanticSegmentationLabelSourceConfig(LabelSourceConfig):
     """Configure a :class:`.SemanticSegmentationLabelSource`."""
 
-    raster_source: Union[RasterSourceConfig, RasterizedSourceConfig] = Field(
+    raster_source: RasterSourceConfig | RasterizedSourceConfig = Field(
         ..., description='The labels in the form of rasters.')
 
     def build(self, class_config, crs_transformer, bbox=None,

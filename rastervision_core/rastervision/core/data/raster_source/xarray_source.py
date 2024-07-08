@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, List, Optional, Sequence, Tuple, Union
+from typing import TYPE_CHECKING, Any, Sequence
 import logging
 
 import numpy as np
@@ -25,26 +25,26 @@ class XarraySource(RasterSource):
     def __init__(self,
                  data_array: DataArray,
                  crs_transformer: 'CRSTransformer',
-                 raster_transformers: List['RasterTransformer'] = [],
-                 channel_order: Optional[Sequence[int]] = None,
-                 bbox: Optional[Box] = None,
+                 raster_transformers: list['RasterTransformer'] = [],
+                 channel_order: Sequence[int] | None = None,
+                 bbox: Box | None = None,
                  temporal: bool = False):
         """Constructor.
 
         Args:
-            uris (Union[str, List[str]]): One or more URIs of images. If more
-                than one, the images will be mosaiced together using GDAL.
-            crs_transformer (CRSTransformer): A CRSTransformer defining the
-                mapping between pixel and map coords.
-            raster_transformers (List['RasterTransformer']): RasterTransformers
-                to use to transform chips after they are read.
-            channel_order (Optional[Sequence[int]]): List of indices of
-                channels to extract from raw imagery. Can be a subset of the
-                available channels. If None, all channels available in the
-                image will be read. Defaults to None.
-            bbox (Optional[Box], optional): User-specified crop of the extent.
-                If None, the full extent available in the source file is used.
-            temporal (bool): If True, data_array is expected to have a "time"
+            uris: One or more URIs of images. If more than one, the images will
+                be mosaiced together using GDAL.
+            crs_transformer: A CRSTransformer defining the mapping between
+                pixel and map coords.
+            raster_transformers: RasterTransformers to use to transform chips
+                after they are read.
+            channel_order: List of indices of channels to extract from raw
+                imagery. Can be a subset of the available channels. If
+                ``None``, all channels available in the image will be read.
+                Defaults to ``None``.
+            bbox: User-specified crop of the extent. If ``None``, the full
+                extent available in the source file is used.
+            temporal: If ``True``, data_array is expected to have a "time"
                 dimension and the chips returned will be of shape (T, H, W, C).
         """
         self.temporal = temporal
@@ -167,7 +167,7 @@ class XarraySource(RasterSource):
         return raster_source
 
     @property
-    def shape(self) -> Tuple[int, int, int]:
+    def shape(self) -> tuple[int, int, int]:
         """Shape of the raster as a (height, width, num_channels) tuple."""
         H, W = self.bbox.size
         if self.temporal:
@@ -208,9 +208,9 @@ class XarraySource(RasterSource):
 
     def _get_chip(self,
                   window: Box,
-                  bands: Union[int, Sequence[int], slice] = slice(None),
-                  time: Union[int, Sequence[int], slice] = slice(None),
-                  out_shape: Optional[Tuple[int, ...]] = None) -> np.ndarray:
+                  bands: int | Sequence[int] | slice = slice(None),
+                  time: int | Sequence[int] | slice = slice(None),
+                  out_shape: tuple[int, ...] | None = None) -> np.ndarray:
         window = window.to_global_coords(self.bbox)
 
         window_within_bbox = window.intersection(self.bbox)
@@ -239,21 +239,19 @@ class XarraySource(RasterSource):
 
     def get_chip(self,
                  window: Box,
-                 bands: Optional[Union[int, Sequence[int], slice]] = None,
-                 time: Union[int, Sequence[int], slice] = slice(None),
-                 out_shape: Optional[Tuple[int, ...]] = None) -> np.ndarray:
+                 bands: int | Sequence[int] | slice | None = None,
+                 time: int | Sequence[int] | slice = slice(None),
+                 out_shape: tuple[int, ...] | None = None) -> np.ndarray:
         """Read a chip specified by a window from the file.
 
         Args:
-            window (Box): Bounding box of chip in pixel coordinates.
-            bands (Optional[Union[Sequence[int], slice]], optional): Subset of
-                bands to read. Note that this will be applied on top of the
-                channel_order (if specified). So if this is an RGB image and
-                channel_order=[2, 1, 0], then using bands=[0] will return the
-                B-channel. Defaults to None.
-            out_shape (Optional[Tuple[int, ...]], optional): (height, width) of
-                the output chip. If None, no resizing is done.
-                Defaults to None.
+            window: Bounding box of chip in pixel coordinates.
+            bands: Subset of bands to read. Note that this will be applied on
+                top of the ``channel_order`` (if specified). So if this is an
+                RGB image and ``channel_order=[2, 1, 0]``, then using
+                ``bands=[0]`` will return the B-channel. Defaults to ``None``.
+            out_shape: (height, width) of the output chip. If ``None``, no
+                resizing is done. Defaults to ``None``.
 
         Returns:
             np.ndarray: A chip of shape (height, width, channels).

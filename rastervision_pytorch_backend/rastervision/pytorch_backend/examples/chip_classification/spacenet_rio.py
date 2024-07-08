@@ -37,19 +37,19 @@ def get_config(runner,
         processed_uri (str): Directory for storing processed data.
                              E.g. crops for testing.
         root_uri (str): Directory where all the output will be written.
-        external_model (bool, optional): If True, use an external model defined
+        external_model (bool): If True, use an external model defined
             by the ExternalModuleConfig. Defaults to False.
-        external_loss (bool, optional): If True, use an external loss defined
+        external_loss (bool): If True, use an external loss defined
             by the ExternalModuleConfig. Defaults to False.
-        augment (bool, optional): If True, use custom data augmentation
+        augment (bool): If True, use custom data augmentation
             transforms. Some basic data augmentation is done even if this is
             False. To completely disable, specify augmentors=[] is the dat
             config. Defaults to False.
-        nochip (bool, optional): If True, read directly from the TIFF during
+        nochip (bool): If True, read directly from the TIFF during
             training instead of from pre-generated chips. The analyze and chip
             commands should not be run, if this is set to True. Defaults to
             True.
-        test (bool, optional): If True, does the following simplifications:
+        test (bool): If True, does the following simplifications:
             (1) Uses only the first 1 scene
             (2) Uses only a 600x600 crop of the scenes
             (3) Trains for only 4 epochs.

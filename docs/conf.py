@@ -6,7 +6,7 @@
 # full list see the documentation:
 # http://www.sphinx-doc.org/en/stable/config
 
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 import sys
 from unittest.mock import MagicMock
 
@@ -21,13 +21,13 @@ class Mock(MagicMock):
         return MagicMock()
 
 
-MOCK_MODULES = ['pyproj', 'h5py', 'osgeo']
+MOCK_MODULES = ['h5py', 'osgeo']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 # -- Allow Jinja templates in non-template .rst files -------------------------
 
 
-def rstjinja(app: 'Sphinx', docname: str, source: List[str]) -> None:
+def rstjinja(app: 'Sphinx', docname: str, source: list[str]) -> None:
     """Allow use of jinja templating in all doc pages.
 
     Adapted from:
@@ -124,7 +124,7 @@ autosummary_ignore_module_all = False
 autodoc_typehints = 'both'
 autodoc_class_signature = 'separated'
 autodoc_member_order = 'groupwise'
-autodoc_mock_imports = ['torch', 'torchvision', 'pycocotools', 'geopandas']
+autodoc_mock_imports = ['pycocotools']
 #########################
 
 #########################

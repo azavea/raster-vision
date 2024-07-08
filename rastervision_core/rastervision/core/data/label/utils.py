@@ -1,4 +1,4 @@
-from typing import (TYPE_CHECKING, Iterable, Iterator, List, Tuple)
+from typing import (TYPE_CHECKING, Iterable, Iterator)
 if TYPE_CHECKING:
     import numpy as np
     from rastervision.core.box import Box
@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 
 def discard_prediction_edges(
         windows: Iterable['Box'], predictions: Iterable['np.ndarray'],
-        crop_sz: int) -> Tuple[List['Box'], Iterator['np.ndarray']]:
+        crop_sz: int) -> tuple[list['Box'], Iterator['np.ndarray']]:
     """Discard the edges of predicted chips.
 
     Args:
@@ -15,7 +15,7 @@ def discard_prediction_edges(
         crop_sz (int): Number of pixel rows/cols to discard.
 
     Returns:
-        Tuple[Iterator[Box], Iterator[np.ndarray]]: Cropped windows and chips.
+        tuple[Iterator[Box], Iterator[np.ndarray]]: Cropped windows and chips.
     """
     windows_cropped = [w.center_crop(crop_sz, crop_sz) for w in windows]
     array_slices = [

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Dict, Tuple
+from typing import TYPE_CHECKING
 
 import numpy as np
 import geopandas as gpd
@@ -15,7 +15,7 @@ def compute_metrics(
         gt_labels: 'ObjectDetectionLabels',
         pred_labels: 'ObjectDetectionLabels',
         num_classes: int,
-        iou_thresh: float = 0.5) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        iou_thresh: float = 0.5) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Compute per-class true positives, false positives, and false negatives.
 
     Does the following:
@@ -97,7 +97,7 @@ class ObjectDetectionEvaluation(ClassificationEvaluation):
             gt_labels: 'ObjectDetectionLabels',
             pred_labels: 'ObjectDetectionLabels',
             class_config: 'ClassConfig',
-            iou_thresh: float = 0.5) -> Dict[int, ClassEvaluationItem]:
+            iou_thresh: float = 0.5) -> dict[int, ClassEvaluationItem]:
         num_classes = len(class_config)
         tps, fps, fns = compute_metrics(gt_labels, pred_labels, num_classes,
                                         iou_thresh)

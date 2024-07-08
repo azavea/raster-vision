@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING
 from enum import Enum
 from os.path import join
 import logging
@@ -70,11 +70,10 @@ class ObjectDetectionGeoDataConfig(ObjectDetectionDataConfig, GeoDataConfig):
     def scene_to_dataset(
             self,
             scene: Scene,
-            transform: Optional[A.BasicTransform] = None,
-            bbox_params: Optional[A.BboxParams] = DEFAULT_BBOX_PARAMS,
+            transform: A.BasicTransform | None = None,
+            bbox_params: A.BboxParams | None = DEFAULT_BBOX_PARAMS,
             for_chipping: bool = False
-    ) -> Union[ObjectDetectionSlidingWindowGeoDataset,
-               ObjectDetectionRandomWindowGeoDataset]:
+    ) -> ObjectDetectionSlidingWindowGeoDataset | ObjectDetectionRandomWindowGeoDataset:
         if isinstance(self.sampling, dict):
             opts = self.sampling[scene.id]
         else:
@@ -204,7 +203,7 @@ class ObjectDetectionModelConfig(ModelConfig):
 class ObjectDetectionLearnerConfig(LearnerConfig):
     """Configure an :class:`.ObjectDetectionLearner`."""
 
-    model: Optional[ObjectDetectionModelConfig]
+    model: ObjectDetectionModelConfig | None
 
     def build(self,
               tmp_dir=None,

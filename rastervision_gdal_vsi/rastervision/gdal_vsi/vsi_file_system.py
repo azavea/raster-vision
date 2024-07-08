@@ -1,4 +1,3 @@
-from typing import List, Optional
 import os
 from os.path import join
 from pathlib import Path
@@ -195,18 +194,18 @@ class VsiFileSystem(FileSystem):
         return join(download_dir, filename)
 
     @staticmethod
-    def last_modified(vsipath: str) -> Optional[datetime]:
+    def last_modified(vsipath: str) -> datetime | None:
         stats = gdal.VSIStatL(vsipath)
         return datetime.fromtimestamp(stats.mtime) if stats else None
 
     @staticmethod
-    def list_paths(vsipath: str, ext: Optional[str] = None) -> List[str]:
+    def list_paths(vsipath: str, ext: str | None = None) -> list[str]:
         items = VsiFileSystem.list_children(vsipath, ext=ext)
         paths = [join(vsipath, item) for item in items]
         return paths
 
     @staticmethod
-    def list_children(vsipath: str, ext: Optional[str] = None) -> List[str]:
+    def list_children(vsipath: str, ext: str | None = None) -> list[str]:
         """List filenames of children rooted at URI.
 
         Optionally only includes filenames with a certain file extension.

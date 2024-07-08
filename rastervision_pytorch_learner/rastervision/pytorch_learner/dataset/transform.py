@@ -1,13 +1,16 @@
-from typing import Optional, Tuple, Any, Callable, Dict
-from pydantic import PositiveInt as PosInt
+from typing import Any
+from collections.abc import Callable
 from enum import Enum
 
+from pydantic import PositiveInt as PosInt
 import numpy as np
 import albumentations as A
-
 import torch
 
 from rastervision.pytorch_learner.object_detection_utils import BoxList
+
+TransformFunc = Callable[[tuple[np.ndarray, Any], A.BasicTransform], tuple[
+    np.ndarray, Any]]
 
 
 class TransformType(Enum):
@@ -25,11 +28,11 @@ def apply_transform(transform: A.BasicTransform, **kwargs) -> dict:
     This is useful for when the images represent a time-series.
 
     Args:
-        transform (A.BasicTransform): An albumentations transform.
+        transform: An albumentations transform.
         **kwargs: Extra args for ``transform``.
 
     Returns:
-        dict: Output of ``transform``. If ndim == 4, the transformed image in
+        Output of ``transform``. If ``ndim == 4``, the transformed image in
         the dict is also 4-dimensional.
     """
     img = kwargs['image']
@@ -55,9 +58,9 @@ def apply_transform(transform: A.BasicTransform, **kwargs) -> dict:
     return out
 
 
-def classification_transformer(inp: Tuple[np.ndarray, Optional[int]],
-                               transform=Optional[A.BasicTransform]
-                               ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+def classification_transformer(inp: tuple[np.ndarray, int | None],
+                               transform=A.BasicTransform | None
+                               ) -> tuple[np.ndarray, np.ndarray | None]:
     """Apply transform to image only."""
     x, y = inp
     x = np.array(x)
@@ -69,9 +72,9 @@ def classification_transformer(inp: Tuple[np.ndarray, Optional[int]],
     return x, y
 
 
-def regression_transformer(inp: Tuple[np.ndarray, Optional[Any]],
-                           transform=Optional[A.BasicTransform]
-                           ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+def regression_transformer(inp: tuple[np.ndarray, Any | None],
+                           transform=A.BasicTransform | None
+                           ) -> tuple[np.ndarray, np.ndarray | None]:
     """Apply transform to image only."""
     x, y = inp
     x = np.array(x)
@@ -84,7 +87,7 @@ def regression_transformer(inp: Tuple[np.ndarray, Optional[Any]],
 
 
 def yxyx_to_albu(yxyx: np.ndarray,
-                 img_size: Tuple[PosInt, PosInt]) -> np.ndarray:
+                 img_size: tuple[PosInt, PosInt]) -> np.ndarray:
     """Unnormalized [ymin, xmin, ymax, xmax] to Albumentations format i.e.
     normalized [ymin, xmin, ymax, xmax].
     """
@@ -103,7 +106,7 @@ def yxyx_to_albu(yxyx: np.ndarray,
 
 
 def xywh_to_albu(xywh: np.ndarray,
-                 img_size: Tuple[PosInt, PosInt]) -> np.ndarray:
+                 img_size: tuple[PosInt, PosInt]) -> np.ndarray:
     """Unnormalized [xmin, ymin, w, h] to Albumentations format i.e.
     normalized [ymin, xmin, ymax, xmax].
     """
@@ -123,7 +126,7 @@ def xywh_to_albu(xywh: np.ndarray,
 
 
 def albu_to_yxyx(xyxy: np.ndarray,
-                 img_size: Tuple[PosInt, PosInt]) -> np.ndarray:
+                 img_size: tuple[PosInt, PosInt]) -> np.ndarray:
     """Albumentations format (i.e. normalized [ymin, xmin, ymax, xmax]) to
     unnormalized [ymin, xmin, ymax, xmax].
     """
@@ -141,9 +144,9 @@ def albu_to_yxyx(xyxy: np.ndarray,
 
 
 def object_detection_transformer(
-        inp: Tuple[np.ndarray, Optional[Tuple[np.ndarray, np.ndarray, str]]],
-        transform: Optional[A.BasicTransform] = None
-) -> Tuple[torch.Tensor, Optional[BoxList]]:
+        inp: tuple[np.ndarray, tuple[np.ndarray, np.ndarray, str] | None],
+        transform: A.BasicTransform | None = None
+) -> tuple[torch.Tensor, BoxList | None]:
     """Apply transform to image, bounding boxes, and labels. Also perform
     normalization and conversion to pytorch tensors.
 
@@ -151,17 +154,15 @@ def object_detection_transformer(
     'albumentations' (i.e. normalized [ymin, xmin, ymax, xmax]).
 
     Args:
-        inp (Tuple[np.ndarray, Optional[Tuple[np.ndarray, np.ndarray, str]]]):
-            Tuple of the form: (image, (boxes, class_ids, box_format)).
-            box_format must be 'yxyx' or 'xywh'.
-        transform (Optional[A.BasicTransform], optional): A transform.
-            Defaults to None.
+        inp: Tuple of the form: ``(image, (boxes, class_ids, box_format))``.
+            box_format must be ``'yxyx'`` or ``'xywh'``.
+        transform: A transform. Defaults to ``None``.
 
     Raises:
-        NotImplementedError: If box_format is not 'yxyx' or 'xywh'.
+        NotImplementedError: If box_format is not ``'yxyx'`` or ``'xywh'``.
 
     Returns:
-        Tuple[torch.Tensor, BoxList]: Transformed image and boxes.
+        Transformed image and boxes.
     """
     x, y = inp
     img_size = x.shape[:2]
@@ -214,9 +215,9 @@ def object_detection_transformer(
 
 
 def semantic_segmentation_transformer(
-        inp: Tuple[np.ndarray, Optional[np.ndarray]],
-        transform=Optional[A.BasicTransform]
-) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+        inp: tuple[np.ndarray, np.ndarray | None],
+        transform=A.BasicTransform | None
+) -> tuple[np.ndarray, np.ndarray | None]:
     """Apply transform to image and mask."""
     x, y = inp
     x = np.array(x)
@@ -232,7 +233,7 @@ def semantic_segmentation_transformer(
     return x, y
 
 
-TF_TYPE_TO_TF_FUNC: Dict[TransformType, Callable] = {
+TF_TYPE_TO_TF_FUNC: dict[TransformType, TransformFunc] = {
     TransformType.noop: lambda x, tf: x,
     TransformType.classification: classification_transformer,
     TransformType.regression: regression_transformer,

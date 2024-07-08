@@ -1,5 +1,4 @@
 from functools import partial
-from typing import Tuple, Union
 
 from rastervision.core.rv_pipeline import (
     SceneConfig, DatasetConfig, SemanticSegmentationChipOptions,
@@ -89,11 +88,11 @@ def get_config(runner,
         processed_uri (str): Directory for storing processed data.
                              E.g. crops for testing.
         root_uri (str): Directory where all the output will be written.
-        nochip (bool, optional): If True, read directly from the TIFF during
+        nochip (bool): If True, read directly from the TIFF during
             training instead of from pre-generated chips. The analyze and chip
             commands should not be run, if this is set to True. Defaults to
             True.
-        test (bool, optional): If True, does the following simplifications:
+        test (bool): If True, does the following simplifications:
             (1) Uses only the first 2 scenes
             (2) Uses only a 600x600 crop of the scenes
             (3) Trains for only 2 epochs and uses a batch size of 2.
@@ -237,8 +236,8 @@ def make_scene(raw_uri: UriPath,
 
 
 def make_multi_raster_source(
-        rgbir_raster_uri: Union[UriPath, str],
-        elevation_raster_uri: Union[UriPath, str]) -> MultiRasterSourceConfig:
+        rgbir_raster_uri: UriPath | str,
+        elevation_raster_uri: UriPath | str) -> MultiRasterSourceConfig:
     """ Create multi raster source by combining rgbir and elevation sources. """
     rgbir_raster_uri = str(rgbir_raster_uri)
     elevation_raster_uri = str(elevation_raster_uri)
@@ -257,7 +256,7 @@ def make_multi_raster_source(
 
 def make_crop(processed_uri: UriPath,
               raster_uri: UriPath,
-              label_uri: UriPath = None) -> Tuple[UriPath, UriPath]:
+              label_uri: UriPath = None) -> tuple[UriPath, UriPath]:
     crop_uri = processed_uri / TEST_CROP_DIR / raster_uri.name
     if label_uri is not None:
         label_crop_uri = processed_uri / TEST_CROP_DIR / label_uri.name
@@ -275,8 +274,8 @@ def make_crop(processed_uri: UriPath,
     return crop_uri, label_crop_uri
 
 
-def make_label_source(class_config: ClassConfig, label_uri: Union[UriPath, str]
-                      ) -> Tuple[SemanticSegmentationLabelSourceConfig,
+def make_label_source(class_config: ClassConfig, label_uri: UriPath | str
+                      ) -> tuple[SemanticSegmentationLabelSourceConfig,
                                  SemanticSegmentationLabelStoreConfig]:
     label_uri = str(label_uri)
     # Using with_rgb_class_map because label TIFFs have classes encoded as

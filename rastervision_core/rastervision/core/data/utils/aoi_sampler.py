@@ -1,18 +1,17 @@
-from typing import Sequence, Tuple, Union
+from typing import Sequence
 
 import numpy as np
 from shapely.geometry import Polygon, MultiPolygon, LinearRing
 from shapely.ops import unary_union
 
 
-class AoiSampler():
-    """Given a set of polygons representing the AOI, allows efficiently
-    sampling points inside the AOI uniformly at random.
+class AoiSampler:
+    """Allows efficiently sampling points inside an AOI uniformly at random.
 
-    To achieve this, each polygon is first partitioned into triangles
-    (triangulation). Then, to sample a single point, we first sample a triangle
-    at random with probability proportional to its area and then sample a point
-    within that triangle uniformly at random.
+    To achieve this, each polygon in the AOI is first partitioned into
+    triangles (triangulation). Then, to sample a single point, we first sample
+    a triangle at random with probability proportional to its area and then
+    sample a point within that triangle uniformly at random.
     """
 
     def __init__(self, polygons: Sequence[Polygon]) -> None:
@@ -43,7 +42,7 @@ class AoiSampler():
             - Return the final position.
 
         Args:
-            n (int, optional): Number of points to sample. Defaults to 1.
+            n (int): Number of points to sample. Defaults to 1.
 
         Returns:
             np.ndarray: (n, 2) 2D coordinates of the sampled points.
@@ -63,8 +62,10 @@ class AoiSampler():
         return loc
 
     def triangulate_polygon(self, polygon: Polygon) -> dict:
-        """Extract vertices and edges from the polygon (and its holes, if any)
-        and pass them to the Triangle library for triangulation.
+        """Triangulate polygon.
+        
+        Extracts vertices and edges from the polygon (and its holes, if any)
+        and passes them to the Triangle library for triangulation.
         """
         from triangle import triangulate
 
@@ -111,17 +112,16 @@ class AoiSampler():
         }
         return out
 
-    def polygon_to_graph(self, polygon: Union[Polygon, LinearRing]
-                         ) -> Tuple[np.ndarray, np.ndarray]:
+    def polygon_to_graph(self, polygon: Polygon | LinearRing
+                         ) -> tuple[np.ndarray, np.ndarray]:
         """Given a polygon, return its graph representation.
 
         Args:
-            polygon (Union[Polygon, LinearRing]): A polygon or
-                polygon-exterior.
+            polygon: A polygon or polygon-exterior.
 
         Returns:
-            Tuple[np.ndarray, np.ndarray]: An (N, 2) array of vertices and
-            an (N, 2) array of indices to vertices representing edges.
+            An (N, 2) array of vertices and an (N, 2) array of indices to
+            vertices representing edges.
         """
         exterior = getattr(polygon, 'exterior', polygon)
         vertices = np.array(exterior.coords)
@@ -138,17 +138,17 @@ class AoiSampler():
         return vertices, edges
 
     def triangle_side_lengths(self, vertices: np.ndarray, simplices: np.ndarray
-                              ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+                              ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Calculate lengths of all 3 sides of each triangle specified by the
         simplices array.
 
         Args:
-            vertices (np.ndarray): (N, 2) array of vertex coords in 2D.
-            simplices (np.ndarray): (N, 3) array of indexes to entries in the
+            vertices: (N, 2) array of vertex coords in 2D.
+            simplices: (N, 3) array of indexes to entries in the
                 vertices array. Each row represents one triangle.
 
         Returns:
-            Tuple[np.ndarray, np.ndarray, np.ndarray]: ||AB||, ||BC||, ||AC||
+            tuple[np.ndarray, np.ndarray, np.ndarray]: ||AB||, ||BC||, ||AC||
         """
         A = vertices[simplices[:, 0]]
         B = vertices[simplices[:, 1]]
@@ -161,12 +161,12 @@ class AoiSampler():
 
     def triangle_origin_and_basis(
             self, vertices: np.ndarray, simplices: np.ndarray
-    ) -> Tuple[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+    ) -> tuple[np.ndarray, tuple[np.ndarray, np.ndarray]]:
         """For each triangle ABC, return point A, vector AB, and vector AC.
 
         Args:
-            vertices (np.ndarray): (N, 2) array of vertex coords in 2D.
-            simplices (np.ndarray): (N, 3) array of indexes to entries in the
+            vertices: (N, 2) array of vertex coords in 2D.
+            simplices: (N, 3) array of indexes to entries in the
                 vertices array. Each row represents one triangle.
 
         Returns:
@@ -186,8 +186,8 @@ class AoiSampler():
         using Heron's formula.
 
         Args:
-            vertices (np.ndarray): (N, 2) array of vertex coords in 2D.
-            simplices (np.ndarray): (N, 3) array of indexes to entries in the
+            vertices: (N, 2) array of vertex coords in 2D.
+            simplices: (N, 3) array of indexes to entries in the
                 vertices array. Each row represents one triangle.
 
         Returns:

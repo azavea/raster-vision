@@ -1,4 +1,3 @@
-from typing import Optional
 from os.path import join
 
 from rastervision.core.data.label_store import (LabelStoreConfig,
@@ -10,7 +9,7 @@ from rastervision.pipeline.config import register_config, Field
 class ObjectDetectionGeoJSONStoreConfig(LabelStoreConfig):
     """Configure an :class:`.ObjectDetectionGeoJSONStore`."""
 
-    uri: Optional[str] = Field(
+    uri: str | None = Field(
         None,
         description=
         ('URI of GeoJSON file with predictions. If None, and this Config is part of '
@@ -24,5 +23,4 @@ class ObjectDetectionGeoJSONStoreConfig(LabelStoreConfig):
     def update(self, pipeline=None, scene=None):
         if pipeline is not None and scene is not None:
             if self.uri is None:
-                self.uri = join(pipeline.predict_uri,
-                                '{}.json'.format(scene.id))
+                self.uri = join(pipeline.predict_uri, f'{scene.id}.json')

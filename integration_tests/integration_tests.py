@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from typing import List
 from os.path import join, dirname, abspath, isfile
 import math
 import traceback
@@ -108,7 +107,7 @@ def get_actual_eval_path(test_id: str, tmp_dir: str) -> str:
 
 
 def check_eval_item(test_id: str, test_cfg: dict, expected_item: dict,
-                    actual_item: dict) -> List[TestError]:
+                    actual_item: dict) -> list[TestError]:
     errors = []
     f1_threshold = 0.05
     class_name = expected_item['class_name']
@@ -125,7 +124,7 @@ def check_eval_item(test_id: str, test_cfg: dict, expected_item: dict,
     return errors
 
 
-def check_eval(test_id: str, test_cfg: dict, tmp_dir: str) -> List[TestError]:
+def check_eval(test_id: str, test_cfg: dict, tmp_dir: str) -> list[TestError]:
     errors = []
 
     actual_eval_path = get_actual_eval_path(test_id, tmp_dir)
@@ -152,7 +151,7 @@ def check_eval(test_id: str, test_cfg: dict, tmp_dir: str) -> List[TestError]:
 
 def test_model_bundle_validation(pipeline, test_id: str, test_cfg: dict,
                                  tmp_dir: str,
-                                 image_uri: str) -> List[TestError]:
+                                 image_uri: str) -> list[TestError]:
     console_info('Checking predict command validation...')
     errors = []
     model_bundle_uri = pipeline.get_model_bundle_uri()
@@ -171,7 +170,7 @@ def test_model_bundle_validation(pipeline, test_id: str, test_cfg: dict,
 
 def test_model_bundle_results(pipeline, test_id: str, test_cfg: dict,
                               tmp_dir: str, scenes: list,
-                              scenes_to_uris: dict) -> List[TestError]:
+                              scenes_to_uris: dict) -> list[TestError]:
     console_info('Checking model bundle produces same results...')
     errors = []
     model_bundle_uri = pipeline.get_model_bundle_uri()
@@ -213,7 +212,7 @@ def test_model_bundle(pipeline,
                       test_id: str,
                       test_cfg: dict,
                       tmp_dir: str,
-                      check_channel_order: bool = False) -> List[TestError]:
+                      check_channel_order: bool = False) -> list[TestError]:
     # Check the model bundle.
     # This will only work with raster_sources that
     # have a single URI.
@@ -250,7 +249,7 @@ def test_model_bundle(pipeline,
     return errors
 
 
-def run_test(test_id: str, test_cfg: dict, tmp_dir: str) -> List[TestError]:
+def run_test(test_id: str, test_cfg: dict, tmp_dir: str) -> list[TestError]:
     msg = f'\nRunning test: {test_id}'
     console_info(msg, bold=True)
     console_info('With params:')

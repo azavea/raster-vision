@@ -1,4 +1,4 @@
-from typing import Callable
+from collections.abc import Callable
 import unittest
 from os.path import join, exists
 from os import makedirs

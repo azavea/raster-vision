@@ -1,4 +1,4 @@
-from typing import (List, Literal, Optional, Self, Union)
+from typing import Literal, Self
 import logging
 
 from pydantic import NonNegativeInt as NonNegInt
@@ -32,7 +32,7 @@ def ss_chip_options_upgrader(cfg_dict: dict, version: int) -> dict:
     'semantic_segmentation_chip_options', upgrader=ss_chip_options_upgrader)
 class SemanticSegmentationChipOptions(ChipOptions):
     """Chipping options for semantic segmentation."""
-    target_class_ids: Optional[List[int]] = Field(
+    target_class_ids: list[int] | None = Field(
         None,
         description=
         ('List of class ids considered as targets (ie. those to prioritize when '
@@ -77,12 +77,12 @@ class SemanticSegmentationChipOptions(ChipOptions):
 
 @register_config('semantic_segmentation_predict_options')
 class SemanticSegmentationPredictOptions(PredictOptions):
-    stride: Optional[int] = Field(
+    stride: int | None = Field(
         None,
         description='Stride of the sliding window for generating chips. '
         'Allows aggregating multiple predictions for each pixel if less than '
         'the chip size. Defaults to ``chip_sz``.')
-    crop_sz: Optional[Union[NonNegInt, Literal['auto']]] = Field(
+    crop_sz: NonNegInt | Literal['auto'] | None = Field(
         None,
         description=
         'Number of rows/columns of pixels from the edge of prediction '

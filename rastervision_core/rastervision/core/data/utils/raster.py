@@ -13,7 +13,7 @@ def fill_overflow(bbox: Box,
         bbox (Box): Bounding box.
         window (Box): Window corresponding to the ``chip``.
         chip (np.ndarray): (H, W, C) array.
-        fill_value (int, optional): Value to set overflowing pixels to.
+        fill_value (int): Value to set overflowing pixels to.
             Defaults to 0.
 
     Returns:
@@ -43,7 +43,7 @@ def pad_to_window_size(chip: np.ndarray, window: Box, bbox: Box,
         chip (np.ndarray): (H, W[, C]) array.
         bbox (Box): Bounding box.
         window (Box): Window corresponding to the ``chip``.
-        fill_value (int, optional): Value to pad with. Defaults to 0.
+        fill_value (int): Value to pad with. Defaults to 0.
 
     Returns:
         np.ndarray: Chip of size equal to window size with edges padded with

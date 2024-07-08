@@ -1,4 +1,3 @@
-from typing import List
 from abc import (ABC, abstractmethod)
 
 from rastervision.core.data import Scene
@@ -11,5 +10,5 @@ class Analyzer(ABC):
     """
 
     @abstractmethod
-    def process(self, scenes: List[Scene], tmp_dir: str):
+    def process(self, scenes: list[Scene], tmp_dir: str):
         """Process scenes and save result."""

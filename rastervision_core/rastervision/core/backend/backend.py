@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 from abc import ABC, abstractmethod
 from contextlib import AbstractContextManager
 
@@ -40,7 +40,7 @@ class Backend(ABC):
         """
 
     @abstractmethod
-    def load_model(self, uri: Optional[str] = None):
+    def load_model(self, uri: str | None = None):
         """Load the model in preparation for one or more prediction calls.
 
         Args:

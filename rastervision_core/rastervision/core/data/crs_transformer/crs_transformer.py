@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Optional, overload, Tuple
+from typing import Any, overload
 
 import numpy as np
 from shapely.ops import transform
@@ -16,36 +16,35 @@ class CRSTransformer(ABC):
     """
 
     def __init__(self,
-                 transform: Optional[Any] = None,
-                 image_crs: Optional[str] = None,
-                 map_crs: Optional[str] = None):
+                 transform: Any | None = None,
+                 image_crs: str | None = None,
+                 map_crs: str | None = None):
         self.transform = transform
         self.image_crs = image_crs
         self.map_crs = map_crs
 
     @overload
-    def map_to_pixel(self,
-                     inp: Tuple[float, float],
-                     bbox: Optional[Box] = None) -> Tuple[int, int]:
+    def map_to_pixel(self, inp: tuple[float, float],
+                     bbox: Box | None = None) -> tuple[int, int]:
         ...
 
     @overload
     def map_to_pixel(self,
-                     inp: Tuple['np.array', 'np.array'],
-                     bbox: Optional[Box] = None
-                     ) -> Tuple['np.array', 'np.array']:
+                     inp: tuple['np.ndarray', 'np.ndarray'],
+                     bbox: Box | None = None
+                     ) -> tuple['np.ndarray', 'np.ndarray']:
         ...
 
     @overload
-    def map_to_pixel(self, inp: Box, bbox: Optional[Box] = None) -> Box:
+    def map_to_pixel(self, inp: Box, bbox: Box | None = None) -> Box:
         ...
 
     @overload
     def map_to_pixel(self, inp: BaseGeometry,
-                     bbox: Optional[Box] = None) -> BaseGeometry:
+                     bbox: Box | None = None) -> BaseGeometry:
         ...
 
-    def map_to_pixel(self, inp, bbox: Optional[Box] = None):
+    def map_to_pixel(self, inp, bbox: Box | None = None):
         """Transform input from map to pixel coords.
 
         Args:
@@ -90,28 +89,27 @@ class CRSTransformer(ABC):
                 'Input must be 2-tuple or Box or shapely geometry.')
 
     @overload
-    def pixel_to_map(self,
-                     inp: Tuple[float, float],
-                     bbox: Optional[Box] = None) -> Tuple[float, float]:
+    def pixel_to_map(self, inp: tuple[float, float],
+                     bbox: Box | None = None) -> tuple[float, float]:
         ...
 
     @overload
     def pixel_to_map(self,
-                     inp: Tuple['np.array', 'np.array'],
-                     bbox: Optional[Box] = None
-                     ) -> Tuple['np.array', 'np.array']:
+                     inp: tuple['np.ndarray', 'np.ndarray'],
+                     bbox: Box | None = None
+                     ) -> tuple['np.ndarray', 'np.ndarray']:
         ...
 
     @overload
-    def pixel_to_map(self, inp: Box, bbox: Optional[Box] = None) -> Box:
+    def pixel_to_map(self, inp: Box, bbox: Box | None = None) -> Box:
         ...
 
     @overload
     def pixel_to_map(self, inp: BaseGeometry,
-                     bbox: Optional[Box] = None) -> BaseGeometry:
+                     bbox: Box | None = None) -> BaseGeometry:
         ...
 
-    def pixel_to_map(self, inp, bbox: Optional[Box] = None):
+    def pixel_to_map(self, inp, bbox: Box | None = None):
         """Transform input from pixel to map coords.
 
         Args:
@@ -157,7 +155,7 @@ class CRSTransformer(ABC):
                 'Input must be 2-tuple or Box or shapely geometry.')
 
     @abstractmethod
-    def _map_to_pixel(self, point: Tuple[float, float]) -> Tuple[int, int]:
+    def _map_to_pixel(self, point: tuple[float, float]) -> tuple[int, int]:
         """Transform point from map to pixel coordinates.
 
         Args:
@@ -165,11 +163,11 @@ class CRSTransformer(ABC):
             can be single values or array-like.
 
         Returns:
-            Tuple[int, int]: (x, y) tuple in pixel coordinates.
+            tuple[int, int]: (x, y) tuple in pixel coordinates.
         """
 
     @abstractmethod
-    def _pixel_to_map(self, point: Tuple[float, float]) -> Tuple[float, float]:
+    def _pixel_to_map(self, point: tuple[int, int]) -> tuple[float, float]:
         """Transform point from pixel to map coordinates.
 
         Args:
@@ -177,5 +175,5 @@ class CRSTransformer(ABC):
             single values or array-like.
 
         Returns:
-            Tuple[float, float]: (x, y) tuple in map coordinates (eg. lon/lat).
+            tuple[float, float]: (x, y) tuple in map coordinates (eg. lon/lat).
         """

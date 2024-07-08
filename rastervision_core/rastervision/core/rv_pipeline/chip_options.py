@@ -1,4 +1,4 @@
-from typing import (Any, Dict, Literal, Optional, Self, Tuple, Union)
+from typing import (Any, Literal, Self)
 from enum import Enum
 
 from pydantic import NonNegativeInt as NonNegInt, PositiveInt as PosInt
@@ -27,17 +27,17 @@ class WindowSamplingConfig(Config):
 
     method: WindowSamplingMethod = Field(
         WindowSamplingMethod.sliding, description='')
-    size: Union[PosInt, Tuple[PosInt, PosInt]] = Field(
+    size: PosInt | tuple[PosInt, PosInt] = Field(
         ...,
         description='If method = sliding, this is the size of sliding window. '
         'If method = random, this is the size that all the windows are '
         'resized to before they are returned. If method = random and neither '
         'size_lims nor h_lims and w_lims have been specified, then size_lims '
         'is set to (size, size + 1).')
-    stride: Optional[Union[PosInt, Tuple[PosInt, PosInt]]] = Field(
+    stride: PosInt | tuple[PosInt, PosInt] | None = Field(
         None,
         description='Stride of sliding window. Only used if method = sliding.')
-    padding: Optional[Union[NonNegInt, Tuple[NonNegInt, NonNegInt]]] = Field(
+    padding: NonNegInt | tuple[NonNegInt, NonNegInt] | None = Field(
         None,
         description='How many pixels are windows allowed to overflow '
         'the edges of the raster source.')
@@ -46,7 +46,7 @@ class WindowSamplingConfig(Config):
         description='If "end", only pad ymax and xmax (bottom and right). '
         'If "start", only pad ymin and xmin (top and left). If "both", '
         'pad all sides. Has no effect if padding is zero. Defaults to "end".')
-    size_lims: Optional[Tuple[PosInt, PosInt]] = Field(
+    size_lims: tuple[PosInt, PosInt] | None = Field(
         None,
         description='[min, max) interval from which window sizes will be '
         'uniformly randomly sampled. The upper limit is exclusive. To fix the '
@@ -55,11 +55,11 @@ class WindowSamplingConfig(Config):
         'h_lims and w_lims, but not both. If neither size_lims nor h_lims '
         'and w_lims have been specified, then this will be set to '
         '(size, size + 1).')
-    h_lims: Optional[Tuple[PosInt, PosInt]] = Field(
+    h_lims: tuple[PosInt, PosInt] | None = Field(
         None,
         description='[min, max] interval from which window heights will be '
         'uniformly randomly sampled. Only used if method = random.')
-    w_lims: Optional[Tuple[PosInt, PosInt]] = Field(
+    w_lims: tuple[PosInt, PosInt] | None = Field(
         None,
         description='[min, max] interval from which window widths will be '
         'uniformly randomly sampled. Only used if method = random.')
@@ -110,9 +110,8 @@ class WindowSamplingConfig(Config):
 @register_config('chip_options')
 class ChipOptions(Config):
     """Configure the sampling and filtering of chips."""
-    sampling: Union[WindowSamplingConfig, Dict[
-        str, WindowSamplingConfig]] = Field(
-            ..., description='Window sampling config.')
+    sampling: WindowSamplingConfig | dict[str, WindowSamplingConfig] = Field(
+        ..., description='Window sampling config.')
     nodata_threshold: Proportion = Field(
         1.,
         description='Discard chips where the proportion of NODATA values is '
@@ -121,11 +120,11 @@ class ChipOptions(Config):
         'caution. If 1.0, only chips that are fully NODATA will be discarded. '
         'Defaults to 1.0.')
 
-    def get_chip_sz(self, scene_id: Optional[str] = None) -> int:
+    def get_chip_sz(self, scene_id: str | None = None) -> int:
         if isinstance(self.sampling, dict):
             if scene_id is None:
                 raise KeyError(
-                    'sampling is a Dict[scene_id, WindowSamplingConfig], so '
+                    'sampling is a dict[scene_id, WindowSamplingConfig], so '
                     'there is no single chip size. Specify a valid scene_id '
                     'to get the chip size for a particular scene.')
             return self.sampling[scene_id].size

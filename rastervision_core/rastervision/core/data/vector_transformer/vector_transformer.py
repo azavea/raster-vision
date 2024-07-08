@@ -1,5 +1,5 @@
 from abc import (ABC, abstractmethod)
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from rastervision.core.data import CRSTransformer
@@ -10,13 +10,13 @@ class VectorTransformer(ABC):
 
     def __call__(self,
                  geojson: dict,
-                 crs_transformer: Optional['CRSTransformer'] = None,
+                 crs_transformer: 'CRSTransformer | None' = None,
                  **kwargs) -> dict:
         """Shortcut for :meth:`.transform`.
 
         Args:
             geojson (dict): A GeoJSON-like mapping of a FeatureCollection.
-            crs_transformer (Optional[CRSTransformer]): CRSTransformer.
+            crs_transformer (CRSTransformer | None): CRSTransformer.
                 Defaults to None.
             **kwargs: Extra args for :meth:`.transform`.
 
@@ -29,7 +29,7 @@ class VectorTransformer(ABC):
     @abstractmethod
     def transform(self,
                   geojson: dict,
-                  crs_transformer: Optional['CRSTransformer'] = None) -> dict:
+                  crs_transformer: 'CRSTransformer | None' = None) -> dict:
         """Transform a GeoJSON mapping of vector data.
 
         Args:

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 from os.path import join, splitext
 import tempfile
 
@@ -127,13 +127,13 @@ class PyTorchLearnerBackend(Backend):
             learner = self.learner_cfg.build(self.tmp_dir, training=True)
         learner.main()
 
-    def load_model(self, uri: Optional[str] = None):
+    def load_model(self, uri: str | None = None):
         self.learner = self._build_learner_from_bundle(
             bundle_uri=uri, training=False)
 
     def _build_learner_from_bundle(self,
-                                   bundle_uri: Optional[str] = None,
-                                   cfg: Optional['LearnerConfig'] = None,
+                                   bundle_uri: str | None = None,
+                                   cfg: 'LearnerConfig | None' = None,
                                    training: bool = False):
         if bundle_uri is None:
             bundle_uri = self.learner_cfg.get_model_bundle_uri()
@@ -166,7 +166,7 @@ class PyTorchLearnerBackend(Backend):
             dataset: 'Dataset',
             sample_writer: 'PyTorchLearnerSampleWriter',
             chip_options: 'ChipOptions',
-            split: Optional[str] = None,
+            split: str | None = None,
             dataloader_kw: dict = {},
     ) -> None:
         from torch.utils.data import DataLoader
@@ -204,7 +204,7 @@ class PyTorchLearnerBackend(Backend):
     def predict_scene(self,
                       scene: 'Scene',
                       chip_sz: int,
-                      stride: Optional[int] = None):
+                      stride: int | None = None):
         raise NotImplementedError()
 
     def _make_chip_data_config(self, dataset: 'DatasetConfig',

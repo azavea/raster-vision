@@ -1,4 +1,4 @@
-from typing import List, Optional, Self
+from typing import Self
 
 from typing_extensions import Annotated
 from pydantic import NonNegativeInt as NonNegInt
@@ -28,7 +28,7 @@ class MultiRasterSourceConfig(RasterSourceConfig):
     Or :class:`.TemporalMultiRasterSource`, if ``temporal=True``.
     """
 
-    raster_sources: Annotated[List[
+    raster_sources: Annotated[list[
         RasterSourceConfig], Field(min_length=1)] = Field(
             ..., description='List of RasterSourceConfig to combine.')
     primary_source_idx: NonNegInt = Field(
@@ -61,8 +61,7 @@ class MultiRasterSourceConfig(RasterSourceConfig):
                 'Setting channel_order is not allowed if temporal=True.')
         return self
 
-    def build(self,
-              tmp_dir: Optional[str] = None,
+    def build(self, tmp_dir: str | None = None,
               use_transformers: bool = True) -> MultiRasterSource:
         if use_transformers:
             raster_transformers = [t.build() for t in self.transformers]

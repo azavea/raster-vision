@@ -1,5 +1,5 @@
-from typing import (TYPE_CHECKING, Callable, Dict, List, Literal, Optional,
-                    Self, Type, Union)
+from typing import TYPE_CHECKING, Literal, Self
+from collections.abc import Callable
 import inspect
 import logging
 
@@ -84,12 +84,12 @@ class Config(BaseModel):
         for c in child_configs:
             c.recursive_validate_config()
 
-    def validate_list(self, field: str, valid_options: List[str]):
+    def validate_list(self, field: str, valid_options: list[str]):
         """Validate a list field.
 
         Args:
             field (str): name of field to validate
-            valid_options (List[str]): values that field is allowed to take
+            valid_options (list[str]): values that field is allowed to take
 
         Raises:
             ConfigError: if field is invalid
@@ -197,8 +197,8 @@ def save_pipeline_config(cfg: 'PipelineConfig', output_uri: str) -> None:
     str_to_file(cfg_json, output_uri)
 
 
-def build_config(x: Union[dict, List[Union[dict, Config]], Config]
-                 ) -> Union[Config, List[Config]]:
+def build_config(
+        x: dict | list[dict | Config] | Config) -> Config | list[Config]:
     """Build a Config from various types of input.
 
     This is useful for deserializing from JSON. It implements polymorphic
@@ -209,7 +209,7 @@ def build_config(x: Union[dict, List[Union[dict, Config]], Config]
         x: some representation of Config(s)
 
     Returns:
-        Config: the corresponding Config(s)
+        The corresponding Config(s).
     """
     if isinstance(x, dict):
         new_x = {k: build_config(v) for k, v in x.items()}
@@ -224,8 +224,8 @@ def build_config(x: Union[dict, List[Union[dict, Config]], Config]
         return x
 
 
-def _upgrade_config(x: Union[dict, List[dict]], plugin_versions: Dict[str, int]
-                    ) -> Union[dict, List[dict]]:
+def _upgrade_config(x: dict | list[dict],
+                    plugin_versions: dict[str, int]) -> dict | list[dict]:
     """Upgrade serialized Config(s) to the latest version.
 
     Used to implement backward compatibility of Configs using upgraders stored
@@ -265,7 +265,7 @@ def _upgrade_config(x: Union[dict, List[dict]], plugin_versions: Dict[str, int]
         return x
 
 
-def upgrade_plugin_versions(plugin_versions: Dict[str, int]) -> Dict[str, int]:
+def upgrade_plugin_versions(plugin_versions: dict[str, int]) -> dict[str, int]:
     """Update the names of the plugins using the plugin aliases in the registry.
 
     This allows changing the names of plugins over time and maintaining backward
@@ -289,8 +289,7 @@ def upgrade_plugin_versions(plugin_versions: Dict[str, int]) -> Dict[str, int]:
     return new_plugin_versions
 
 
-def upgrade_config(
-        config_dict: Union[dict, List[dict]]) -> Union[dict, List[dict]]:
+def upgrade_config(config_dict: dict | list[dict]) -> dict | list[dict]:
     """Upgrade serialized Config(s) to the latest version.
 
     Used to implement backward compatibility of Configs using upgraders stored
@@ -312,7 +311,7 @@ def upgrade_config(
     return out
 
 
-def get_plugin(config_cls: Type) -> str:
+def get_plugin(config_cls: type) -> str:
     """Infer the module path of the plugin where a Config class is defined.
 
     This only works correctly if the plugin is in a module under rastervision.
@@ -322,8 +321,9 @@ def get_plugin(config_cls: Type) -> str:
 
 
 def register_config(type_hint: str,
-                    plugin: Optional[str] = None,
-                    upgrader: Optional[Callable] = None) -> Callable:
+                    plugin: str | None = None,
+                    upgrader: Callable[[dict, int], dict] | None = None
+                    ) -> Callable[[], Config]:
     """Class decorator used to register Config classes with registry.
 
     All Configs must be registered! Registering a Config does the following:
@@ -335,24 +335,22 @@ def register_config(type_hint: str,
         type_hint.
 
     Args:
-        type_hint (str): a type hint used to deserialize Configs. Must be
-            unique across all registered Configs.
-        plugin (Optional[str], optional): the module path of the plugin where
-            the Config is defined. If None, will be inferred.
-            Defauilts to None.
-        upgrader (Optional[Callable], optional): a function of the form
-            upgrade(config_dict, version) which returns the corresponding
-            config dict of version = version + 1. This can be useful for
-            maintaining backward compatibility by allowing old configs using an
-            outdated schema to be upgraded to the current schema.
-            Defaults to None.
+        type_hint: a type hint used to deserialize Configs. Must be unique
+            across all registered Configs.
+        plugin: the module path of the plugin where the ``Config`` is defined.
+            If ``None``, will be inferred. Defauilts to ``None``.
+        upgrader: a function of the form ``upgrade(config_dict, version)``
+            which returns the corresponding config dict of
+            ``version = version + 1``. This can be useful for maintaining
+            backward compatibility by allowing old configs using an outdated
+            schema to be upgraded to the current schema. Defaults to ``None``.
 
     Returns:
-        Callable: A function that returns a new class that is identical to the
-        input Config with an additional ``type_hint`` field.
+        A function that returns a new class that is identical to the input
+        ``Config`` with an additional ``type_hint`` field.
     """
 
-    def _register_config(cls: Type):
+    def _register_config(cls: type):
         new_cls = create_model(
             cls.__name__,
             __base__=cls,

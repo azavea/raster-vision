@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any
 
 from rastervision.core.data.utils import match_bboxes, geoms_to_bbox_coords
 
@@ -14,9 +14,9 @@ class Scene:
     def __init__(self,
                  id: str,
                  raster_source: 'RasterSource',
-                 label_source: Optional['LabelSource'] = None,
-                 label_store: Optional['LabelStore'] = None,
-                 aoi_polygons: Optional[List['BaseGeometry']] = None):
+                 label_source: 'LabelSource | None' = None,
+                 label_store: 'LabelStore | None' = None,
+                 aoi_polygons: list['BaseGeometry'] | None = None):
         """Constructor.
 
         During initialization, ``Scene`` attempts to set the extents of the
@@ -68,7 +68,7 @@ class Scene:
         """Bounding box applied to the source data."""
         return self.raster_source.bbox
 
-    def __getitem__(self, key: Any) -> Tuple[Any, Any]:
+    def __getitem__(self, key: Any) -> tuple[Any, Any]:
         x = self.raster_source[key]
         if self.label_source is not None:
             y = self.label_source[key]

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional, Tuple, List, Dict, Union
+from typing import TYPE_CHECKING
 from os.path import join
 from collections import defaultdict
 import logging
@@ -27,15 +27,15 @@ class CocoDataset(Dataset):
         """Constructor.
 
         Args:
-            img_dir (str): Directory containing the images. Image filenames
+            img_dir: Directory containing the images. Image filenames
                 must match the image IDs in the annotations file.
-            annotation_uri (str): URI to a JSON file containing annotations in
+            annotation_uri: URI to a JSON file containing annotations in
                 the COCO format.
         """
         self.annotation_uri = annotation_uri
         ann_json = file_to_json(annotation_uri)
 
-        self.img_ids: List[str] = [img['id'] for img in ann_json['images']]
+        self.img_ids: list[str] = [img['id'] for img in ann_json['images']]
         self.img_paths = {
             img['id']: join(img_dir, img['file_name'])
             for img in ann_json['images']
@@ -47,10 +47,10 @@ class CocoDataset(Dataset):
             img_ann['category_id'].append(ann['category_id'])
 
     def __getitem__(self, ind: int
-                    ) -> Tuple[np.ndarray, Tuple[np.ndarray, np.ndarray, str]]:
+                    ) -> tuple[np.ndarray, tuple[np.ndarray, np.ndarray, str]]:
         img_id = self.img_ids[ind]
         path = self.img_paths[img_id]
-        ann: Dict[str, list] = self.img_anns[img_id]
+        ann: dict[str, list] = self.img_anns[img_id]
 
         x = load_image(path)
         bboxes = np.array(ann['bboxes'])
@@ -75,9 +75,9 @@ class ObjectDetectionImageDataset(ImageDataset):
         """Constructor.
 
         Args:
-            img_dir (str): Directory containing the images. Image filenames
+            img_dir: Directory containing the images. Image filenames
                 must match the image IDs in the annotations file.
-            annotation_uri (str): URI to a JSON file containing annotations in
+            annotation_uri: URI to a JSON file containing annotations in
                 the COCO format.
             *args: See :meth:`.ImageDataset.__init__`.
             **kwargs: See :meth:`.ImageDataset.__init__`.
@@ -88,11 +88,11 @@ class ObjectDetectionImageDataset(ImageDataset):
 
 
 def make_od_geodataset(cls,
-                       image_uri: Union[str, List[str]],
-                       label_vector_uri: Optional[str] = None,
-                       class_config: Optional['ClassConfig'] = None,
-                       aoi_uri: Union[str, List[str]] = [],
-                       label_vector_default_class_id: Optional[int] = None,
+                       image_uri: str | list[str],
+                       label_vector_uri: str | None = None,
+                       class_config: 'ClassConfig | None' = None,
+                       aoi_uri: str | list[str] = [],
+                       label_vector_default_class_id: int | None = None,
                        image_raster_source_kw: dict = {},
                        label_vector_source_kw: dict = {},
                        label_source_kw: dict = {},
@@ -103,33 +103,34 @@ def make_od_geodataset(cls,
     recommended to use the default constructor.
 
     Args:
-        image_uri (Union[str, List[str]]): URI or list of URIs of GeoTIFFs to
-            use as the source of image data.
-        label_vector_uri (Optional[str], optional):  URI of GeoJSON file to use
-            as the source of segmentation label data. Defaults to None.
-        class_config (Optional['ClassConfig']): The ClassConfig. Can be None if
-            not using any labels.
-        aoi_uri (Union[str, List[str]], optional): URI or list of URIs of
+        image_uri: URI or list of URIs of GeoTIFFs to use as the source of
+            image data.
+        label_vector_uri:  URI of GeoJSON file to use as the source of label.
+            Defaults to ``None``.
+        class_config: The ClassConfig. Must be non-None if creating a scene
+            without a ``LabelSource``. Defaults to ``None``.
+        aoi_uri: URI or list of URIs of
             GeoJSONs that specify the area-of-interest. If provided, the
-            dataset will only access data from this area. Defaults to [].
-        label_vector_default_class_id (Optional[int], optional): If using
+            dataset will only access data from this area. Defaults to ``[]``.
+        label_vector_default_class_id: If using
             label_vector_uri and all polygons in that file belong to the same
             class and they do not contain a `class_id` property, then use this
             argument to map all of the polygons to the appropriate class ID.
             See docs for ClassInferenceTransformer for more details.
-            Defaults to None.
-        image_raster_source_kw (dict, optional): Additional arguments to pass
-            to the RasterioSource used for image data. See docs for
-            RasterioSource for more details. Defaults to {}.
-        label_vector_source_kw (dict, optional): Additional arguments to pass
-            to the GeoJSONVectorSourceConfig used for label data, if
-            label_vector_uri is set. See docs for GeoJSONVectorSourceConfig
-            for more details. Defaults to {}.
-        label_source_kw (dict, optional): Additional arguments to pass
-            to the ObjectDetectionLabelSourceConfig used for label data, if
+            Defaults to ``None``.
+        image_raster_source_kw: Additional arguments to pass
+            to the :class:`.RasterioSource` used for image data. See docs for
+            :class:`.RasterioSource` for more details. Defaults to ``{}``.
+        label_vector_source_kw: Additional arguments to pass
+            to the :class:`.GeoJSONVectorSourceConfig` used for label data, if
             label_vector_uri is set. See docs for
-            ObjectDetectionLabelSourceConfig for more details.
-            Defaults to {}.
+            :class:`.GeoJSONVectorSourceConfig` for more details.
+            Defaults to ``{}``.
+        label_source_kw: Additional arguments to pass
+            to the :class:`.ObjectDetectionLabelSourceConfig` used for label data, if
+            label_vector_uri is set. See docs for
+            :class:`.ObjectDetectionLabelSourceConfig` for more details.
+            Defaults to ``{}``.
         **kwargs: All other keyword args are passed to the default constructor
             for this class.
 
@@ -167,38 +168,36 @@ class ObjectDetectionRandomWindowGeoDataset(RandomWindowGeoDataset):
             *args: See :meth:`.RandomWindowGeoDataset.__init__`.
 
         Keyword Args:
-            bbox_params (Optional[A.BboxParams], optional): Optional
-                bbox_params to use when resizing windows. Defaults to None.
-            ioa_thresh (float, optional): Minimum IoA of a bounding box with a
-                given window for it to be included in the labels for that
-                window. Defaults to 0.9.
-            clip (bool, optional): Clip bounding boxes to window limits when
-                retrieving labels for a window. Defaults to False.
-            neg_ratio (Optional[float], optional): Ratio of sampling
-                probabilities of negative windows (windows w/o bboxes) vs
-                positive windows (windows w/ at least 1 bbox). E.g. neg_ratio=2
-                means 2/3 probability of sampling a negative window.
-                If None, the default sampling behavior of
-                RandomWindowGeoDataset is used, without taking bboxes into
-                account. Defaults to None.
-            neg_ioa_thresh (float, optional): A window will be considered
-                negative if its max IoA with any bounding box is less than this
-                threshold. Defaults to 0.2.
+            bbox_params: Optional ``bbox_params`` to use when resizing windows.
+                Defaults to ``None``.
+            ioa_thresh: Minimum IoA of a bounding box with a given window for
+                it to be included in the labels for that window.
+                Defaults to ``0.9``.
+            clip: Clip bounding boxes to window limits when retrieving labels
+                for a window. Defaults to ``False``.
+            neg_ratio: Ratio of sampling probabilities of negative windows
+                (windows w/o bboxes) vs positive windows (windows w/ at least 1
+                bbox). E.g. ``neg_ratio=2`` means 2/3 probability of sampling a
+                negative window. If ``None``, the default sampling behavior of
+                ``RandomWindowGeoDataset`` is used, without taking bboxes into
+                account. Defaults to ``None``.
+            neg_ioa_thresh: A window will be considered negative if its max IoA
+                with any bounding box is less than this threshold.
+                Defaults to ``0.2``.
             **kwargs: See :meth:`.RandomWindowGeoDataset.__init__`.
         """
         from rastervision.pytorch_learner import DEFAULT_BBOX_PARAMS
-        self.bbox_params: Optional[A.BboxParams] = kwargs.pop(
+        self.bbox_params: A.BboxParams | None = kwargs.pop(
             'bbox_params', DEFAULT_BBOX_PARAMS)
         ioa_thresh: float = kwargs.pop('ioa_thresh', 0.9)
         clip: bool = kwargs.pop('clip', False)
-        neg_ratio: Optional[float] = kwargs.pop('neg_ratio', None)
+        neg_ratio: float | None = kwargs.pop('neg_ratio', None)
         neg_ioa_thresh: float = kwargs.pop('neg_ioa_thresh', 0.2)
 
         super().__init__(
             *args, **kwargs, transform_type=TransformType.object_detection)
 
-        label_source: Optional[
-            'ObjectDetectionLabelSource'] = self.scene.label_source
+        label_source: 'ObjectDetectionLabelSource | None' = self.scene.label_source
         if label_source is not None:
             label_source.ioa_thresh = ioa_thresh
             label_source.clip = clip

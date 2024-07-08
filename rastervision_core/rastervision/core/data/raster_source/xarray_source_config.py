@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any
 import logging
 
 from rastervision.pipeline.config import Field, register_config
@@ -15,14 +15,14 @@ log = logging.getLogger(__name__)
 class XarraySourceConfig(RasterSourceConfig):
     """Configure an :class:`.XarraySource`."""
 
-    stac: Union[STACItemConfig, STACItemCollectionConfig] = Field(
+    stac: STACItemConfig | STACItemCollectionConfig = Field(
         ...,
         description='STAC Item or ItemCollection to build the DataArray from.')
     allow_streaming: bool = Field(
         True,
         description='If False, load the entire DataArray into memory. '
         'Defaults to True.')
-    bbox_map_coords: Optional[Tuple[float, float, float, float]] = Field(
+    bbox_map_coords: tuple[float, float, float, float] | None = Field(
         None,
         description='Optional user-specified bbox in EPSG:4326 coords of the '
         'form (ymin, xmin, ymax, xmax). Useful for cropping the raster source '
@@ -30,11 +30,10 @@ class XarraySourceConfig(RasterSourceConfig):
         'bbox is also specified. Defaults to None.')
     temporal: bool = Field(
         False, description='Whether the data is a time-series.')
-    stackstac_args: Dict[str, Any] = Field(
+    stackstac_args: dict[str, Any] = Field(
         {}, description='Optional arguments to pass to stackstac.stack().')
 
-    def build(self,
-              tmp_dir: Optional[str] = None,
+    def build(self, tmp_dir: str | None = None,
               use_transformers: bool = True) -> XarraySource:
         item_or_item_collection = self.stac.build()
         raster_transformers = ([rt.build() for rt in self.transformers]

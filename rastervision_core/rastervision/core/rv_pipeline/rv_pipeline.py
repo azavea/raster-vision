@@ -1,8 +1,8 @@
-import logging
+from typing import TYPE_CHECKING
 from os.path import join
+import logging
 import tempfile
 import shutil
-from typing import TYPE_CHECKING, Optional, List
 from functools import lru_cache
 
 import click
@@ -45,7 +45,7 @@ class RVPipeline(Pipeline):
 
     def __init__(self, config: 'RVPipelineConfig', tmp_dir: str):
         super().__init__(config, tmp_dir)
-        self.backend: Optional['Backend'] = None
+        self.backend: 'Backend | None' = None
         self.config: 'RVPipelineConfig'
 
     @property
@@ -93,7 +93,7 @@ class RVPipeline(Pipeline):
                          f'scene group "{group_name}"...')
                 analyzer.process(group_scenes, self.tmp_dir)
 
-    def get_train_windows(self, scene: Scene) -> List[Box]:
+    def get_train_windows(self, scene: Scene) -> list[Box]:
         """Return the training windows for a Scene.
 
         Each training window represents the spatial extent of a training chip to
@@ -134,7 +134,7 @@ class RVPipeline(Pipeline):
         """
         return sample
 
-    def post_process_batch(self, windows: List[Box], chips: np.ndarray,
+    def post_process_batch(self, windows: list[Box], chips: np.ndarray,
                            labels: Labels) -> Labels:
         """Post-process a batch of predictions."""
         return labels
@@ -233,6 +233,6 @@ class RVPipeline(Pipeline):
             zipdir(bundle_dir, model_bundle_path)
             upload_or_copy(model_bundle_path, model_bundle_uri)
 
-    def build_backend(self, uri: Optional[str] = None) -> None:
+    def build_backend(self, uri: str | None = None) -> None:
         self.backend = self.config.backend.build(self.config, self.tmp_dir)
         self.backend.load_model(uri)

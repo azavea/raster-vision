@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING
 import sys
 from os.path import dirname, join
 from subprocess import Popen
@@ -15,7 +15,7 @@ LOCAL = 'local'
 
 def make_run_cmd_invocation(cfg_json_uri: str,
                             command: str,
-                            opts: Optional[dict] = None) -> str:
+                            opts: dict | None = None) -> str:
     opts_str = ''
     if opts is not None:
         opts_str = ' ' + ' '.join(f'{k} {v}' for k, v in opts.items())
@@ -24,10 +24,10 @@ def make_run_cmd_invocation(cfg_json_uri: str,
 
 
 def make_makefile_entry_for_cmd(curr_command_ind: int,
-                                prev_command_inds: List[int],
+                                prev_command_inds: list[int],
                                 cfg_json_uri: str,
                                 command: str,
-                                opts: Optional[dict] = None) -> str:
+                                opts: dict | None = None) -> str:
     out = f'{curr_command_ind}: '
     out += ' '.join([str(ci) for ci in prev_command_inds])
     out += '\n'
@@ -47,7 +47,7 @@ class LocalRunner(Runner):
     def run(self,
             cfg_json_uri: str,
             pipeline: 'Pipeline',
-            commands: List[str],
+            commands: list[str],
             num_splits: int = 1,
             pipeline_run_name: str = 'raster-vision'):
         makefile = self.build_makefile_string(cfg_json_uri, pipeline, commands,
@@ -57,7 +57,7 @@ class LocalRunner(Runner):
         makefile_path_local = download_if_needed(makefile_path)
         return self.run_command(['make', '-j', '-f', makefile_path_local])
 
-    def run_command(self, cmd: List[str]):
+    def run_command(self, cmd: list[str]):
         process = Popen(cmd)
         terminate_at_exit(process)
         exitcode = process.wait()
@@ -69,7 +69,7 @@ class LocalRunner(Runner):
     def build_makefile_string(self,
                               cfg_json_uri: str,
                               pipeline: 'Pipeline',
-                              commands: List[str],
+                              commands: list[str],
                               num_splits: int = 1) -> str:
         num_commands = 0
         for command in commands:

@@ -1,5 +1,3 @@
-from typing import Dict, List, Set
-
 from rastervision.pipeline.config import (Config, register_config, ConfigError,
                                           Field)
 from rastervision.pipeline.utils import split_into_groups
@@ -21,13 +19,13 @@ def dataset_config_upgrader(cfg_dict: dict, version: int) -> dict:
 class DatasetConfig(Config):
     """Configure train, validation, and test splits for a dataset."""
     class_config: ClassConfig
-    train_scenes: List[SceneConfig]
-    validation_scenes: List[SceneConfig]
-    test_scenes: List[SceneConfig] = []
-    scene_groups: Dict[str, Set[str]] = Field(
+    train_scenes: list[SceneConfig]
+    validation_scenes: list[SceneConfig]
+    test_scenes: list[SceneConfig] = []
+    scene_groups: dict[str, set[str]] = Field(
         {},
         description='Groupings of scenes. Should be a dict of the form: '
-        '{<group-name>: Set(scene_id_1, scene_id_2, ...)}. Three groups are '
+        '{<group-name>: set(scene_id_1, scene_id_2, ...)}. Three groups are '
         'added by default: "train_scenes", "validation_scenes", and '
         '"test_scenes"')
 
@@ -88,7 +86,7 @@ class DatasetConfig(Config):
         return new_cfg
 
     @property
-    def all_scenes(self) -> List[SceneConfig]:
+    def all_scenes(self) -> list[SceneConfig]:
         return self.train_scenes + self.validation_scenes + self.test_scenes
 
     def __repr__(self):

@@ -1,4 +1,4 @@
-from typing import Optional, Self
+from typing import Self
 
 from rastervision.core.data.vector_source import (VectorSourceConfig)
 from rastervision.core.data.label_source import (LabelSourceConfig,
@@ -25,7 +25,7 @@ class ChipClassificationLabelSourceConfig(LabelSourceConfig):
     This can be provided explicitly as a grid of cells, or a grid of cells can
     be inferred from arbitrary polygons.
     """
-    vector_source: Optional[VectorSourceConfig] = None
+    vector_source: VectorSourceConfig | None = None
     ioa_thresh: float = Field(
         0.5,
         description=
@@ -42,7 +42,7 @@ class ChipClassificationLabelSourceConfig(LabelSourceConfig):
         ('If True, the class_id for a cell is the minimum class_id of the boxes in that '
          'cell. Otherwise, pick the class_id of the box covering the greatest area.'
          ))
-    background_class_id: Optional[int] = Field(
+    background_class_id: int | None = Field(
         None,
         description=
         ('If not None, class_id to use as the background class; ie. the one that is used '
@@ -51,7 +51,7 @@ class ChipClassificationLabelSourceConfig(LabelSourceConfig):
     infer_cells: bool = Field(
         False,
         description='If True, infers a grid of cells based on the cell_sz.')
-    cell_sz: Optional[int] = Field(
+    cell_sz: int | None = Field(
         None,
         description=
         ('Size of a cell to use in pixels. If None, and this Config is part '

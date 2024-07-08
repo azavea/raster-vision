@@ -1,4 +1,4 @@
-from typing import Any, Iterator, Tuple
+from typing import Any, Iterator
 import io
 import os
 import subprocess
@@ -132,7 +132,7 @@ class S3FileSystem(FileSystem):
         return parsed_uri.scheme == 's3'
 
     @staticmethod
-    def parse_uri(uri: str) -> Tuple[str, str]:
+    def parse_uri(uri: str) -> tuple[str, str]:
         """Parse bucket name and key from an S3 URI."""
         parsed_uri = urlparse(uri)
         bucket, key = parsed_uri.netloc, parsed_uri.path[1:]

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 import logging
 
 from rastervision.core.data.label import ObjectDetectionLabels
@@ -21,7 +21,7 @@ class ObjectDetectionGeoJSONStore(LabelStore):
                  uri: str,
                  class_config: 'ClassConfig',
                  crs_transformer: 'CRSTransformer',
-                 bbox: Optional['Box'] = None):
+                 bbox: 'Box | None' = None):
         """Constructor.
 
         Args:
@@ -30,7 +30,7 @@ class ObjectDetectionGeoJSONStore(LabelStore):
                 (or label) field
             crs_transformer: CRSTransformer to convert from map coords in label
                 in GeoJSON file to pixel coords.
-            bbox (Optional[Box], optional): User-specified crop of the extent.
+            bbox: User-specified crop of the extent.
                 If provided, only labels falling inside it are returned by
                 :meth:`.ObjectDetectionGeoJSONStore.get_labels`. Must be
                 provided if the corresponding RasterSource has bbox != extent.

@@ -1,6 +1,6 @@
 """Defines abstract base evaluation class for all tasks."""
 
-from typing import TYPE_CHECKING, Any, Dict, Optional, Union
+from typing import TYPE_CHECKING, Any
 from abc import (ABC, abstractmethod)
 import copy
 import json
@@ -20,20 +20,17 @@ class ClassificationEvaluation(ABC):
     Evaluations can be keyed, for instance, if evaluations happen per class.
 
     Attributes:
-        class_to_eval_item (Dict[int, ClassEvaluationItem]): Mapping from class
-            IDs to ``ClassEvaluationItem``s.
-        scene_to_eval (Dict[str, ClassificationEvaluation]): Mapping from scene
-            IDs to ``ClassificationEvaluation``s.
-        avg_item (Optional[Dict[str, Any]]): Averaged evaluation over all
-            classes.
-        conf_mat (Optional[np.ndarray]): Confusion matrix.
+        class_to_eval_item: Mapping from class IDs to ``ClassEvaluationItem``s.
+        scene_to_eval: Mapping from scene IDs to ``ClassificationEvaluation``s.
+        avg_item: Averaged evaluation over all classes.
+        conf_mat: Confusion matrix.
     """
 
     def __init__(self):
-        self.class_to_eval_item: Dict[int, 'ClassEvaluationItem']
-        self.scene_to_eval: Dict[str, 'ClassificationEvaluation']
-        self.avg_item: Optional[Dict[str, Any]]
-        self.conf_mat: Optional[np.ndarray]
+        self.class_to_eval_item: dict[int, 'ClassEvaluationItem']
+        self.scene_to_eval: dict[str, 'ClassificationEvaluation']
+        self.avg_item: dict[str, Any] | None
+        self.conf_mat: np.ndarray | None
         self.reset()
 
     def reset(self):
@@ -43,11 +40,11 @@ class ClassificationEvaluation(ABC):
         self.avg_item = None
         self.conf_mat = None
 
-    def to_json(self) -> Union[dict, list]:
+    def to_json(self) -> dict | list:
         """Serialize to a dict or list.
 
         Returns:
-            Union[dict, list]: Class-wise and (if available) scene-wise
+            dict | list: Class-wise and (if available) scene-wise
             evaluations.
         """
         out = [item.to_json() for item in self.class_to_eval_item.values()]
@@ -77,7 +74,7 @@ class ClassificationEvaluation(ABC):
 
     def merge(self,
               other: 'ClassificationEvaluation',
-              scene_id: Optional[str] = None) -> None:
+              scene_id: str | None = None) -> None:
         """Merge Evaluation for another Scene into this one.
 
         This is useful for computing the average metrics of a set of scenes.
@@ -85,7 +82,7 @@ class ClassificationEvaluation(ABC):
 
         Args:
             other (ClassificationEvaluation): Evaluation to merge into this one
-            scene_id (Optional[str], optional): ID of scene. If specified,
+            scene_id (str | None): ID of scene. If specified,
                 (a copy of) ``other`` will be saved and be available in
                 ``to_json()``'s output. Defaults to None.
         """

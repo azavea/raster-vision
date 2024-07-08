@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING
 from abc import ABC, abstractmethod
 import logging
 
@@ -22,18 +22,18 @@ class VectorSource(ABC):
 
     def __init__(self,
                  crs_transformer: 'CRSTransformer',
-                 vector_transformers: List['VectorTransformer'] = [],
-                 bbox: Optional[Box] = None):
+                 vector_transformers: list['VectorTransformer'] = [],
+                 bbox: Box | None = None):
         """Constructor.
 
         Args:
             crs_transformer (CRSTransformer): A ``CRSTransformer`` to convert
                 between map and pixel coords. Normally this is obtained from a
                 :class:`.RasterSource`.
-            vector_transformers (List[VectorTransformer]):
+            vector_transformers (list[VectorTransformer]):
                 ``VectorTransformers`` for transforming geometries.
                 Defaults to ``[]``.
-            bbox (Optional[Box]): User-specified crop of the extent. If None,
+            bbox (Box | None): User-specified crop of the extent. If None,
                 the full extent available in the source file is used.
         """
         self.crs_transformer = crs_transformer
@@ -44,7 +44,7 @@ class VectorSource(ABC):
         self._bbox = bbox
 
     def get_geojson(self,
-                    window: Optional[Box] = None,
+                    window: Box | None = None,
                     to_map_coords: bool = False) -> dict:
         """Return transformed GeoJSON.
 
@@ -59,7 +59,7 @@ class VectorSource(ABC):
         VectorTransformers in vector_transformers are also applied.
 
         Args:
-            window (Optional[Box]): If specified, return only the features that
+            window (Box | None): If specified, return only the features that
                 intersect with this window; otherwise, return all features.
                 Defaults to None.
             to_map_coords (bool): If true, will return GeoJSON in map
@@ -87,16 +87,15 @@ class VectorSource(ABC):
             return filter_geojson_to_window(geojson, window)
         return geojson
 
-    def get_geoms(self,
-                  window: Optional[Box] = None,
-                  to_map_coords: bool = False) -> List['BaseGeometry']:
+    def get_geoms(self, window: Box | None = None,
+                  to_map_coords: bool = False) -> list['BaseGeometry']:
         """Returns all geometries in the transformed GeoJSON as Shapely geoms.
 
         Args:
             to_map_coords: If true, will return geoms in map coordinates.
 
         Returns:
-            List['BaseGeometry']: List of Shapely geoms.
+            list['BaseGeometry']: List of Shapely geoms.
         """
         geojson = self.get_geojson(window=window, to_map_coords=to_map_coords)
         return list(geojson_to_geoms(geojson))
@@ -106,12 +105,12 @@ class VectorSource(ABC):
         """Return raw GeoJSON."""
 
     def get_dataframe(self,
-                      window: Optional[Box] = None,
+                      window: Box | None = None,
                       to_map_coords: bool = False) -> gpd.GeoDataFrame:
         """Return geometries as a :class:`~geopandas.GeoDataFrame`.
 
         Arguments:
-            window (Optional[Box]): If specified, return only the features that
+            window (Box | None): If specified, return only the features that
                 intersect with this window; otherwise, return all features.
                 Defaults to None.
             to_map_coords (bool): If true, will return GeoJSON in map
@@ -162,7 +161,7 @@ def sanitize_geojson(geojson: dict,
         geojson (dict): A GeoJSON-like mapping of a FeatureCollection.
         crs_transformer (CRSTransformer): A CRS transformer for coordinate
             transformation.
-        to_map_coords (bool, optional): If True, transform geometries back to
+        to_map_coords (bool): If True, transform geometries back to
             map coordinates before returning. Defaults to False.
 
     Returns:

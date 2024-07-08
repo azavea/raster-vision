@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Optional, Tuple
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
@@ -17,19 +17,19 @@ class ObjectDetectionLabelSource(LabelSource):
 
     def __init__(self,
                  vector_source: VectorSource,
-                 bbox: Optional[Box] = None,
-                 ioa_thresh: Optional[float] = None,
+                 bbox: Box | None = None,
+                 ioa_thresh: float | None = None,
                  clip: bool = False):
         """Constructor.
 
         Args:
-            vector_source (VectorSource): A VectorSource.
-            bbox (Optional[Box], optional): User-specified crop of the extent.
-                If None, the full extent available in the source file is used.
-            ioa_thresh (Optional[float], optional): IOA threshold to apply when
-                retrieving labels for a window. Defaults to None.
-            clip (bool, optional): Clip bounding boxes to window limits when
-                retrieving labels for a window. Defaults to False.
+            vector_source: A ``VectorSource``.
+            bbox: User-specified crop of the extent. If ``None``, the full
+                extent available in the source file is used.
+            ioa_thresh: IOA threshold to apply when retrieving labels for a
+                window. Defaults to ``None``.
+            clip: Clip bounding boxes to window limits when retrieving labels
+                for a window. Defaults to ``False``.
         """
         self.vector_source = vector_source
         geojson = self.vector_source.get_geojson()
@@ -42,18 +42,18 @@ class ObjectDetectionLabelSource(LabelSource):
         self.clip = clip
 
     def get_labels(self,
-                   window: Box = None,
+                   window: Box | None = None,
                    ioa_thresh: float = 1e-6,
                    clip: bool = False) -> ObjectDetectionLabels:
         """Get labels (in global coords) for a window.
 
         Args:
-            window (Box): Window coords.
+            window: Window coords.
 
         Returns:
-            ObjectDetectionLabels: Labels with sufficient overlap with the
-            window. The returned labels are in global coods (i.e. coords within
-            the full extent of the source).
+            Labels with sufficient overlap with the window. The returned labels
+            are in global coods (i.e. coords within the full extent of the
+            source).
         """
         if window is None:
             return self.labels
@@ -61,7 +61,7 @@ class ObjectDetectionLabelSource(LabelSource):
         return ObjectDetectionLabels.get_overlapping(
             self.labels, window, ioa_thresh=ioa_thresh, clip=clip)
 
-    def __getitem__(self, key: Any) -> Tuple[np.ndarray, np.ndarray, str]:
+    def __getitem__(self, key: Any) -> tuple[np.ndarray, np.ndarray, str]:
         """Get labels (in window coords) for a window.
 
         Returns a 3-tuple: (npboxes, class_ids, box_format).
@@ -76,7 +76,7 @@ class ObjectDetectionLabelSource(LabelSource):
             window (Box): Window coords.
 
         Returns:
-            Tuple[np.ndarray, np.ndarray, str]: 3-tuple of
+            tuple[np.ndarray, np.ndarray, str]: 3-tuple of
             (npboxes, class_ids, box_format). The returned npboxes are in
             window coords (i.e. coords within the window).
         """

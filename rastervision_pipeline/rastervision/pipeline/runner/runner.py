@@ -1,5 +1,4 @@
 from abc import abstractmethod
-from typing import Optional, List
 
 from rastervision.pipeline.pipeline import Pipeline
 
@@ -15,7 +14,7 @@ class Runner():
     def run(self,
             cfg_json_uri: str,
             pipeline: Pipeline,
-            commands: List[str],
+            commands: list[str],
             num_splits: int = 1,
             pipeline_run_name: str = 'raster-vision'):
         """Run commands in a Pipeline using a serialized PipelineConfig.
@@ -28,14 +27,14 @@ class Runner():
         """
 
     @abstractmethod
-    def run_command(self, cmd: List[str]):
+    def run_command(self, cmd: list[str]):
         """Run a single command.
 
         Args:
             cmd: The command to run.
         """
 
-    def get_split_ind(self) -> Optional[int]:
+    def get_split_ind(self) -> int | None:
         """Get the split_ind for the process.
 
         For split commands, the split_ind determines which split of work to perform

@@ -2,7 +2,7 @@
 # Ported over from https://github.com/azavea/mask-to-polygons.
 ###############################################################################
 
-from typing import TYPE_CHECKING, Iterator, Optional, Tuple
+from typing import TYPE_CHECKING, Iterator
 from itertools import chain
 
 import numpy as np
@@ -13,17 +13,17 @@ from shapely.geometry import shape
 if TYPE_CHECKING:
     from shapely.geometry.base import BaseGeometry
 
-RotatedRectange = Tuple[Tuple[float, float], Tuple[float, float], float]
+RotatedRectange = tuple[tuple[float, float], tuple[float, float], float]
 
 
-def mask_to_polygons(mask: np.ndarray, transform: Optional[rio.Affine] = None
+def mask_to_polygons(mask: np.ndarray, transform: rio.Affine | None = None
                      ) -> Iterator['BaseGeometry']:
     """Polygonize a raster mask. Wrapper around rasterio.features.shapes.
 
     Args:
-        mask (np.ndarray): The mask containing buildings to polygonize.
-        transform (Optional[rio.Affine]): Affine transform to use during
-            polygonization. Defaults to None (i.e. identity transform).
+        mask: The mask containing buildings to polygonize.
+        transform: Affine transform to use during polygonization.
+            Defaults to ``None`` (i.e. identity transform).
 
     Returns:
         Iterator[BaseGeometry]: Generator of shapely polygons.
@@ -37,7 +37,7 @@ def mask_to_polygons(mask: np.ndarray, transform: Optional[rio.Affine] = None
 
 def mask_to_building_polygons(
         mask: np.ndarray,
-        transform: Optional[rio.Affine] = None,
+        transform: rio.Affine | None = None,
         min_area: float = 100,
         width_factor: float = 0.5,
         thickness: float = 0.001) -> Iterator['BaseGeometry']:
@@ -60,7 +60,7 @@ def mask_to_building_polygons(
 
     Args:
         mask (np.ndarray): The mask containing buildings to polygonize.
-        transform (Optional[rio.Affine]): Affine transform to use during
+        transform (rio.Affine|None): Affine transform to use during
             polygonization. Defaults to None (i.e. identity transform).
         min_area (float): Minimum area (in pixels^2) of anything that can be
             considered to be a building or cluster of buildings. The goal is to
@@ -103,7 +103,7 @@ def mask_to_building_polygons(
     return chain.from_iterable(iterators)
 
 
-def get_rectangle(buildings: np.ndarray) -> Optional[RotatedRectange]:
+def get_rectangle(buildings: np.ndarray) -> RotatedRectange | None:
     contours, _ = cv2.findContours(buildings, cv2.RETR_EXTERNAL,
                                    cv2.CHAIN_APPROX_SIMPLE)
     if len(contours) > 0:
@@ -115,7 +115,7 @@ def get_rectangle(buildings: np.ndarray) -> Optional[RotatedRectange]:
 
 def get_kernel(rectangle: RotatedRectange,
                width_factor: float = 0.5,
-               thickness: float = 0.001) -> Optional[np.ndarray]:
+               thickness: float = 0.001) -> np.ndarray | None:
     ((cx, cy), (xwidth, ywidth), angle) = rectangle
 
     width = int(width_factor * min(xwidth, ywidth))

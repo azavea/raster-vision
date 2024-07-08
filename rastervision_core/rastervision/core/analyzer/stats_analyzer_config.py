@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Iterable, Optional, Tuple
+from typing import TYPE_CHECKING, Iterable
 from os.path import join
 
 from rastervision.pipeline.config import register_config, ConfigError, Field
@@ -16,13 +16,13 @@ class StatsAnalyzerConfig(AnalyzerConfig):
     be used to normalize chips read from them.
     """
 
-    output_uri: Optional[str] = Field(
+    output_uri: str | None = Field(
         None,
         description='URI of directory where stats will be saved. '
         'Stats for a scene-group will be save in a JSON file at '
         '<output_uri>/<scene-group-name>/stats.json. If None, and this Config '
         'is part of an RVPipeline, this field will be auto-generated.')
-    sample_prob: Optional[float] = Field(
+    sample_prob: float | None = Field(
         0.1,
         description=(
             'The probability of using a random window for computing statistics. '
@@ -31,12 +31,12 @@ class StatsAnalyzerConfig(AnalyzerConfig):
         300,
         description='Chip size to use when sampling chips to compute stats '
         'from.')
-    nodata_value: Optional[float] = Field(
+    nodata_value: float | None = Field(
         0,
         description='NODATA value. If set, these pixels will be ignored when '
         'computing stats.')
 
-    def update(self, pipeline: Optional['RVPipelineConfig'] = None) -> None:
+    def update(self, pipeline: 'RVPipelineConfig | None' = None) -> None:
         if pipeline is not None and self.output_uri is None:
             self.output_uri = join(pipeline.analyze_uri, 'stats')
 
@@ -44,7 +44,7 @@ class StatsAnalyzerConfig(AnalyzerConfig):
         if self.sample_prob > 1 or self.sample_prob <= 0:
             raise ConfigError('sample_prob must be <= 1 and > 0')
 
-    def build(self, scene_group: Optional[Tuple[str, Iterable[str]]] = None
+    def build(self, scene_group: tuple[str, Iterable[str]] | None = None
               ) -> StatsAnalyzer:
         if scene_group is None:
             output_uri = join(self.output_uri, f'stats.json')

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Iterator, List, Optional
+from typing import TYPE_CHECKING, Iterator
 from os.path import join
 
 from rastervision.pipeline.config import register_config, Config, Field
@@ -41,7 +41,7 @@ class VectorOutputConfig(Config):
         'intensive (especially for large images). Larger values will remove '
         'more noise and make vectorization faster but might also remove '
         'legitimate detections.')
-    threshold: Optional[float] = Field(
+    threshold: float | None = Field(
         None,
         description='Probability threshold for creating the binary mask for '
         'the pixels of this class. Pixels will be considered to belong to '
@@ -57,7 +57,7 @@ class VectorOutputConfig(Config):
         raise NotImplementedError()
 
     def get_uri(self, root: str,
-                class_config: Optional['ClassConfig'] = None) -> str:
+                class_config: 'ClassConfig | None' = None) -> str:
         if class_config is not None:
             class_name = class_config.get_name(self.class_id)
             uri = join(root, f'class-{self.class_id}-{class_name}.json')
@@ -125,13 +125,13 @@ class SemanticSegmentationLabelStoreConfig(LabelStoreConfig):
     Stores class raster as GeoTIFF, and can optionally vectorizes predictions and stores
     them in GeoJSON files.
     """
-    uri: Optional[str] = Field(
+    uri: str | None = Field(
         None,
         description=(
             'URI of file with predictions. If None, and this Config is part of '
             'a SceneConfig inside an RVPipelineConfig, this fiend will be '
             'auto-generated.'))
-    vector_output: List[VectorOutputConfig] = []
+    vector_output: list[VectorOutputConfig] = []
     rgb: bool = Field(
         False,
         description=
@@ -156,7 +156,7 @@ class SemanticSegmentationLabelStoreConfig(LabelStoreConfig):
               class_config: 'ClassConfig',
               crs_transformer: 'CRSTransformer',
               bbox: 'Box',
-              tmp_dir: Optional[str] = None) -> SemanticSegmentationLabelStore:
+              tmp_dir: str | None = None) -> SemanticSegmentationLabelStore:
         class_config.ensure_null_class()
 
         label_store = SemanticSegmentationLabelStore(
@@ -174,8 +174,8 @@ class SemanticSegmentationLabelStoreConfig(LabelStoreConfig):
         return label_store
 
     def update(self,
-               pipeline: Optional['RVPipelineConfig'] = None,
-               scene: Optional['SceneConfig'] = None):
+               pipeline: 'RVPipelineConfig | None' = None,
+               scene: 'SceneConfig | None' = None):
         if pipeline is not None and scene is not None:
             if self.uri is None:
                 self.uri = join(pipeline.predict_uri, f'{scene.id}')

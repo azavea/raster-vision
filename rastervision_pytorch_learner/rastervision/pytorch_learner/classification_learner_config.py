@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING, Callable, Iterable, Optional, Union
+from typing import TYPE_CHECKING, Iterable
+from collections.abc import Callable
 from enum import Enum
 import logging
 
@@ -58,18 +59,18 @@ class ClassificationGeoDataConfig(ClassificationDataConfig, GeoDataConfig):
 
     def build_scenes(self,
                      scene_configs: Iterable['SceneConfig'],
-                     tmp_dir: Optional[str] = None):
+                     tmp_dir: str | None = None):
         for s in scene_configs:
             if s.label_source is not None:
                 s.label_source.lazy = True
         return super().build_scenes(scene_configs, tmp_dir=tmp_dir)
 
-    def scene_to_dataset(self,
-                         scene: Scene,
-                         transform: Optional[A.BasicTransform] = None,
-                         for_chipping: bool = False
-                         ) -> Union[ClassificationSlidingWindowGeoDataset,
-                                    ClassificationRandomWindowGeoDataset]:
+    def scene_to_dataset(
+            self,
+            scene: Scene,
+            transform: A.BasicTransform | None = None,
+            for_chipping: bool = False
+    ) -> ClassificationSlidingWindowGeoDataset | ClassificationRandomWindowGeoDataset:
         if isinstance(self.sampling, dict):
             opts = self.sampling[scene.id]
         else:
@@ -155,7 +156,7 @@ class ClassificationModelConfig(ModelConfig):
 class ClassificationLearnerConfig(LearnerConfig):
     """Configure a :class:`.ClassificationLearner`."""
 
-    model: Optional[ClassificationModelConfig]
+    model: ClassificationModelConfig | None
 
     def build(self,
               tmp_dir=None,

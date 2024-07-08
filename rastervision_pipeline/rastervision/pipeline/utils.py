@@ -1,4 +1,5 @@
-from typing import Any, Callable, Optional
+from typing import Any
+from collections.abc import Callable
 import os
 import atexit
 import logging
@@ -49,8 +50,8 @@ def repr_with_args(obj: Any, **kwargs) -> str:
 
 
 def get_env_var(key: str,
-                default: Optional[Any] = None,
-                out_type: Optional[type | Callable] = None) -> Optional[Any]:
+                default: Any | None = None,
+                out_type: type | Callable | None = None) -> Any | None:
     val = os.environ.get(key, default)
     if val is not None and out_type is not None:
         if out_type == bool:

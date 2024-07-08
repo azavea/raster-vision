@@ -1,4 +1,4 @@
-from typing import Optional, Self
+from typing import Self
 
 from rastervision.pipeline.config import (Field, register_config,
                                           model_validator)
@@ -21,7 +21,7 @@ class ObjectDetectionWindowSamplingConfig(WindowSamplingConfig):
         False,
         description='Clip bounding boxes to window limits when retrieving '
         'labels for a window.')
-    neg_ratio: Optional[float] = Field(
+    neg_ratio: float | None = Field(
         None,
         description='The ratio of negative chips (those containing no '
         'bounding boxes) to positive chips. This can be useful if the '
@@ -43,7 +43,7 @@ class ObjectDetectionChipOptions(ChipOptions):
 
 @register_config('object_detection_predict_options')
 class ObjectDetectionPredictOptions(PredictOptions):
-    stride: Optional[int] = Field(
+    stride: int | None = Field(
         None,
         description='Stride of the sliding window for generating chips. '
         'Defaults to half of ``chip_sz``.')
@@ -71,8 +71,8 @@ class ObjectDetectionPredictOptions(PredictOptions):
 class ObjectDetectionConfig(RVPipelineConfig):
     """Configure an :class:`.ObjectDetection` pipeline."""
 
-    chip_options: Optional[ObjectDetectionChipOptions] = None
-    predict_options: Optional[ObjectDetectionPredictOptions] = None
+    chip_options: ObjectDetectionChipOptions | None = None
+    predict_options: ObjectDetectionPredictOptions | None = None
 
     def build(self, tmp_dir):
         from rastervision.core.rv_pipeline.object_detection import ObjectDetection

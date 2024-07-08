@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional, Sequence
+from typing import TYPE_CHECKING, Self, Sequence
 
 import numpy as np
 
@@ -44,7 +44,7 @@ class StatsTransformer(RasterTransformer):
 
     def transform(self,
                   chip: np.ndarray,
-                  channel_order: Optional[Sequence[int]] = None) -> np.ndarray:
+                  channel_order: Sequence[int] | None = None) -> np.ndarray:
         """Transform a chip.
 
         Transforms non-uint8 to uint8 values using raster_stats.
@@ -95,19 +95,19 @@ class StatsTransformer(RasterTransformer):
 
     @classmethod
     def from_raster_sources(cls,
-                            raster_sources: List['RasterSource'],
-                            sample_prob: Optional[float] = 0.1,
+                            raster_sources: list['RasterSource'],
+                            sample_prob: float | None = 0.1,
                             max_stds: float = 3.,
-                            chip_sz: int = 300) -> 'StatsTransformer':
+                            chip_sz: int = 300) -> Self:
         """Build with stats from the given raster sources.
 
         Args:
-            raster_sources (List[RasterSource]): List of raster sources to
+            raster_sources (list[RasterSource]): List of raster sources to
                 compute stats from.
-            sample_prob (float, optional): Fraction of each raster to sample
+            sample_prob (float): Fraction of each raster to sample
                 for computing stats. For details see docs for
                 RasterStats.compute(). Defaults to 0.1.
-            max_stds (float, optional): Number of standard deviations to clip
+            max_stds (float): Number of standard deviations to clip
                 the distribution to on both sides. Defaults to 3.
 
         Returns:
@@ -123,7 +123,7 @@ class StatsTransformer(RasterTransformer):
         return stats_transformer
 
     @classmethod
-    def from_stats_json(cls, uri: str, **kwargs) -> 'StatsTransformer':
+    def from_stats_json(cls, uri: str, **kwargs) -> Self:
         """Build with stats from a JSON file.
 
         The file is expected to be in the same format as written by
@@ -141,8 +141,7 @@ class StatsTransformer(RasterTransformer):
         return stats_transformer
 
     @classmethod
-    def from_raster_stats(cls, stats: RasterStats,
-                          **kwargs) -> 'StatsTransformer':
+    def from_raster_stats(cls, stats: RasterStats, **kwargs) -> Self:
         """Build with stats from a :class:`.RasterStats` instance.
 
         The file is expected to be in the same format as written by

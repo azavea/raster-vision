@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING
 from pathlib import Path
 import logging
 
@@ -48,7 +48,7 @@ class SemanticSegmentationDataReader(Dataset):
                     f'Name mismatch between image file {img_path.stem} '
                     f'and label file {label_path.stem}.')
 
-    def __getitem__(self, ind: int) -> Tuple[np.ndarray, np.ndarray]:
+    def __getitem__(self, ind: int) -> tuple[np.ndarray, np.ndarray]:
         img_path = self.img_paths[ind]
         label_path = self.label_paths[ind]
 
@@ -85,54 +85,53 @@ class SemanticSegmentationImageDataset(ImageDataset):
             transform_type=TransformType.semantic_segmentation)
 
 
-def make_ss_geodataset(
-        cls,
-        image_uri: Union[str, List[str]],
-        label_raster_uri: Optional[Union[str, List[str]]] = None,
-        label_vector_uri: Optional[str] = None,
-        class_config: Optional['ClassConfig'] = None,
-        aoi_uri: Union[str, List[str]] = [],
-        label_vector_default_class_id: Optional[int] = None,
-        image_raster_source_kw: dict = {},
-        label_raster_source_kw: dict = {},
-        label_vector_source_kw: dict = {},
-        **kwargs):
+def make_ss_geodataset(cls,
+                       image_uri: str | list[str],
+                       label_raster_uri: str | list[str] | None = None,
+                       label_vector_uri: str | None = None,
+                       class_config: 'ClassConfig | None' = None,
+                       aoi_uri: str | list[str] = [],
+                       label_vector_default_class_id: int | None = None,
+                       image_raster_source_kw: dict = {},
+                       label_raster_source_kw: dict = {},
+                       label_vector_source_kw: dict = {},
+                       **kwargs):
     """Create an instance of this class from image and label URIs.
 
     This is a convenience method. For more fine-grained control, it is
     recommended to use the default constructor.
 
     Args:
-        image_uri (Union[str, List[str]]): URI or list of URIs of GeoTIFFs to
-            use as the source of image data.
-        label_raster_uri (Optional[Union[str, List[str]]], optional): URI or
-            list of URIs of GeoTIFFs to use as the source of segmentation label
-            data. If the labels are in the form of GeoJSONs, use
-            label_vector_uri instead. Defaults to None.
-        label_vector_uri (Optional[str], optional):  URI of GeoJSON file to use
-            as the source of segmentation label data. If the labels are in the
-            form of GeoTIFFs, use label_raster_uri instead. Defaults to None.
-        class_config (Optional['ClassConfig']): The ClassConfig. Can be None if
-            not using any labels.
-        aoi_uri (Union[str, List[str]], optional): URI or list of URIs of
-            GeoJSONs that specify the area-of-interest. If provided, the
-            dataset will only access data from this area. Defaults to [].
-        label_vector_default_class_id (Optional[int], optional): If using
-            label_vector_uri and all polygons in that file belong to the same
-            class and they do not contain a `class_id` property, then use this
-            argument to map all of the polygons to the appropriate class ID.
-            See docs for ClassInferenceTransformer for more details.
-            Defaults to None.
-        image_raster_source_kw (dict, optional): Additional arguments to pass
-            to the RasterioSource used for image data. See docs for
-            RasterioSource for more details. Defaults to {}.
-        label_raster_source_kw (dict, optional): Additional arguments to pass
-            to the RasterioSource used for label data, if label_raster_uri is
-            used. See docs for RasterioSource for more details. Defaults to {}.
-        label_vector_source_kw (dict, optional): Additional arguments to pass
-            to the GeoJSONVectorSource used for label data, if label_vector_uri
-            is used. See docs for GeoJSONVectorSource for more details.
-            Defaults to {}.
+        image_uri: URI or list of URIs of GeoTIFFs to use as the source of
+            image data.
+        label_raster_uri: URI or list of URIs of GeoTIFFs to use as the source
+            of segmentation label data. If the labels are in the form of
+            GeoJSONs, use ``label_vector_uri`` instead. Defaults to ``None``.
+        label_vector_uri:  URI of GeoJSON file to use as the source of
+            segmentation label data. If the labels are in the form of GeoTIFFs,
+            use ``label_raster_uri`` instead. Defaults to ``None``.
+        class_config: The ``ClassConfig``. Can be ``None`` if not using any
+            labels.
+        aoi_uri: URI or list of URIs of GeoJSONs that specify the
+            area-of-interest. If provided, the dataset will only access data
+            from this area. Defaults to ``[]``.
+        label_vector_default_class_id: If using ``label_vector_uri`` and all
+            polygons in that file belong to the same class and they do not
+            contain a ``class_id`` property, then use this argument to map all
+            of the polygons to the appropriate class ID. See docs for
+            :class:`.ClassInferenceTransformer` for more details.
+            Defaults to ``None``.
+        image_raster_source_kw: Additional arguments to pass to the
+            :class:`.RasterioSource` used for image data. See docs for
+            :class:`.RasterioSource` for more details. Defaults to ``{}``.
+        label_raster_source_kw: Additional arguments to pass
+            to the :class:`.RasterioSource` used for label data, if
+            ``label_raster_uri`` is used. See docs for :class:`.RasterioSource`
+            for more details. Defaults to ``{}``.
+        label_vector_source_kw: Additional arguments to pass to the
+            :class:`.GeoJSONVectorSource` used for label data, if
+            ``label_vector_uri`` is used. See docs for
+            :class:`.GeoJSONVectorSource` for more details. Defaults to ``{}``.
         **kwargs: All other keyword args are passed to the default constructor
             for this class.
 

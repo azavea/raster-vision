@@ -1,5 +1,5 @@
+from typing import TYPE_CHECKING
 import logging
-from typing import List, TYPE_CHECKING
 
 log = logging.getLogger(__name__)
 
@@ -25,9 +25,9 @@ class Pipeline():
         gpu_commands: names of commands that should be executed on GPUs if
             available
     """
-    commands: List[str] = ['test_cpu', 'test_gpu']
-    split_commands: List[str] = ['test_cpu']
-    gpu_commands: List[str] = ['test_gpu']
+    commands: list[str] = ['test_cpu', 'test_gpu']
+    split_commands: list[str] = ['test_cpu']
+    gpu_commands: list[str] = ['test_gpu']
 
     def __init__(self, config: 'PipelineConfig', tmp_dir: str):
         """Constructor

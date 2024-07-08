@@ -32,11 +32,11 @@ def get_config(runner,
         processed_uri (str): Directory for storing processed data.
                              E.g. crops for testing.
         root_uri (str): Directory where all the output will be written.
-        nochip (bool, optional): If True, read directly from the TIFF during
+        nochip (bool): If True, read directly from the TIFF during
             training instead of from pre-generated chips. The analyze and chip
             commands should not be run, if this is set to True. Defaults to
             False.
-        test (bool, optional): If True, does the following simplifications:
+        test (bool): If True, does the following simplifications:
             (1) Uses only the first 2 scenes.
             (2) Uses only a 2000x2000 crop of the scenes.
             (3) Trains for only 2 epochs.

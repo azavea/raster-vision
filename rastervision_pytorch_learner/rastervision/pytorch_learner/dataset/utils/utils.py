@@ -1,4 +1,4 @@
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Iterable
 from os import PathLike
 from os.path import join, splitext
 from pathlib import Path
@@ -25,7 +25,7 @@ class GeoDatasetError(DatasetError):
 
 
 def discover_images(dir: PathLike,
-                    extensions: Iterable[str] = IMG_EXTENSIONS) -> List[Path]:
+                    extensions: Iterable[str] = IMG_EXTENSIONS) -> list[Path]:
     """Find all images with the given ``extensions`` in ``dir``."""
     dir = Path(dir)
     img_paths = chain.from_iterable(
@@ -52,9 +52,8 @@ def load_image(path: PathLike) -> np.ndarray:
     return img
 
 
-def make_image_folder_dataset(data_dir: str,
-                              classes: Optional[Iterable[str]] = None
-                              ) -> DatasetFolder:
+def make_image_folder_dataset(
+        data_dir: str, classes: Iterable[str] | None = None) -> DatasetFolder:
     """Initializes and returns an ImageFolder.
 
     If classes is specified, ImageFolder's default class-to-index mapping
@@ -76,7 +75,7 @@ def make_image_folder_dataset(data_dir: str,
 
     class ImageFolder(DatasetFolder):
         def find_classes(self,
-                         directory: str) -> Tuple[List[str], Dict[str, int]]:
+                         directory: str) -> tuple[list[str], dict[str, int]]:
             """Override to force mapping from class name to class index."""
             return classes_present, class_to_id
 

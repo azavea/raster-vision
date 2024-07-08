@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 import os
 import csv
 from io import StringIO
@@ -23,13 +23,13 @@ def get_scene_info(csv_uri: str) -> list:  # pragma: no cover
 def save_image_crop(
         image_uri: str,
         image_crop_uri: str,
-        label_uri: Optional[str] = None,
-        label_crop_uri: Optional[str] = None,
+        label_uri: str | None = None,
+        label_crop_uri: str | None = None,
         size: int = 600,
         min_features: int = 10,
         vector_labels: bool = True,
         default_class_id: int = 0,
-        class_config: Optional['ClassConfig'] = None):  # pragma: no cover
+        class_config: 'ClassConfig | None' = None):  # pragma: no cover
     """Save a crop of an image to use for testing.
 
     If label_uri is set, the crop needs to cover >= min_features.

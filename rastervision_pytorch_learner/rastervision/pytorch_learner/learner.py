@@ -1,6 +1,6 @@
-from typing import (TYPE_CHECKING, Any, Callable, Dict, Iterator, List,
-                    Literal, Optional, Tuple, Union, Type)
+from typing import (TYPE_CHECKING, Any, Iterator, Literal, Self)
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from os.path import join, isfile, basename, isdir
 import warnings
 from time import perf_counter
@@ -40,7 +40,6 @@ from rastervision.pytorch_learner.utils import (
 from rastervision.pytorch_learner.dataset.visualizer import Visualizer
 
 if TYPE_CHECKING:
-    from typing import Self
     from torch.optim import Optimizer
     from torch.optim.lr_scheduler import _LRScheduler
     from torch.utils.data import Dataset, Sampler
@@ -56,7 +55,7 @@ BUNDLE_MODEL_ONNX_FILENAME = 'model.onnx'
 
 log = logging.getLogger(__name__)
 
-MetricDict = Dict[str, float]
+MetricDict = dict[str, float]
 
 
 class Learner(ABC):
@@ -90,65 +89,61 @@ class Learner(ABC):
 
     def __init__(self,
                  cfg: 'LearnerConfig',
-                 output_dir: Optional[str] = None,
-                 train_ds: Optional['Dataset'] = None,
-                 valid_ds: Optional['Dataset'] = None,
-                 test_ds: Optional['Dataset'] = None,
-                 model: Optional[nn.Module] = None,
-                 loss: Optional[Callable] = None,
-                 optimizer: Optional['Optimizer'] = None,
-                 epoch_scheduler: Optional['_LRScheduler'] = None,
-                 step_scheduler: Optional['_LRScheduler'] = None,
-                 tmp_dir: Optional[str] = None,
-                 model_weights_path: Optional[str] = None,
-                 model_def_path: Optional[str] = None,
-                 loss_def_path: Optional[str] = None,
+                 output_dir: str | None = None,
+                 train_ds: 'Dataset | None' = None,
+                 valid_ds: 'Dataset | None' = None,
+                 test_ds: 'Dataset | None' = None,
+                 model: nn.Module | None = None,
+                 loss: Callable[..., Tensor] | None = None,
+                 optimizer: 'Optimizer | None' = None,
+                 epoch_scheduler: '_LRScheduler | None' = None,
+                 step_scheduler: '_LRScheduler | None' = None,
+                 tmp_dir: str | None = None,
+                 model_weights_path: str | None = None,
+                 model_def_path: str | None = None,
+                 loss_def_path: str | None = None,
                  training: bool = True):
         """Constructor.
 
         Args:
-            cfg (LearnerConfig): LearnerConfig.
-            train_ds (Optional[Dataset], optional): The dataset to use for
-                training. If None, will be generated from cfg.data.
-                Defaults to None.
-            valid_ds (Optional[Dataset], optional): The dataset to use for
-                validation. If None, will be generated from cfg.data.
-                Defaults to None.
-            test_ds (Optional[Dataset], optional): The dataset to use for
-                testing. If None, will be generated from cfg.data.
-                Defaults to None.
-            model (Optional[nn.Module], optional): The model. If None,
-                will be generated from cfg.model. Defaults to None.
-            loss (Optional[Callable], optional): The loss function.
-                If None, will be generated from cfg.solver.
-                Defaults to None.
-            optimizer (Optional[Optimizer], optional): The optimizer.
-                If None, will be generated from cfg.solver.
-                Defaults to None.
-            epoch_scheduler (Optional[_LRScheduler], optional): The scheduler
-                that updates after each epoch. If None, will be generated from
-                cfg.solver. Defaults to None.
-            step_scheduler (Optional[_LRScheduler], optional): The scheduler
-                that updates after each optimizer-step. If None, will be
-                generated from cfg.solver. Defaults to None.
-            tmp_dir (Optional[str], optional): A temporary directory to use for
-                downloads etc. If None, will be auto-generated.
-                Defaults to None.
-            model_weights_path (Optional[str], optional): URI of model weights
-                to initialize the model with. Defaults to None.
-            model_def_path (Optional[str], optional): A local path to a
-                directory with a hubconf.py. If provided, the model definition
-                is imported from here. This is used when loading an external
-                model from a model-bundle. Defaults to None.
-            loss_def_path (Optional[str], optional): A local path to a
-                directory with a hubconf.py. If provided, the loss function
-                definition is imported from here. This is used when loading an
-                external loss function from a model-bundle. Defaults to None.
-            training (bool, optional): If False, the training apparatus (loss,
+            cfg: LearnerConfig.
+            train_ds: The dataset to use for training. If ``None``, will be
+                generated from ``cfg.data``. Defaults to ``None``.
+            valid_ds: The dataset to use for
+                validation. If ``None``, will be generated from ``cfg.data``.
+                Defaults to ``None``.
+            test_ds: The dataset to use for
+                testing. If ``None``, will be generated from ``cfg.data``.
+                Defaults to ``None``.
+            model: The model. If ``None``,
+                will be generated from cfg.model. Defaults to ``None``.
+            loss: The loss function. If ``None``, will be generated from
+                ``cfg.solver``. Defaults to ``None``.
+            optimizer: The optimizer. If ``None``, will be generated from
+                ``cfg.solver``. Defaults to ``None``.
+            epoch_scheduler: The scheduler that updates after each epoch.
+                If ``None``, will be generated from ``cfg.solver``.
+                Defaults to ``None``.
+            step_scheduler: The scheduler that updates after each
+                optimizer-step. If ``None``, will be generated from
+                ``cfg.solver``. Defaults to ``None``.
+            tmp_dir: A temporary directory to use for downloads etc. If
+                ``None``, will be auto-generated. Defaults to ``None``.
+            model_weights_path: URI of model weights to initialize the model
+                with. Defaults to ``None``.
+            model_def_path: A local path to a directory with a ``hubconf.py``
+                file. If provided, the model definition is imported from here.
+                This is used when loading an external model from a
+                model-bundle. Defaults to ``None``.
+            loss_def_path: A local path to a directory with a ``hubconf.py``
+                file. If provided, the loss function definition is imported
+                from here. This is used when loading an external loss function
+                from a model-bundle. Defaults to ``None``.
+            training: If ``False``, the training apparatus (loss,
                 optimizer, scheduler, logging, etc.) will not be set up and the
-                model will be put into eval mode. If True, the training
+                model will be put into eval mode. If ``True``, the training
                 apparatus will be set up and the model will be put into
-                training mode. Defaults to True.
+                training mode. Defaults to ``True``.
         """
         self.cfg = cfg
         self.training = training
@@ -264,13 +259,13 @@ class Learner(ABC):
             cfg.data.plot_options.channel_display_groups)
 
     @classmethod
-    def from_model_bundle(cls: Type,
+    def from_model_bundle(cls: type,
                           model_bundle_uri: str,
-                          tmp_dir: Optional[str] = None,
-                          cfg: Optional['LearnerConfig'] = None,
+                          tmp_dir: str | None = None,
+                          cfg: 'LearnerConfig | None' = None,
                           training: bool = False,
-                          use_onnx_model: Optional[bool] = None,
-                          **kwargs) -> 'Self':
+                          use_onnx_model: bool | None = None,
+                          **kwargs) -> Self:
         """Create a Learner from a model bundle.
 
         .. note::
@@ -279,19 +274,19 @@ class Learner(ABC):
             ``bundle/model-bundle.zip``.
 
         Args:
-            model_bundle_uri (str): URI of the model bundle.
-            tmp_dir (Optional[str], optional): Optional temporary directory.
+            model_bundle_uri: URI of the model bundle.
+            tmp_dir: Optional temporary directory.
                 Will be used for unzipping bundle and also passed to the
                 default constructor. If None, will be auto-generated.
                 Defaults to None.
-            cfg (Optional[LearnerConfig], optional): If None, will be read from
+            cfg: If None, will be read from
                 the bundle. Defaults to None.
-            training (bool, optional): If False, the training apparatus (loss,
+            training: If False, the training apparatus (loss,
                 optimizer, scheduler, logging, etc.) will not be set up and the
                 model will be put into eval mode. If True, the training
                 apparatus will be set up and the model will be put into
                 training mode. Defaults to True.
-            use_onnx_model (Optional[bool]): If True and training=False and a
+            use_onnx_model: If True and training=False and a
                 model.onnx file is available in the bundle, use that for
                 inference rather than the PyTorch weights. Defaults to the
                 boolean environment variable RASTERVISION_USE_ONNX if set,
@@ -426,7 +421,7 @@ class Learner(ABC):
     ###########################
     # Training and validation
     ###########################
-    def train(self, epochs: Optional[int] = None):
+    def train(self, epochs: int | None = None):
         """Run training loop, resuming training if appropriate"""
         start_epoch, end_epoch = self.get_start_and_end_epochs(epochs)
 
@@ -513,8 +508,8 @@ class Learner(ABC):
     def train_epoch(
             self,
             optimizer: 'Optimizer',
-            dataloader: Optional[DataLoader] = None,
-            step_scheduler: Optional['_LRScheduler'] = None) -> MetricDict:
+            dataloader: DataLoader | None = None,
+            step_scheduler: '_LRScheduler | None' = None) -> MetricDict:
         """Train for a single epoch."""
         self.model.train()
         if dataloader is None:
@@ -565,8 +560,8 @@ class Learner(ABC):
         self.log_data_stats()
         self.plot_dataloaders(self.cfg.data.preview_batch_limit)
 
-    def train_end(self, outputs: List[Dict[str, Union[float, Tensor]]]
-                  ) -> MetricDict:
+    def train_end(self,
+                  outputs: list[dict[str, float | Tensor]]) -> MetricDict:
         """Aggregate the output of train_step at the end of the epoch.
 
         Args:
@@ -661,8 +656,8 @@ class Learner(ABC):
             dict with metric names mapped to metric values
         """
 
-    def validate_end(self, outputs: List[Dict[str, Union[float, Tensor]]]
-                     ) -> MetricDict:
+    def validate_end(self,
+                     outputs: list[dict[str, float | Tensor]]) -> MetricDict:
         """Aggregate the output of validate_step at the end of the epoch.
 
         Args:
@@ -736,27 +731,27 @@ class Learner(ABC):
                         dataloader_kw: dict = {},
                         progress_bar: bool = True,
                         progress_bar_kw: dict = {}
-                        ) -> Union[Iterator[Any], Iterator[Tuple[Any, ...]]]:
+                        ) -> Iterator[Any] | Iterator[tuple[Any, ...]]:
         """Returns an iterator over predictions on the given dataset.
 
         Args:
             dataset (Dataset): The dataset to make predictions on.
-            return_format (Literal['xyz', 'yz', 'z'], optional): Format of the
+            return_format (Literal['xyz', 'yz', 'z']): Format of the
                 return elements of the returned iterator. Must be one of:
                 'xyz', 'yz', and 'z'. If 'xyz', elements are 3-tuples of x, y,
                 and z. If 'yz', elements are 2-tuples of y and z. If 'z',
                 elements are (non-tuple) values of z. Where x = input image,
                 y = ground truth, and z = prediction. Defaults to 'z'.
-            raw_out (bool, optional): If true, return raw predicted scores.
+            raw_out (bool): If true, return raw predicted scores.
                 Defaults to True.
-            numpy_out (bool, optional): If True, convert predictions to numpy
+            numpy_out (bool): If True, convert predictions to numpy
                 arrays before returning. Defaults to False.
             predict_kw (dict): Dict with keywords passed to Learner.predict().
                 Useful if a Learner subclass implements a custom predict()
                 method.
             dataloader_kw (dict): Dict with keywords passed to the DataLoader
                 constructor.
-            progress_bar (bool, optional): If True, display a progress bar.
+            progress_bar (bool): If True, display a progress bar.
                 Since this function returns an iterator, the progress bar won't
                 be visible until the iterator is consumed. Defaults to True.
             progress_bar_kw (dict): Dict with keywords passed to tqdm.
@@ -810,28 +805,27 @@ class Learner(ABC):
 
         return preds
 
-    def predict_dataloader(
-            self,
-            dl: DataLoader,
-            batched_output: bool = True,
-            return_format: Literal['xyz', 'yz', 'z'] = 'z',
-            raw_out: bool = True,
-            predict_kw: dict = {}
-    ) -> Union[Iterator[Any], Iterator[Tuple[Any, ...]]]:
+    def predict_dataloader(self,
+                           dl: DataLoader,
+                           batched_output: bool = True,
+                           return_format: Literal['xyz', 'yz', 'z'] = 'z',
+                           raw_out: bool = True,
+                           predict_kw: dict = {}
+                           ) -> Iterator[Any] | Iterator[tuple[Any, ...]]:
         """Returns an iterator over predictions on the given dataloader.
 
         Args:
             dl (DataLoader): The dataloader to make predictions on.
-            batched_output (bool, optional): If True, return batches of
+            batched_output (bool): If True, return batches of
                 x, y, z as defined by the dataloader. If False, unroll the
                 batches into individual items. Defaults to True.
-            return_format (Literal['xyz', 'yz', 'z'], optional): Format of the
+            return_format (Literal['xyz', 'yz', 'z']): Format of the
                 return elements of the returned iterator. Must be one of:
                 'xyz', 'yz', and 'z'. If 'xyz', elements are 3-tuples of x, y,
                 and z. If 'yz', elements are 2-tuples of y and z. If 'z',
                 elements are (non-tuple) values of z. Where x = input image,
                 y = ground truth, and z = prediction. Defaults to 'z'.
-            raw_out (bool, optional): If true, return raw predicted scores.
+            raw_out (bool): If true, return raw predicted scores.
                 Defaults to True.
             predict_kw (dict): Dict with keywords passed to Learner.predict().
                 Useful if a Learner subclass implements a custom predict()
@@ -841,10 +835,9 @@ class Learner(ABC):
             ValueError: If return_format is not one of the allowed values.
 
         Returns:
-            Union[Iterator[Any], Iterator[Tuple[Any, ...]]]: If return_format
-                is 'z', the returned value is an iterator of whatever type the
-                predictions are. Otherwise, the returned value is an iterator
-                of tuples.
+            If ``return_format`` is ``'z'``, the returned value is an iterator
+            of whatever type the predictions are. Otherwise, the returned value
+            is an iterator of tuples.
         """
 
         if return_format not in {'xyz', 'yz', 'z'}:
@@ -868,15 +861,15 @@ class Learner(ABC):
             dl: DataLoader,
             raw_out: bool = True,
             batched_output: bool = True,
-            predict_kw: dict = {}) -> Iterator[Tuple[Tensor, Any, Any]]:
+            predict_kw: dict = {}) -> Iterator[tuple[Tensor, Any, Any]]:
         """Returns an iterator over predictions on the given dataloader.
 
         Args:
             dl (DataLoader): The dataloader to make predictions on.
-            batched_output (bool, optional): If True, return batches of
+            batched_output (bool): If True, return batches of
                 x, y, z as defined by the dataloader. If False, unroll the
                 batches into individual items. Defaults to True.
-            raw_out (bool, optional): If true, return raw predicted scores.
+            raw_out (bool): If true, return raw predicted scores.
                 Defaults to True.
             predict_kw (dict): Dict with keywords passed to Learner.predict().
                 Useful if a Learner subclass implements a custom predict()
@@ -886,7 +879,7 @@ class Learner(ABC):
             ValueError: If return_format is not one of the allowed values.
 
         Yields:
-            Iterator[Tuple[Tensor, Any, Any]]: 3-tuples of x, y, and z, which
+            Iterator[tuple[Tensor, Any, Any]]: 3-tuples of x, y, and z, which
                 might or might not be batched depending on the batched_output
                 argument.
         """
@@ -1013,7 +1006,7 @@ class Learner(ABC):
             log.info(f'DDP rank: {self.ddp_rank}')
             log.info(f'DDP local rank: {self.ddp_local_rank}')
 
-    def setup_training(self, loss_def_path: Optional[str] = None) -> None:
+    def setup_training(self, loss_def_path: str | None = None) -> None:
         """Set up model, data, loss, optimizers and various paths.
 
         The exact behavior differs based on whether this method is called in
@@ -1073,8 +1066,8 @@ class Learner(ABC):
             if self.ddp_start_method == 'fork':
                 self.setup_data()
 
-    def get_start_and_end_epochs(
-            self, epochs: Optional[int] = None) -> Tuple[int, int]:
+    def get_start_and_end_epochs(self,
+                                 epochs: int | None = None) -> tuple[int, int]:
         """Get start and end epochs given epochs."""
         start_epoch = self.get_start_epoch()
         if epochs is None:
@@ -1101,15 +1094,15 @@ class Learner(ABC):
         return start_epoch
 
     def setup_model(self,
-                    model_weights_path: Optional[str] = None,
-                    model_def_path: Optional[str] = None) -> None:
+                    model_weights_path: str | None = None,
+                    model_def_path: str | None = None) -> None:
         """Setup self.model.
 
         Args:
-            model_weights_path (Optional[str], optional): Path to model
+            model_weights_path (str | None): Path to model
                 weights. Will be available when loading from a bundle.
                 Defaults to None.
-            model_def_path (Optional[str], optional): Path to model definition.
+            model_def_path (str | None): Path to model definition.
                 Will be available when loading from a bundle. Defaults to None.
         """
         if self.onnx_mode:
@@ -1124,7 +1117,7 @@ class Learner(ABC):
             self.model = DDP(self.model, device_ids=[self.ddp_local_rank])
         self.load_init_weights(model_weights_path=model_weights_path)
 
-    def build_model(self, model_def_path: Optional[str] = None) -> nn.Module:
+    def build_model(self, model_def_path: str | None = None) -> nn.Module:
         """Build a PyTorch model."""
         cfg = self.cfg
 
@@ -1141,7 +1134,7 @@ class Learner(ABC):
             ddp_rank=self.ddp_local_rank)
         return model
 
-    def setup_data(self, distributed: Optional[bool] = None):
+    def setup_data(self, distributed: bool | None = None):
         """Set datasets and dataLoaders for train, validation, and test sets.
         """
         if distributed is None:
@@ -1175,7 +1168,7 @@ class Learner(ABC):
         self.train_dl, self.valid_dl, self.test_dl = self.build_dataloaders(
             distributed=distributed)
 
-    def build_datasets(self) -> Tuple['Dataset', 'Dataset', 'Dataset']:
+    def build_datasets(self) -> tuple['Dataset', 'Dataset', 'Dataset']:
         """Build Datasets for train, validation, and test splits."""
         log.info(f'Building datasets ...')
         train_ds, val_ds, test_ds = self.cfg.data.build(tmp_dir=self.tmp_dir)
@@ -1188,8 +1181,8 @@ class Learner(ABC):
         ds = self.cfg.data.build_dataset(split=split, tmp_dir=self.tmp_dir)
         return ds
 
-    def build_dataloaders(self, distributed: Optional[bool] = None
-                          ) -> Tuple[DataLoader, DataLoader, DataLoader]:
+    def build_dataloaders(self, distributed: bool | None = None
+                          ) -> tuple[DataLoader, DataLoader, DataLoader]:
         """Build DataLoaders for train, validation, and test splits."""
         if distributed is None:
             distributed = self.distributed
@@ -1205,7 +1198,7 @@ class Learner(ABC):
 
     def build_dataloader(self,
                          split: Literal['train', 'valid', 'test'],
-                         distributed: Optional[bool] = None,
+                         distributed: bool | None = None,
                          **kwargs) -> DataLoader:
         """Build DataLoader for split."""
         if distributed is None:
@@ -1253,7 +1246,7 @@ class Learner(ABC):
         dl = DataLoader(ds, **args)
         return dl
 
-    def get_collate_fn(self) -> Optional[callable]:
+    def get_collate_fn(self) -> Callable | None:
         """Returns a custom collate_fn to use in DataLoader.
 
         None is returned if default collate_fn should be used.
@@ -1265,7 +1258,7 @@ class Learner(ABC):
     def build_sampler(self,
                       ds: 'Dataset',
                       split: Literal['train', 'valid', 'test'],
-                      distributed: bool = False) -> Optional['Sampler']:
+                      distributed: bool = False) -> 'Sampler | None':
         """Build an optional sampler for the split's dataloader."""
         split = split.lower()
         sampler = None
@@ -1285,11 +1278,11 @@ class Learner(ABC):
                     rank=self.ddp_rank)
         return sampler
 
-    def setup_loss(self, loss_def_path: Optional[str] = None) -> None:
+    def setup_loss(self, loss_def_path: str | None = None) -> None:
         """Setup self.loss.
 
         Args:
-            loss_def_path (str, optional): Loss definition path. Will be
+            loss_def_path (str): Loss definition path. Will be
             available when loading from a bundle. Defaults to None.
         """
         if self.loss is None:
@@ -1298,7 +1291,8 @@ class Learner(ABC):
         if self.loss is not None and isinstance(self.loss, nn.Module):
             self.loss.to(self.device)
 
-    def build_loss(self, loss_def_path: Optional[str] = None) -> Callable:
+    def build_loss(self,
+                   loss_def_path: str | None = None) -> Callable[..., Tensor]:
         """Build a loss Callable."""
         cfg = self.cfg
         loss = cfg.solver.build_loss(
@@ -1327,12 +1321,12 @@ class Learner(ABC):
     # Visualization
     ################
     @abstractmethod
-    def get_visualizer_class(self) -> Type[Visualizer]:
+    def get_visualizer_class(self) -> type[Visualizer]:
         """Returns a Visualizer class object for plotting data samples."""
 
     def plot_predictions(self,
                          split: Literal['train', 'valid', 'test'],
-                         batch_limit: Optional[int] = None,
+                         batch_limit: int | None = None,
                          show: bool = False):
         """Plot predictions for a split.
 
@@ -1356,7 +1350,7 @@ class Learner(ABC):
     def plot_dataloader(self,
                         dl: DataLoader,
                         output_path: str,
-                        batch_limit: Optional[int] = None,
+                        batch_limit: int | None = None,
                         show: bool = False):
         """Plot images and ground truth labels for a DataLoader."""
         x, y = next(iter(dl))
@@ -1364,7 +1358,7 @@ class Learner(ABC):
             x, y, output_path, batch_limit=batch_limit, show=show)
 
     def plot_dataloaders(self,
-                         batch_limit: Optional[int] = None,
+                         batch_limit: int | None = None,
                          show: bool = False):
         """Plot images and ground truth labels for all DataLoaders."""
         if self.train_dl:
@@ -1448,28 +1442,28 @@ class Learner(ABC):
 
     def export_to_onnx(self,
                        path: str,
-                       model: Optional['nn.Module'] = None,
-                       sample_input: Optional[Tensor] = None,
+                       model: nn.Module | None = None,
+                       sample_input: Tensor | None = None,
                        validate_export: bool = True,
                        **kwargs) -> None:
         """Export model to ONNX format via :func:`torch.onnx.export`.
 
         Args:
-            path (str): File path to save to.
-            model (Optional[nn.Module]): The model to export. If None,
-                self.model will be used. Defaults to None.
-            sample_input (Optional[Tensor]): Sample input to the model. If
-                None, a single batch from any available DataLoader in this
-                Learner will be used. Defaults to None.
-            validate_export (bool): If True, use
-                :func:`onnx.checker.check_model` to validate exported model.
-                An exception is raised if the check fails. Defaults to True.
-            **kwargs (dict): Keyword args to pass to :func:`torch.onnx.export`.
+            path: File path to save to.
+            model: The model to export. If ``None``,
+                ``self.model`` will be used. Defaults to ``None``.
+            sample_input: Sample input to the model. If ``None``, a single
+                batch from any available ``DataLoader`` in this ``Learner``
+                will be used. Defaults to ``None``.
+            validate_export: If ``True``, use :func:`onnx.checker.check_model`
+                to validate exported model. An exception is raised if the check
+                fails. Defaults to ``True``.
+            **kwargs: Keyword args to pass to :func:`torch.onnx.export`.
                 These override the default values used in the function
                 definition.
 
         Raises:
-            ValueError: If sample_input is None and the Learner has no valid
+            ValueError: If sample_input is ``None`` and the Learner has no valid
                 DataLoaders.
         """
         if model is None:
@@ -1557,7 +1551,7 @@ class Learner(ABC):
     #########
     # Misc.
     #########
-    def ddp(self, rank: Optional[int] = None, world_size: Optional[int] = None
+    def ddp(self, rank: int | None = None, world_size: int | None = None
             ) -> DDPContextManager:  # pragma: no cover
         """Return a :class:`DDPContextManager`.
 
@@ -1611,7 +1605,7 @@ class Learner(ABC):
             x = x[None, ...]
         return x
 
-    def to_device(self, x: Any, device: Union[str, torch.device]) -> Any:
+    def to_device(self, x: Any, device: str | torch.device) -> Any:
         """Load Tensors onto a device.
 
         Args:
@@ -1627,7 +1621,7 @@ class Learner(ABC):
             return x.to(device)
 
     def get_dataset(self, split: Literal['train', 'valid', 'test']
-                    ) -> Optional[DataLoader]:
+                    ) -> DataLoader | None:
         """Get the Dataset for a split.
 
         Args:
@@ -1673,8 +1667,7 @@ class Learner(ABC):
             x = x.astype(float) / max_val
         return x
 
-    def load_init_weights(self,
-                          model_weights_path: Optional[str] = None) -> None:
+    def load_init_weights(self, model_weights_path: str | None = None) -> None:
         """Load the weights to initialize model."""
         cfg = self.cfg
         uri = None

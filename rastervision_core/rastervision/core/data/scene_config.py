@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING
 
 from rastervision.pipeline.config import (Config, ConfigError, register_config,
                                           Field)
@@ -35,9 +35,9 @@ class SceneConfig(Config):
 
     id: str
     raster_source: RasterSourceConfig
-    label_source: Optional[LabelSourceConfig] = None
-    label_store: Optional[LabelStoreConfig] = None
-    aoi_uris: Optional[List[str]] = Field(
+    label_source: LabelSourceConfig | None = None
+    label_store: LabelStoreConfig | None = None
+    aoi_uris: list[str] | None = Field(
         None,
         description='List of URIs of GeoJSON files that define the AOIs for '
         'the scene. Each polygon defines an AOI which is a piece of the scene '
@@ -46,7 +46,7 @@ class SceneConfig(Config):
 
     def build(self,
               class_config: 'ClassConfig',
-              tmp_dir: Optional[str] = None,
+              tmp_dir: str | None = None,
               use_transformers: bool = True) -> Scene:
         raster_source = self.raster_source.build(
             tmp_dir, use_transformers=use_transformers)
@@ -80,7 +80,7 @@ class SceneConfig(Config):
             label_store=label_store,
             aoi_polygons=aoi_polygons)
 
-    def update(self, pipeline: Optional['RVPipelineConfig'] = None) -> None:
+    def update(self, pipeline: 'RVPipelineConfig | None' = None) -> None:
         super().update()
 
         self.raster_source.update(pipeline=pipeline, scene=self)

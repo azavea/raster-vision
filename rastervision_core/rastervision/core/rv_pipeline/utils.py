@@ -10,7 +10,7 @@ def nodata_below_threshold(chip: np.ndarray,
         chip (np.ndarray): Raster as (..., H, W[, C]) numpy array.
         threshold (float): Threshold to check the fraction of NODATA pixels
             against.
-        nodata_val (int, optional): Value that represents NODATA pixels.
+        nodata_val (int): Value that represents NODATA pixels.
             Defaults to 0.
 
     Returns:

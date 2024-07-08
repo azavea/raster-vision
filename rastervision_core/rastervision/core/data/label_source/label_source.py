@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 from abc import ABC, abstractmethod
 
 from rastervision.core.box import Box
@@ -18,7 +18,7 @@ class LabelSource(ABC):
     """
 
     @abstractmethod
-    def get_labels(self, window: Optional['Box'] = None) -> 'Labels':
+    def get_labels(self, window: 'Box | None' = None) -> 'Labels':
         """Return labels overlapping with window.
 
         Args:

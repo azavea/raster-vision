@@ -1,4 +1,3 @@
-from typing import List, Optional
 from os.path import join
 
 from rastervision.pipeline.pipeline import Pipeline
@@ -14,8 +13,8 @@ from rastervision.pipeline.utils import split_into_groups
 class SamplePipelineConfig(PipelineConfig):
     # Config classes are configuration schemas. Each field is an attributes
     # with a type and optional default value.
-    names: List[str] = ['alice', 'bob']
-    message_uris: Optional[List[str]] = None
+    names: list[str] = ['alice', 'bob']
+    message_uris: list[str] | None = None
 
     def build(self, tmp_dir):
         # The build method is used to instantiate the corresponding object
@@ -34,7 +33,7 @@ class SamplePipelineConfig(PipelineConfig):
 
 class SamplePipeline(Pipeline):
     # The order in which commands run. Each command correspond to a method.
-    commands: List[str] = ['save_messages', 'print_messages']
+    commands: list[str] = ['save_messages', 'print_messages']
 
     # Split commands can be split up and run in parallel.
     split_commands = ['save_messages']

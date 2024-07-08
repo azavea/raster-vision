@@ -1,4 +1,4 @@
-from typing import (TYPE_CHECKING, Any, Iterable, List, Optional, Sequence)
+from typing import (TYPE_CHECKING, Any, Iterable, Self, Sequence)
 from abc import abstractmethod
 
 import numpy as np
@@ -32,8 +32,7 @@ class SemanticSegmentationLabels(Labels):
         self.dtype = dtype
 
     @abstractmethod
-    def __add__(self, other: 'SemanticSegmentationLabels'
-                ) -> 'SemanticSegmentationLabels':
+    def __add__(self, other: Self) -> Self:
         """Merge self with other labels."""
 
     def __setitem__(self, window: Box, values: np.ndarray) -> None:
@@ -49,7 +48,7 @@ class SemanticSegmentationLabels(Labels):
         """Get labels for the given window."""
 
     @abstractmethod
-    def add_window(self, window: Box, values: np.ndarray) -> List[Box]:
+    def add_window(self, window: Box, values: np.ndarray) -> list[Box]:
         """Set labels for the given window."""
 
     @abstractmethod
@@ -69,7 +68,7 @@ class SemanticSegmentationLabels(Labels):
     def get_class_mask(self,
                        window: Box,
                        class_id: int,
-                       threshold: Optional[float] = None) -> np.ndarray:
+                       threshold: float | None = None) -> np.ndarray:
         """Get a binary mask representing all pixels of a class."""
         scores = self.get_score_arr(window)
         if threshold is None:
@@ -77,7 +76,7 @@ class SemanticSegmentationLabels(Labels):
         mask = scores[class_id] >= threshold
         return mask
 
-    def get_windows(self, **kwargs) -> List[Box]:
+    def get_windows(self, **kwargs) -> list[Box]:
         """Generate sliding windows over the local extent.
 
         The keyword args are passed to :meth:`.Box.get_windows` and can
@@ -89,19 +88,19 @@ class SemanticSegmentationLabels(Labels):
         Args:
             **kwargs: Extra args for :meth:`.Box.get_windows`.
         """
-        size: Optional[int] = kwargs.pop('size', None)
+        size: int | None = kwargs.pop('size', None)
         if size is None:
             return [self.extent]
         return self.extent.get_windows(size, size, **kwargs)
 
-    def filter_by_aoi(self, aoi_polygons: List['Polygon'], null_class_id: int,
-                      **kwargs) -> 'SemanticSegmentationLabels':
+    def filter_by_aoi(self, aoi_polygons: list['Polygon'], null_class_id: int,
+                      **kwargs) -> Self:
         """Keep only the values that lie inside the AOI.
 
         This is an inplace operation.
 
         Args:
-            aoi_polygons (List[Polygon]): AOI polygons to filter by, in pixel
+            aoi_polygons (list[Polygon]): AOI polygons to filter by, in pixel
                 coordinates.
             null_class_id (int): Class ID to assign to pixels falling outside
                 the AOI polygons.
@@ -121,7 +120,7 @@ class SemanticSegmentationLabels(Labels):
         for which the mask is ON to the fill_value.
         """
 
-    def _filter_window_by_aoi(self, window: Box, aoi_polygons: List['Polygon'],
+    def _filter_window_by_aoi(self, window: Box, aoi_polygons: list['Polygon'],
                               null_class_id: int) -> None:
         window_geom = window.to_shapely()
         label_arr = self[window]
@@ -156,14 +155,14 @@ class SemanticSegmentationLabels(Labels):
 
     @classmethod
     def make_empty(cls, extent: Box, num_classes: int,
-                   smooth: bool = False) -> 'SemanticSegmentationLabels':
+                   smooth: bool = False) -> Self:
         """Instantiate an empty instance.
 
         Args:
             extent (Box): The extent of the region to which the labels belong,
                 in global coordinates.
             num_classes (int): Number of classes.
-            smooth (bool, optional): If True, creates a
+            smooth (bool): If True, creates a
                 SemanticSegmentationSmoothLabels object. If False, creates a
                 SemanticSegmentationDiscreteLabels object. Defaults to False.
 
@@ -183,28 +182,27 @@ class SemanticSegmentationLabels(Labels):
                 extent=extent, num_classes=num_classes)
 
     @classmethod
-    def from_predictions(
-            cls,
-            windows: Iterable['Box'],
-            predictions: Iterable[Any],
-            extent: Box,
-            num_classes: int,
-            smooth: bool = False,
-            crop_sz: Optional[int] = None) -> 'SemanticSegmentationLabels':
+    def from_predictions(cls,
+                         windows: Iterable['Box'],
+                         predictions: Iterable[Any],
+                         extent: Box,
+                         num_classes: int,
+                         smooth: bool = False,
+                         crop_sz: int | None = None) -> Self:
         """Instantiate from windows and their corresponding predictions.
 
         Args:
-            windows (Iterable[Box]): Boxes in pixel coords, specifying chips
-                in the raster.
-            predictions (Iterable[Any]): The model predictions for each chip
-                specified by the windows.
-            extent (Box): The extent of the region to which the labels belong,
-                in global coordinates.
-            num_classes (int): Number of classes.
-            smooth (bool, optional): If True, creates a
-                SemanticSegmentationSmoothLabels object. If False, creates a
-                SemanticSegmentationDiscreteLabels object. Defaults to False.
-            crop_sz (Optional[int]): Number of rows/columns of pixels from the
+            windows: Boxes in pixel coords, specifying chips in the raster.
+            predictions: The model predictions for each chip specified by the
+                windows.
+            extent: The extent of the region to which the labels belong, in
+                global coordinates.
+            num_classes: Number of classes.
+            smooth: If ``True``, creates a ``SemanticSegmentationSmoothLabels``
+                object. If ``False``, creates a
+                ``SemanticSegmentationDiscreteLabels`` object.
+                Defaults to ``False``.
+            crop_sz: Number of rows/columns of pixels from the
                 edge of prediction windows to discard. This is useful because
                 predictions near edges tend to be lower quality and can result
                 in very visible artifacts near the edges of chips. This should
@@ -223,15 +221,14 @@ class SemanticSegmentationLabels(Labels):
     def add_predictions(self,
                         windows: Iterable['Box'],
                         predictions: Iterable[Any],
-                        crop_sz: Optional[int] = None) -> None:
+                        crop_sz: int | None = None) -> None:
         """Populate predictions.
 
         Args:
-            windows (Iterable[Box]): Boxes in pixel coords, specifying chips
-                in the raster.
-            predictions (Iterable[Any]): The model predictions for each chip
-                specified by the windows.
-            crop_sz (Optional[int]): Number of rows/columns of pixels from the
+            windows: Boxes in pixel coords, specifying chips in the raster.
+            predictions: The model predictions for each chip specified by the
+                windows.
+            crop_sz: Number of rows/columns of pixels from the
                 edge of prediction windows to discard. This is useful because
                 predictions near edges tend to be lower quality and can result
                 in very visible artifacts near the edges of chips. This should
@@ -261,10 +258,10 @@ class SemanticSegmentationDiscreteLabels(SemanticSegmentationLabels):
         """Constructor.
 
         Args:
-            extent (Box): The extent of the region to which
-                the labels belong, in global coordinates.
-            num_classes (int): Number of classes.
-            dtype (Any): dtype of the counts array. Defaults to np.uint8.
+            extent: The extent of the region to which the labels belong, in
+                global coordinates.
+            num_classes: Number of classes.
+            dtype: dtype of the counts array. Defaults to np.uint8.
         """
         super().__init__(extent, num_classes, dtype)
 
@@ -273,8 +270,7 @@ class SemanticSegmentationDiscreteLabels(SemanticSegmentationLabels):
         # track which pixels have been hit at all
         self.hit_mask = np.zeros((self.height, self.width), dtype=bool)
 
-    def __add__(self, other: 'SemanticSegmentationDiscreteLabels'
-                ) -> 'SemanticSegmentationDiscreteLabels':
+    def __add__(self, other: Self) -> Self:
         """Merge self with other labels by adding the pixel counts."""
         if self.extent != other.extent:
             raise ValueError('Cannot add labels with unqeual extents.')
@@ -282,7 +278,7 @@ class SemanticSegmentationDiscreteLabels(SemanticSegmentationLabels):
         self.pixel_counts += other.pixel_counts
         return self
 
-    def __eq__(self, other: 'SemanticSegmentationDiscreteLabels') -> bool:
+    def __eq__(self, other: Self) -> bool:
         if not isinstance(other, SemanticSegmentationDiscreteLabels):
             return False
         if self.extent != other.extent:
@@ -351,8 +347,7 @@ class SemanticSegmentationDiscreteLabels(SemanticSegmentationLabels):
         self.pixel_counts[class_id, y0:y1, x0:x1][mask] = 1
 
     @classmethod
-    def make_empty(cls, extent: Box,
-                   num_classes: int) -> 'SemanticSegmentationDiscreteLabels':
+    def make_empty(cls, extent: Box, num_classes: int) -> Self:
         """Instantiate an empty instance."""
         return cls(extent=extent, num_classes=num_classes)
 
@@ -362,8 +357,7 @@ class SemanticSegmentationDiscreteLabels(SemanticSegmentationLabels):
                          predictions: Iterable[Any],
                          extent: Box,
                          num_classes: int,
-                         crop_sz: Optional[int] = None
-                         ) -> 'SemanticSegmentationDiscreteLabels':
+                         crop_sz: int | None = None) -> Self:
         labels = cls.make_empty(extent, num_classes)
         labels.add_predictions(windows, predictions, crop_sz=crop_sz)
         return labels
@@ -372,42 +366,41 @@ class SemanticSegmentationDiscreteLabels(SemanticSegmentationLabels):
              uri: str,
              crs_transformer: 'CRSTransformer',
              class_config: 'ClassConfig',
-             bbox: Optional[Box] = None,
-             tmp_dir: Optional[str] = None,
+             bbox: Box | None = None,
+             tmp_dir: str | None = None,
              save_as_rgb: bool = False,
              raster_output: bool = True,
              rasterio_block_size: int = 512,
-             vector_outputs: Optional[Sequence['VectorOutputConfig']] = None,
-             profile_overrides: Optional[dict] = None) -> None:
+             vector_outputs: 'Sequence[VectorOutputConfig] | None' = None,
+             profile_overrides: dict | None = None) -> None:
         """Save labels as a raster and/or vectors.
 
         If URI is remote, all files will be first written locally and then
         uploaded to the URI.
 
         Args:
-            uri (str): URI of directory in which to save all output files.
-            crs_transformer (CRSTransformer): CRSTransformer to configure CRS
-                and affine transform of the output GeoTiff.
-            class_config (ClassConfig): The ClassConfig.
-            bbox (Optional[Box]): User-specified crop of the extent. Must be
-                provided if the corresponding RasterSource has bbox != extent.
-            tmp_dir (Optional[str], optional): Temporary directory to use. If
-                None, will be auto-generated. Defaults to None.
-            save_as_rgb (bool, optional): If True, Saves labels as an RGB
-                image, using the class-color mapping in the class_config.
-                Defaults to False.
-            raster_output (bool, optional): If True, saves labels as a raster
-                of class IDs (one band). Defaults to True.
-            rasterio_block_size (int, optional): Value to set blockxsize and
-                blockysize to. Defaults to 512.
-            vector_outputs (Optional[Sequence[VectorOutputConfig]], optional):
-                List of VectorOutputConfig's containing vectorization
-                configuration information. Only classes for which a
-                VectorOutputConfig is specified will be saved as vectors.
-                If None, no vector outputs will be produced. Defaults to None.
-            profile_overrides (Optional[dict], optional): This can be used to
-                arbitrarily override properties in the profile used to create
-                the output GeoTiff. Defaults to None.
+            uri: URI of directory in which to save all output files.
+            crs_transformer: CRSTransformer to configure CRS and affine
+                transform of the output GeoTiff.
+            class_config: The ClassConfig.
+            bbox: User-specified crop of the extent. Must be provided if the
+                corresponding RasterSource has ``bbox != extent``.
+            tmp_dir: Temporary directory to use. If None, will be
+                auto-generated. Defaults to ``None``.
+            save_as_rgb: If ``True``, Saves labels as an RGB image, using the
+                class-color mapping in the class_config. Defaults to ``False``.
+            raster_output: If ``True``, saves labels as a raster of class IDs
+                (one band). Defaults to ``True``.
+            rasterio_block_size: Value to set `blockxsize` and ``blockysize``
+                to. Defaults to ``512``.
+            vector_outputs: List of VectorOutputConfig's containing
+                vectorization configuration information. Only classes for which
+                a ``VectorOutputConfig`` is specified will be saved as vectors.
+                If ``None``, no vector outputs will be produced.
+                Defaults to ``None``.
+            profile_overrides: This can be used to arbitrarily override
+                properties in the profile used to create the output GeoTiff.
+                Defaults to ``None``.
         """
         from rastervision.core.data import SemanticSegmentationLabelStore
 
@@ -442,11 +435,11 @@ class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
         """Constructor.
 
         Args:
-            extent (Box): The extent of the region to which
-                the labels belong, in global coordinates.
-            num_classes (int): Number of classes.
-            dtype (Any): dtype of the scores array. Defaults to np.float16.
-            dtype_hits (Any): dtype of the hits array. Defaults to np.uint8.
+            extent: The extent of the region to which the labels belong,
+                in global coordinates.
+            num_classes: Number of classes.
+            dtype: ``dtype`` of the scores array. Defaults to ``np.float16``.
+            dtype_hits: ``dtype`` of the hits array. Defaults to ``np.uint8``.
         """
         super().__init__(extent, num_classes, dtype)
 
@@ -454,8 +447,7 @@ class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
             (self.num_classes, self.height, self.width), dtype=self.dtype)
         self.pixel_hits = np.zeros((self.height, self.width), dtype=dtype_hits)
 
-    def __add__(self, other: 'SemanticSegmentationSmoothLabels'
-                ) -> 'SemanticSegmentationSmoothLabels':
+    def __add__(self, other: Self) -> Self:
         """Merge self with other by adding pixel scores and hits."""
         if self.extent != other.extent:
             raise ValueError('Cannot add labels with unqeual extents.')
@@ -464,7 +456,7 @@ class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
         self.pixel_hits += other.pixel_hits
         return self
 
-    def __eq__(self, other: 'SemanticSegmentationSmoothLabels') -> bool:
+    def __eq__(self, other: Self) -> bool:
         if not isinstance(other, SemanticSegmentationSmoothLabels):
             return False
         if self.extent != other.extent:
@@ -531,8 +523,7 @@ class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
         self.pixel_hits[y0:y1, x0:x1][mask] = 1
 
     @classmethod
-    def make_empty(cls, extent: Box,
-                   num_classes: int) -> 'SemanticSegmentationSmoothLabels':
+    def make_empty(cls, extent: Box, num_classes: int) -> Self:
         """Instantiate an empty instance."""
         return cls(extent=extent, num_classes=num_classes)
 
@@ -542,8 +533,7 @@ class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
                          predictions: Iterable[Any],
                          extent: Box,
                          num_classes: int,
-                         crop_sz: Optional[int] = None
-                         ) -> 'SemanticSegmentationSmoothLabels':
+                         crop_sz: int | None = None) -> Self:
         labels = cls.make_empty(extent, num_classes)
         labels.add_predictions(windows, predictions, crop_sz=crop_sz)
         return labels
@@ -552,50 +542,50 @@ class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
              uri: str,
              crs_transformer: 'CRSTransformer',
              class_config: 'ClassConfig',
-             bbox: Optional[Box] = None,
-             tmp_dir: Optional[str] = None,
+             bbox: Box | None = None,
+             tmp_dir: str | None = None,
              save_as_rgb: bool = False,
              discrete_output: bool = True,
              smooth_output: bool = True,
              smooth_as_uint8: bool = False,
              rasterio_block_size: int = 512,
-             vector_outputs: Optional[Sequence['VectorOutputConfig']] = None,
-             profile_overrides: Optional[dict] = None) -> None:
+             vector_outputs: 'Sequence[VectorOutputConfig] | None' = None,
+             profile_overrides: dict | None = None) -> None:
         """Save labels as rasters and/or vectors.
 
         If URI is remote, all files will be first written locally and then
         uploaded to the URI.
 
         Args:
-            uri (str): URI of directory in which to save all output files.
-            crs_transformer (CRSTransformer): CRSTransformer to configure CRS
-                and affine transform of the output GeoTiff(s).
-            class_config (ClassConfig): The ClassConfig.
-            bbox (Optional[Box]): User-specified crop of the extent. Must be
-                provided if the corresponding RasterSource has bbox != extent.
-            tmp_dir (Optional[str], optional): Temporary directory to use. If
-                None, will be auto-generated. Defaults to None.
-            save_as_rgb (bool, optional): If True, saves labels as an RGB
-                image, using the class-color mapping in the class_config.
-                Defaults to False.
-            discrete_output (bool, optional): If True, saves labels as a raster
-                of class IDs (one band). Defaults to True.
-            smooth_output (bool, optional): If True, saves labels as a raster
-                of class scores (one band for each class). Defaults to True.
-            smooth_as_uint8 (bool, optional): If True, stores smooth class
-                scores as np.uint8 (0-255) values rather than as np.float32
+            uri: URI of directory in which to save all output files.
+            crs_transformer: CRSTransformer to configure CRS and affine
+                transform of the output GeoTiff(s).
+            class_config: The ClassConfig.
+            bbox: User-specified crop of the extent. Must be provided if the
+                corresponding RasterSource has bbox != extent.
+            tmp_dir: Temporary directory to use. If ``None``, will be
+                auto-generated. Defaults to ``None``.
+            save_as_rgb: If True, saves labels as an RGB image, using the
+                class-color mapping in the ``class_config``.
+                Defaults to ``False``.
+            discrete_output: If ``True``, saves labels as a raster of class IDs
+                (one band). Defaults to ``True``.
+            smooth_output: If ``True``, saves labels as a raster of class
+                scores (one band for each class). Defaults to ``True``.
+            smooth_as_uint8: If ``True``, stores smooth class scores as
+                ``np.uint8`` (0-255) values rather than as ``np.float32``
                 discrete labels, to help save memory/disk space.
-                Defaults to False.
-            rasterio_block_size (int, optional): Value to set blockxsize and
-                blockysize to. Defaults to 512.
-            vector_outputs (Optional[Sequence[VectorOutputConfig]], optional):
-                List of VectorOutputConfig's containing vectorization
-                configuration information. Only classes for which a
-                VectorOutputConfig is specified will be saved as vectors.
-                If None, no vector outputs will be produced. Defaults to None.
-            profile_overrides (Optional[dict], optional): This can be used to
-                arbitrarily override properties in the profile used to create
-                the output GeoTiff(s). Defaults to None.
+                Defaults to ``False``.
+            rasterio_block_size: Value to set ``blockxsize`` and ``blockysize``
+                to. Defaults to ``512``.
+            vector_outputs: List of VectorOutputConfig's containing
+                vectorization configuration information. Only classes for which
+                a ``VectorOutputConfig`` is specified will be saved as vectors.
+                If ``None``, no vector outputs will be produced.
+                Defaults to ``None``.
+            profile_overrides: This can be used to arbitrarily override
+                properties in the profile used to create the output GeoTiff(s).
+                Defaults to ``None``.
         """
         from rastervision.core.data import SemanticSegmentationLabelStore
 

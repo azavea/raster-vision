@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING
 from os.path import join, basename
 import logging
 from pprint import pprint
@@ -67,9 +67,9 @@ class AWSSageMakerRunner(Runner):
     def run(self,
             cfg_json_uri: str,
             pipeline: 'Pipeline',
-            commands: List[str],
+            commands: list[str],
             num_splits: int = 1,
-            cmd_prefix: List[str] = [
+            cmd_prefix: list[str] = [
                 'python', '-m', 'rastervision.pipeline.cli'
             ],
             pipeline_run_name: str = 'rv'):
@@ -95,9 +95,9 @@ class AWSSageMakerRunner(Runner):
     def build_pipeline(self,
                        cfg_json_uri: str,
                        pipeline: 'Pipeline',
-                       commands: List[str],
+                       commands: list[str],
                        num_splits: int = 1,
-                       cmd_prefix: List[str] = [
+                       cmd_prefix: list[str] = [
                            'python', '-m', 'rastervision.pipeline.cli'
                        ],
                        pipeline_run_name: str = 'rv') -> 'SageMakerPipeline':
@@ -213,7 +213,7 @@ class AWSSageMakerRunner(Runner):
                    pipeline: 'RVPipeline',
                    step_name: str,
                    job_name: str,
-                   cmd: List[str],
+                   cmd: list[str],
                    role: str,
                    image_uri: str,
                    instance_type: str,
@@ -222,7 +222,7 @@ class AWSSageMakerRunner(Runner):
                    instance_count: int = 1,
                    max_wait: int = DEFAULT_MAX_RUN_TIME,
                    max_run: int = DEFAULT_MAX_RUN_TIME,
-                   **kwargs) -> Union['TrainingStep', 'ProcessingStep']:
+                   **kwargs) -> 'TrainingStep | ProcessingStep':
         """Build appropriate SageMaker pipeline step.
 
         If ``step_name=='train'``, builds a :class:`.TrainingStep`. Otherwise,
@@ -247,8 +247,7 @@ class AWSSageMakerRunner(Runner):
                 max_run=max_run,
                 **kwargs,
             )
-            step_args: Optional['_JobStepArguments'] = estimator.fit(
-                wait=False)
+            step_args: '_JobStepArguments | None' = estimator.fit(wait=False)
             step = TrainingStep(job_name, step_args=step_args)
         else:
             from sagemaker.processing import Processor
@@ -263,38 +262,38 @@ class AWSSageMakerRunner(Runner):
                 entrypoint=cmd,
                 **kwargs,
             )
-            step_args: Optional['_JobStepArguments'] = step_processor.run(
+            step_args: '_JobStepArguments | None' = step_processor.run(
                 wait=False)
             step = ProcessingStep(job_name, step_args=step_args)
 
         return step
 
     def run_command(self,
-                    cmd: List[str],
+                    cmd: list[str],
                     use_gpu: bool = False,
-                    image_uri: Optional[str] = None,
-                    instance_type: Optional[str] = None,
-                    role: Optional[str] = None,
-                    job_name: Optional[str] = None,
-                    sagemaker_session: Optional['Session'] = None) -> None:
+                    image_uri: str | None = None,
+                    instance_type: str | None = None,
+                    role: str | None = None,
+                    job_name: str | None = None,
+                    sagemaker_session: 'Session | None' = None) -> None:
         """Run a single command as a SageMaker processing job.
 
         Args:
-            cmd (List[str]): The command to run.
+            cmd (list[str]): The command to run.
             use_gpu (bool): Use the GPU instance type and image from the
                 Everett config. This is ignored if image_uri and instance_type
                 are provided. Defaults to False.
-            image_uri (Optional[str]): URI of docker image to use. If not
+            image_uri (str | None): URI of docker image to use. If not
                 provided, will be picked up from Everett config.
                 Defaults to None.
-            instance_type (Optional[str]): AWS instance type to use. If not
+            instance_type (str | None): AWS instance type to use. If not
                 provided, will be picked up from Everett config.
                 Defaults to None.
-            role (Optional[str]): AWS IAM role with SageMaker permissions. If
+            role (str | None): AWS IAM role with SageMaker permissions. If
                 not provided, will be picked up from Everett config.
                 Defaults to None.
-            job_name (Optional[str]): Optional job name. Defaults to None.
-            sagemaker_session (Optional[Session]): SageMaker session.
+            job_name (str | None): Optional job name. Defaults to None.
+            sagemaker_session (Session | None): SageMaker session.
                 Defaults to None.
         """
         from sagemaker.processing import Processor
@@ -331,8 +330,8 @@ class AWSSageMakerRunner(Runner):
                                  sagemaker_session: 'PipelineSession',
                                  use_spot_instances: bool = False,
                                  instance_count: int = 1,
-                                 distribution: Optional[dict] = None,
-                                 job_name: Optional[str] = None,
+                                 distribution: dict | None = None,
+                                 job_name: str | None = None,
                                  **kwargs):
         from sagemaker.pytorch import PyTorch
         from rastervision.aws_s3.s3_file_system import S3FileSystem

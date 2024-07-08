@@ -1,5 +1,5 @@
-from typing import (TYPE_CHECKING, Callable, Dict, List, Literal, Optional,
-                    Sequence, Tuple, Union)
+from typing import (TYPE_CHECKING, Literal, Self)
+from collections.abc import Callable
 from pydantic import NonNegativeInt as NonNegInt, PositiveInt as PosInt
 import math
 import random
@@ -15,21 +15,23 @@ from rastervision.core.utils.misc import (calculate_required_padding,
 
 if TYPE_CHECKING:
     from shapely.geometry import MultiPolygon
+    from shapely.geometry.base import BaseGeometry
 
 
 class BoxSizeError(ValueError):
     pass
 
 
-class Box():
+class Box:
     """A multi-purpose box (ie. rectangle) representation."""
 
-    def __init__(self, ymin, xmin, ymax, xmax):
-        """Construct a bounding box.
+    def __init__(self, ymin: int, xmin: int, ymax: int, xmax: int):
+        """Constructor.
 
-        Unless otherwise stated, the convention is that these coordinates are
-        in pixel coordinates and represent boxes that lie within a
-        RasterSource.
+        Although primarily intended for representing integer pixel coordinates
+        in a scene, this class can also be used to represent floating point
+        map coordinates though not all methods might be compatible with that
+        interpretation.
 
         Args:
             ymin: minimum y value (y is row)
@@ -42,31 +44,32 @@ class Box():
         self.ymax = ymax
         self.xmax = xmax
 
-    def __eq__(self, other: 'Box') -> bool:
+    def __eq__(self, other: Self) -> bool:
         """Return true if other has same coordinates."""
         return self.tuple_format() == other.tuple_format()
 
-    def __ne__(self, other: 'Box'):
+    def __ne__(self, other: Self):
         """Return true if other has different coordinates."""
         return self.tuple_format() != other.tuple_format()
 
     @property
     def height(self) -> int:
-        """Return height of Box."""
+        """Height of the Box."""
         return self.ymax - self.ymin
 
     @property
     def width(self) -> int:
-        """Return width of Box."""
+        """Width of the Box."""
         return self.xmax - self.xmin
 
     @property
-    def extent(self) -> 'Box':
-        """Return a (0, 0, h, w) Box representing the size of this Box."""
+    def extent(self) -> Self:
+        """Return a Box(0, 0, h, w) representing the size of this Box."""
         return Box(0, 0, self.height, self.width)
 
     @property
-    def size(self) -> Tuple[int, int]:
+    def size(self) -> tuple[int, int]:
+        """(height, width) tuple."""
         return self.height, self.width
 
     @property
@@ -74,37 +77,40 @@ class Box():
         """Return area of Box."""
         return self.height * self.width
 
-    def normalize(self) -> 'Box':
+    def normalize(self) -> Self:
         """Ensure ymin <= ymax and xmin <= xmax."""
         ymin, ymax = sorted((self.ymin, self.ymax))
         xmin, xmax = sorted((self.xmin, self.xmax))
         return Box(ymin, xmin, ymax, xmax)
 
-    def rasterio_format(self) -> Tuple[Tuple[int, int], Tuple[int, int]]:
+    def rasterio_format(self) -> tuple[tuple[int, int], tuple[int, int]]:
         """Return Box in Rasterio format: ((ymin, ymax), (xmin, xmax))."""
         return ((self.ymin, self.ymax), (self.xmin, self.xmax))
 
-    def tuple_format(self) -> Tuple[int, int, int, int]:
+    def tuple_format(self) -> tuple[int, int, int, int]:
+        """Return a (ymin, xmin, ymax, xmax) tuple."""
         return (self.ymin, self.xmin, self.ymax, self.xmax)
 
-    def shapely_format(self) -> Tuple[int, int, int, int]:
+    def shapely_format(self) -> tuple[int, int, int, int]:
         return self.to_xyxy()
 
     def to_int(self):
-        return Box(
-            int(self.ymin), int(self.xmin), int(self.ymax), int(self.xmax))
+        """Return a new Box with all coordinates cast to ints."""
+        ymin, xmin, ymax, xmax = self
+        ymin, xmin, ymax, xmax = int(ymin), int(xmin), int(ymax), int(xmax)
+        out = Box(ymin, xmin, ymax, xmax)
+        return out
 
-    def npbox_format(self):
+    def npbox_format(self) -> np.ndarray:
         """Return Box in npbox format used by TF Object Detection API.
 
         Returns:
             Numpy array of form [ymin, xmin, ymax, xmax] with float type
         """
-        return np.array(
-            [self.ymin, self.xmin, self.ymax, self.xmax], dtype=float)
+        return np.array(self.tuple_format(), dtype=float)
 
     @staticmethod
-    def to_npboxes(boxes):
+    def to_npboxes(boxes: list[Self]) -> np.ndarray:
         """Return nx4 numpy array from list of Box."""
         nb_boxes = len(boxes)
         npboxes = np.empty((nb_boxes, 4))
@@ -115,7 +121,7 @@ class Box():
     def __iter__(self):
         return iter(self.tuple_format())
 
-    def __getitem__(self, i):
+    def __getitem__(self, i: NonNegInt):
         return self.tuple_format()[i]
 
     def __repr__(self) -> str:
@@ -124,7 +130,7 @@ class Box():
     def __hash__(self) -> int:
         return hash(self.tuple_format())
 
-    def geojson_coordinates(self) -> List[Tuple[int, int]]:
+    def geojson_coordinates(self) -> list[tuple[int, int]]:
         """Return Box as GeoJSON coordinates."""
         # Compass directions:
         nw = [self.xmin, self.ymin]
@@ -133,7 +139,7 @@ class Box():
         sw = [self.xmax, self.ymin]
         return [nw, ne, se, sw, nw]
 
-    def make_random_square_container(self, size: int) -> 'Box':
+    def make_random_square_container(self, size: int) -> Self:
         """Return a new square Box that contains this Box.
 
         Args:
@@ -141,7 +147,7 @@ class Box():
         """
         return self.make_random_box_container(size, size)
 
-    def make_random_box_container(self, out_h: int, out_w: int) -> 'Box':
+    def make_random_box_container(self, out_h: int, out_w: int) -> Self:
         """Return a new rectangular Box that contains this Box.
 
         Args:
@@ -167,7 +173,7 @@ class Box():
 
         return Box(out_ymin, out_xmin, out_ymin + out_h, out_xmin + out_w)
 
-    def make_random_square(self, size: int) -> 'Box':
+    def make_random_square(self, size: int) -> Self:
         """Return new randomly positioned square Box that lies inside this Box.
 
         Args:
@@ -191,7 +197,7 @@ class Box():
 
         return Box.make_square(rand_y, rand_x, size)
 
-    def intersection(self, other: 'Box') -> 'Box':
+    def intersection(self, other: Self) -> Self:
         """Return the intersection of this Box and the other.
 
         Args:
@@ -212,7 +218,7 @@ class Box():
         ymax = min(box1.ymax, box2.ymax)
         return Box(xmin=xmin, ymin=ymin, xmax=xmax, ymax=ymax)
 
-    def intersects(self, other: 'Box') -> bool:
+    def intersects(self, other: Self) -> bool:
         box1 = self.normalize()
         box2 = other.normalize()
         if box1.ymax <= box2.ymin or box1.ymin >= box2.ymax:
@@ -221,8 +227,8 @@ class Box():
             return False
         return True
 
-    @staticmethod
-    def from_npbox(npbox):
+    @classmethod
+    def from_npbox(cls, npbox: np.ndarray) -> Self:
         """Return new Box based on npbox format.
 
         Args:
@@ -230,23 +236,23 @@ class Box():
         """
         return Box(*npbox)
 
-    @staticmethod
-    def from_shapely(shape):
+    @classmethod
+    def from_shapely(cls, shape: 'BaseGeometry') -> Self:
         """Instantiate from the bounds of a shapely geometry."""
         xmin, ymin, xmax, ymax = shape.bounds
         return Box(ymin, xmin, ymax, xmax)
 
     @classmethod
-    def from_rasterio(self, rio_window: RioWindow) -> 'Box':
+    def from_rasterio(cls, rio_window: RioWindow) -> Self:
         """Instantiate from a rasterio window."""
         yslice, xslice = rio_window.toslices()
         return Box(yslice.start, xslice.start, yslice.stop, xslice.stop)
 
-    def to_xywh(self) -> Tuple[int, int, int, int]:
+    def to_xywh(self) -> tuple[int, int, int, int]:
         """Convert to (xmin, ymin, width, height) tuple"""
         return (self.xmin, self.ymin, self.width, self.height)
 
-    def to_xyxy(self) -> Tuple[int, int, int, int]:
+    def to_xyxy(self) -> tuple[int, int, int, int]:
         """Convert to (xmin, ymin, xmax, ymax) tuple"""
         return (self.xmin, self.ymin, self.xmax, self.ymax)
 
@@ -262,19 +268,18 @@ class Box():
         """Convert to a Rasterio Window."""
         return RioWindow.from_slices(*self.normalize().to_slices())
 
-    def to_slices(self,
-                  h_step: Optional[int] = None,
-                  w_step: Optional[int] = None) -> Tuple[slice, slice]:
+    def to_slices(self, h_step: int | None = None,
+                  w_step: int | None = None) -> tuple[slice, slice]:
         """Convert to slices: ymin:ymax[:h_step], xmin:xmax[:w_step]"""
         return slice(self.ymin, self.ymax, h_step), slice(
             self.xmin, self.xmax, w_step)
 
-    def translate(self, dy: int, dx: int) -> 'Box':
+    def translate(self, dy: int, dx: int) -> Self:
         """Translate window along y and x axes by the given distances."""
         ymin, xmin, ymax, xmax = self
         return Box(ymin + dy, xmin + dx, ymax + dy, xmax + dx)
 
-    def to_global_coords(self, bbox: 'Box') -> 'Box':
+    def to_global_coords(self, bbox: Self) -> Self:
         """Go from bbox coords to global coords.
 
         E.g., Given a box Box(20, 20, 40, 40) and bbox Box(20, 20, 100, 100),
@@ -284,7 +289,7 @@ class Box():
         """
         return self.translate(dy=bbox.ymin, dx=bbox.xmin)
 
-    def to_local_coords(self, bbox: 'Box') -> 'Box':
+    def to_local_coords(self, bbox: Self) -> Self:
         """Go from to global coords bbox coords.
 
         E.g., Given a box Box(40, 40, 60, 60) and bbox Box(20, 20, 100, 100),
@@ -294,7 +299,7 @@ class Box():
         """
         return self.translate(dy=-bbox.ymin, dx=-bbox.xmin)
 
-    def reproject(self, transform_fn: Callable) -> 'Box':
+    def reproject(self, transform_fn: Callable[[tuple], tuple]) -> Self:
         """Reprojects this box based on a transform function.
 
         Args:
@@ -308,11 +313,11 @@ class Box():
         return Box(ymin, xmin, ymax, xmax)
 
     @staticmethod
-    def make_square(ymin, xmin, size) -> 'Box':
+    def make_square(ymin, xmin, size) -> Self:
         """Return new square Box."""
         return Box(ymin, xmin, ymin + size, xmin + size)
 
-    def center_crop(self, edge_offset_y: int, edge_offset_x: int) -> 'Box':
+    def center_crop(self, edge_offset_y: int, edge_offset_x: int) -> Self:
         """Return Box whose sides are eroded by the given offsets.
 
         Box(0, 0, 10, 10).center_crop(2, 4) ==  Box(2, 4, 8, 6)
@@ -320,11 +325,11 @@ class Box():
         return Box(self.ymin + edge_offset_y, self.xmin + edge_offset_x,
                    self.ymax - edge_offset_y, self.xmax - edge_offset_x)
 
-    def erode(self, erosion_sz) -> 'Box':
+    def erode(self, erosion_sz) -> Self:
         """Return new Box whose sides are eroded by erosion_sz."""
         return self.center_crop(erosion_sz, erosion_sz)
 
-    def buffer(self, buffer_sz: float, max_extent: 'Box') -> 'Box':
+    def buffer(self, buffer_sz: float, max_extent: Self) -> Self:
         """Return new Box whose sides are buffered by buffer_sz.
 
         The resulting box is clipped so that the values of the corners are
@@ -346,7 +351,7 @@ class Box():
             min(max_extent.width,
                 int(self.xmax) + delta_width))
 
-    def pad(self, ymin: int, xmin: int, ymax: int, xmax: int) -> 'Box':
+    def pad(self, ymin: int, xmin: int, ymax: int, xmax: int) -> Self:
         """Pad sides by the given amount."""
         return Box(
             ymin=self.ymin - ymin,
@@ -354,7 +359,7 @@ class Box():
             ymax=self.ymax + ymax,
             xmax=self.xmax + xmax)
 
-    def copy(self) -> 'Box':
+    def copy(self) -> Self:
         return Box(*self)
 
     def get_windows(
@@ -363,7 +368,7 @@ class Box():
             stride: PosInt | tuple[PosInt, PosInt],
             padding: NonNegInt | tuple[NonNegInt, NonNegInt] | None = None,
             pad_direction: Literal['both', 'start', 'end'] = 'end'
-    ) -> list['Box']:
+    ) -> list[Self]:
         """Return sliding windows for given size, stride, and padding.
 
         Each of size, stride, and padding can be either a positive int or
@@ -387,7 +392,7 @@ class Box():
                 no effect if padding is zero. Defaults to ``'end'``.
 
         Returns:
-            List of Box objects.
+            List of windows.
         """
         size: tuple[PosInt, PosInt] = ensure_tuple(size)
         stride: tuple[PosInt, PosInt] = ensure_tuple(stride)
@@ -437,7 +442,7 @@ class Box():
                 windows.append(Box(ymin, xmin, ymin + h, xmin + w))
         return windows
 
-    def to_dict(self) -> Dict[str, int]:
+    def to_dict(self) -> dict[str, int]:
         """Convert to a dict with keys: ymin, xmin, ymax, xmax."""
         return {
             'ymin': self.ymin,
@@ -447,13 +452,13 @@ class Box():
         }
 
     @classmethod
-    def from_dict(cls, d: dict) -> 'Box':
+    def from_dict(cls, d: dict) -> Self:
         return cls(d['ymin'], d['xmin'], d['ymax'], d['xmax'])
 
     @staticmethod
-    def filter_by_aoi(windows: List['Box'],
-                      aoi_polygons: List[Polygon],
-                      within: bool = True) -> List['Box']:
+    def filter_by_aoi(windows: list[Self],
+                      aoi_polygons: list[Polygon],
+                      within: bool = True) -> list[Self]:
         """Filters windows by a list of AOI polygons
 
         Args:
@@ -473,8 +478,8 @@ class Box():
         return out
 
     @staticmethod
-    def within_aoi(window: 'Box',
-                   aoi_polygons: Polygon | List[Polygon]) -> bool:
+    def within_aoi(window: Self,
+                   aoi_polygons: Polygon | list[Polygon]) -> bool:
         """Check if window is within the union of given AOI polygons."""
         aoi_polygons: Polygon | MultiPolygon = unary_union(aoi_polygons)
         w = window.to_shapely()
@@ -482,15 +487,15 @@ class Box():
         return out
 
     @staticmethod
-    def intersects_aoi(window: 'Box',
-                       aoi_polygons: Polygon | List[Polygon]) -> bool:
+    def intersects_aoi(window: Self,
+                       aoi_polygons: Polygon | list[Polygon]) -> bool:
         """Check if window intersects with the union of given AOI polygons."""
         aoi_polygons: Polygon | MultiPolygon = unary_union(aoi_polygons)
         w = window.to_shapely()
         out = aoi_polygons.intersects(w)
         return out
 
-    def __contains__(self, query: Union['Box', Sequence]) -> bool:
+    def __contains__(self, query: Self | tuple[int, int]) -> bool:
         """Check if box or point is contained within this box.
 
         Args:

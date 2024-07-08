@@ -1,4 +1,3 @@
-from typing import Optional, List
 import logging
 
 from rastervision.pipeline.config import (register_config, Field)
@@ -44,7 +43,7 @@ class PyTorchLearnerBackendConfig(BackendConfig):
     def get_bundle_filenames(self):
         return ['model-bundle.zip']
 
-    def update(self, pipeline: Optional[RVPipelineConfig] = None):
+    def update(self, pipeline: RVPipelineConfig | None = None):
         super().update(pipeline=pipeline)
 
         if isinstance(self.data, ImageDataConfig):
@@ -57,13 +56,13 @@ class PyTorchLearnerBackendConfig(BackendConfig):
         if not self.data.img_channels:
             self.data.img_channels = self.get_img_channels(pipeline)
 
-    def get_learner_config(self, pipeline: Optional[RVPipelineConfig]):
+    def get_learner_config(self, pipeline: RVPipelineConfig | None):
         raise NotImplementedError()
 
-    def build(self, pipeline: Optional[RVPipelineConfig], tmp_dir: str):
+    def build(self, pipeline: RVPipelineConfig | None, tmp_dir: str):
         raise NotImplementedError()
 
-    def filter_commands(self, commands: List[str]) -> List[str]:
+    def filter_commands(self, commands: list[str]) -> list[str]:
         nochip = isinstance(self.data, GeoDataConfig)
         if nochip and 'chip' in commands:
             commands = [c for c in commands if c != 'chip']

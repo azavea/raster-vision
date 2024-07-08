@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Iterable, Optional, Tuple
+from typing import TYPE_CHECKING, Iterable
 
 from rastervision.pipeline.config import register_config
 from rastervision.core.evaluation.classification_evaluator_config import (
@@ -25,7 +25,7 @@ class SemanticSegmentationEvaluatorConfig(ClassificationEvaluatorConfig):
 
     def build(self,
               class_config: 'ClassConfig',
-              scene_group: Optional[Tuple[str, Iterable[str]]] = None
+              scene_group: tuple[str, Iterable[str]] | None = None
               ) -> SemanticSegmentationEvaluator:
         if scene_group is None:
             output_uri = self.get_output_uri()

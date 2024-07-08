@@ -1,4 +1,3 @@
-from typing import List
 from rastervision.pipeline.cli import _run_command
 from rastervision.pipeline.runner.runner import Runner
 
@@ -25,6 +24,6 @@ class InProcessRunner(Runner):
             else:
                 _run_command(cfg_json_uri, command, 0, 1)
 
-    def run_command(self, cmd: List[str]):
+    def run_command(self, cmd: list[str]):
         raise NotImplementedError(
             'Use LocalRunner.run_command to run a command locally.')
