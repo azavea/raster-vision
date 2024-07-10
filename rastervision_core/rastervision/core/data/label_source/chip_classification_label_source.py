@@ -173,25 +173,45 @@ class ChipClassificationLabelSource(LabelSource):
                     ) -> ChipClassificationLabels:
         """Infer labels for a list of cells.
 
+        Cells are assumed to be in ``bbox`` coords as opposed to global coords
+        and are converted to global coords before inference. The returned
+        labels are in global coords. Only cells whose
+        labels are not already known are inferred.
+
+        Args:
+            cells: Cells (in ``bbox`` coords) whose labels are to be inferred.
+                If ``None``, cells are assumed to be sliding windows of size
+                and stride ``cell_sz`` (specified in
+                :class:`.ChipClassificationLabelSourceConfig`).
+                Defaults to ``None``.
+
+        Returns:
+            Labels (in global coords).
+        """
+        if cells is None:
+            cell_sz = self.cfg.cell_sz
+            if cell_sz is None:
+                raise ValueError('cell_sz is not set.')
+            cells = self.extent.get_windows(cell_sz, cell_sz)
+        cells = [cell.to_global_coords(self.bbox) for cell in cells]
+        labels = self._infer_cells(cells)
+        return labels
+
+    def _infer_cells(self, cells: Iterable[Box]) -> ChipClassificationLabels:
+        """Infer labels for a list of cells.
+
+        Cells are assumed to be in global coords as opposed to ``bbox`` coords.
         Only cells whose labels are not already known are inferred.
 
         Args:
-            cells: Cells whose labels are to be inferred. Defaults to ``None``.
+            cells: Cells (in global coords) whose labels are to be inferred.
 
         Returns:
-            ChipClassificationLabels: labels
+            Labels (in global coords).
         """
         cfg = self.cfg
-        if cells is None:
-            if cfg.cell_sz is None:
-                raise ValueError('cell_sz is not set.')
-            cells = self.extent.get_windows(cfg.cell_sz, cfg.cell_sz)
-        else:
-            cells = [cell.to_global_coords(self.bbox) for cell in cells]
-
         known_cells = [c for c in cells if c in self.labels]
         unknown_cells = [c for c in cells if c not in self.labels]
-
         labels = infer_cells(
             cells=unknown_cells,
             labels_df=self.labels_df,
@@ -199,28 +219,34 @@ class ChipClassificationLabelSource(LabelSource):
             use_intersection_over_cell=cfg.use_intersection_over_cell,
             pick_min_class_id=cfg.pick_min_class_id,
             background_class_id=cfg.background_class_id)
-
         for cell in known_cells:
             class_id = self.labels.get_cell_class_id(cell)
             labels.set_cell(cell, class_id)
-
         return labels
 
     def get_labels(self,
                    window: Box | None = None) -> ChipClassificationLabels:
+        """Return label for a window, inferring it if not already known.
+
+        If window is ``None``, returns all labels.
+        """
         if window is None:
             return self.labels
         window = window.to_global_coords(self.bbox)
-        return self.labels.get_singleton_labels(window)
+        if window not in self.labels:
+            self.labels += self._infer_cells(cells=[window])
+        labels = self.labels.get_singleton_labels(window)
+        return labels
 
     def __getitem__(self, key: Any) -> int:
-        """Return label for a window, inferring it if it is not already known.
-        """
+        """Return class ID for a window, inferring it if not already known."""
         if isinstance(key, Box):
             window = key
+            window = window.to_global_coords(self.bbox)
             if window not in self.labels:
-                self.labels += self.infer_cells(cells=[window])
-            return self.labels[window].class_id
+                self.labels += self._infer_cells(cells=[window])
+            class_id = self.labels[window].class_id
+            return class_id
         else:
             return super().__getitem__(key)
 

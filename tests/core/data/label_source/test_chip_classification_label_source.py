@@ -1,16 +1,20 @@
+from collections.abc import Callable
 import unittest
-import os
+from os.path import join
 
 import geopandas as gpd
+import numpy as np
 
 from rastervision.pipeline.file_system import json_to_file, get_tmp_dir
 from rastervision.core.box import Box
 from rastervision.core.data import (
-    ClassConfig, ChipClassificationLabelSourceConfig,
-    GeoJSONVectorSourceConfig, ClassInferenceTransformerConfig,
-    BufferTransformerConfig)
+    BufferTransformerConfig, ChipClassificationLabelSource,
+    ChipClassificationLabelSourceConfig, ClassConfig,
+    ClassInferenceTransformerConfig, GeoJSONVectorSource,
+    GeoJSONVectorSourceConfig, IdentityCRSTransformer)
 from rastervision.core.data.label_source.chip_classification_label_source \
     import infer_cells
+from rastervision.core.data.label_store.utils import boxes_to_geojson
 
 from tests import data_file_path
 from tests.core.data.mock_crs_transformer import DoubleCRSTransformer
@@ -30,6 +34,12 @@ class TestChipClassificationLabelSourceConfig(unittest.TestCase):
 
 
 class TestChipClassificationLabelSource(unittest.TestCase):
+    def assertNoError(self, fn: Callable, msg: str = ''):
+        try:
+            fn()
+        except Exception:
+            self.fail(msg)
+
     def setUp(self):
         self.crs_transformer = DoubleCRSTransformer()
         self.geojson = {
@@ -76,7 +86,7 @@ class TestChipClassificationLabelSource(unittest.TestCase):
 
         self.file_name = 'labels.json'
         self.tmp_dir = get_tmp_dir()
-        self.uri = os.path.join(self.tmp_dir.name, self.file_name)
+        self.uri = join(self.tmp_dir.name, self.file_name)
         json_to_file(self.geojson, self.uri)
 
     def tearDown(self):
@@ -292,17 +302,37 @@ class TestChipClassificationLabelSource(unittest.TestCase):
     def test_getitem(self):
         # Extent contains both boxes.
         extent = Box.make_square(0, 0, 8)
-
         config = ChipClassificationLabelSourceConfig(
             vector_source=GeoJSONVectorSourceConfig(uris=self.uri))
-        source = config.build(self.class_config, self.crs_transformer, extent,
-                              self.tmp_dir.name)
-        labels = source.get_labels()
-
+        label_source = config.build(self.class_config, self.crs_transformer,
+                                    extent, self.tmp_dir.name)
+        labels = label_source.get_labels()
         cells = labels.get_cells()
         self.assertEqual(len(cells), 2)
-        self.assertEqual(source[cells[0]], self.class_id1)
-        self.assertEqual(source[cells[1]], self.class_id2)
+        self.assertEqual(label_source[cells[0]], self.class_id1)
+        self.assertEqual(label_source[cells[1]], self.class_id2)
+
+    def test_getitem_and_get_labels_with_bbox(self):
+        extent = Box(0, 0, 100, 100)
+        boxes = extent.get_windows(10, 10)
+        class_config = ClassConfig(names=['a', 'b', 'c'], null_class='c')
+        class_ids = np.random.randint(
+            0, len(class_config), size=len(boxes)).tolist()
+        crs_tf = IdentityCRSTransformer()
+        geojson = boxes_to_geojson(boxes, class_ids, crs_tf, class_config)
+
+        ls_cfg = ChipClassificationLabelSourceConfig(
+            background_class_id=class_config.null_class_id, infer_cells=True)
+        bbox = Box(25, 25, 50, 50)
+        with get_tmp_dir() as tmp_dir:
+            labels_uri = join(tmp_dir, 'labels.json')
+            json_to_file(geojson, labels_uri)
+            vs = GeoJSONVectorSource(labels_uri, crs_tf)
+            ls = ChipClassificationLabelSource(
+                ls_cfg, vs, bbox=bbox, lazy=True)
+            self.assertNoError(lambda: ls[:10, :10])
+            labels = ls.get_labels(Box(0, 0, 11, 11))
+            self.assertListEqual(labels.get_cells(), [Box(25, 25, 36, 36)])
 
 
 if __name__ == '__main__':
