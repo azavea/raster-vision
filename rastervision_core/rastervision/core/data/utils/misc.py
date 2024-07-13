@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Sequence
+from typing import TYPE_CHECKING, Any, Sequence, Union
 import logging
 
 import numpy as np
@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 def color_to_triple(
-        color: str | Sequence | None = None) -> tuple[int, int, int]:
+        color: str | Sequence | None = None) -> Union[list, tuple[int, int, int]]:
     """Given a PIL ImageColor string, return a triple of integers
     representing the red, green, and blue values.
 

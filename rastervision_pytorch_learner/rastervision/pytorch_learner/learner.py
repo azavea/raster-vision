@@ -1182,7 +1182,7 @@ class Learner(ABC):
         return ds
 
     def build_dataloaders(self, distributed: bool | None = None
-                          ) -> tuple[DataLoader, DataLoader, DataLoader]:
+                          ) -> tuple[DataLoader, DataLoader, DataLoader | None]:
         """Build DataLoaders for train, validation, and test splits."""
         if distributed is None:
             distributed = self.distributed
