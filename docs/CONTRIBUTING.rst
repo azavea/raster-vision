@@ -6,17 +6,19 @@ We are happy to take contributions! It is best to get in touch with the maintain
 Contributor License Agreement (CLA)
 -----------------------------------
 
-Everyone who contributes code to Raster Vision will be asked to sign the Azavea CLA, which is based off of the Apache CLA.
+Everyone who contributes code to Raster Vision will be asked to sign a CLA, which is based off of the Apache CLA.
 
-1. Download a copy of the `Raster Vision Individual Contributor License Agreement <_static/cla/2018_04_17-Raster-Vision-Open-Source-Contributor-Agreement-Individual.pdf>`_ or the `Raster Vision Corporate Contributor License Agreement <_static/cla/2018_04_18-Raster-Vision-Open-Source-Contributor-Agreement-Corporate.pdf>`_
+1. Download a copy of **one of** the following:
 
-2. Print out the CLAs and sign them, or use PDF software that allows placement of a signature image.
+   - Individual Contributor: `Raster Vision Individual Contributor License Agreement <_static/cla/2018_04_17-Raster-Vision-Open-Source-Contributor-Agreement-Individual.pdf>`_ 
+   - Corporate Contributor: `Raster Vision Corporate Contributor License Agreement <_static/cla/2018_04_18-Raster-Vision-Open-Source-Contributor-Agreement-Corporate.pdf>`_
 
-3. Send the CLAs to Azavea by one of:
+2. Sign the CLA -- either physically on a printout or digitally using appropriate PDF software.
 
-   - Scanning and emailing the document to cla@azavea.com
-   - Faxing a copy to +1-215-925-2600.
-   - Mailing a hardcopy to: :code:`Azavea, 990 Spring Garden Street, 5th Floor, Philadelphia, PA 19107 USA`
+3. Send the signed CLAs to Element 84 via **one of** the following methods:
+
+   - Emailing the document to cla@azavea.com
+   - Mailing a hardcopy to: ``Element 84, 210 N. Lee Street Suite 203 Alexandria, VA 22314, USA``.
 
 
 .. toctree::
