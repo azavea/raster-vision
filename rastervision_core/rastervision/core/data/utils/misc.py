@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 def color_to_triple(
-        color: str | Sequence | None = None) -> Union[list, tuple[int, int, int]]:
+        color: str | Sequence | None = None) -> list[str] | tuple[int, int, int]:
     """Given a PIL ImageColor string, return a triple of integers
     representing the red, green, and blue values.
 
