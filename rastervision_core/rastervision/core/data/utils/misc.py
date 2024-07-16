@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Sequence, Union
+from typing import TYPE_CHECKING, Any, Sequence
 import logging
 
 import numpy as np
