@@ -862,8 +862,7 @@ class ImageDataConfig(DataConfig):
 
     def _build_dataset(self,
                        dirs: Iterable[str],
-                       tf: A.BasicTransform | None = None
-                       ) -> Dataset:
+                       tf: A.BasicTransform | None = None) -> Dataset:
         """Make datasets for a single split.
 
         Args:
