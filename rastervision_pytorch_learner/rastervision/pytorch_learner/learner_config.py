@@ -680,7 +680,7 @@ class DataConfig(Config):
 
     @field_validator('augmentors')
     @classmethod
-    def validate_augmentors(cls, v: list[str]) -> str:
+    def validate_augmentors(cls, v: list[str]) -> list[str]:
         for aug_name in v:
             if aug_name not in augmentors:
                 raise ConfigError(f'Unsupported augmentor "{aug_name}"')
@@ -862,8 +862,7 @@ class ImageDataConfig(DataConfig):
 
     def _build_dataset(self,
                        dirs: Iterable[str],
-                       tf: A.BasicTransform | None = None
-                       ) -> tuple[Dataset, Dataset, Dataset]:
+                       tf: A.BasicTransform | None = None) -> Dataset:
         """Make datasets for a single split.
 
         Args:
@@ -1224,7 +1223,7 @@ class GeoDataConfig(DataConfig):
                        split: Literal['train', 'valid', 'test'],
                        tf: A.BasicTransform | None = None,
                        tmp_dir: str | None = None,
-                       **kwargs) -> tuple[Dataset, Dataset, Dataset]:
+                       **kwargs) -> Dataset:
         """Make training, validation, and test datasets.
 
         Args:

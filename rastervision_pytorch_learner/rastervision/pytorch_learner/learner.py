@@ -1181,8 +1181,9 @@ class Learner(ABC):
         ds = self.cfg.data.build_dataset(split=split, tmp_dir=self.tmp_dir)
         return ds
 
-    def build_dataloaders(self, distributed: bool | None = None
-                          ) -> tuple[DataLoader, DataLoader, DataLoader]:
+    def build_dataloaders(
+            self, distributed: bool | None = None
+    ) -> tuple[DataLoader, DataLoader, DataLoader | None]:
         """Build DataLoaders for train, validation, and test splits."""
         if distributed is None:
             distributed = self.distributed
