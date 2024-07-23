@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Sequence
+from typing import TYPE_CHECKING, Any
 import logging
 
 import numpy as np
@@ -13,8 +13,7 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-def color_to_triple(color: str | Sequence | None = None
-                    ) -> list[str] | tuple[int, int, int]:
+def color_to_triple(color: str | None = None) -> tuple[int, int, int]:
     """Given a PIL ImageColor string, return a triple of integers
     representing the red, green, and blue values.
 
@@ -25,17 +24,11 @@ def color_to_triple(color: str | Sequence | None = None
 
     Returns:
          An triple of integers
-
     """
     if color is None:
         r, g, b = np.random.randint(0, 256, size=3).tolist()
         return r, g, b
-    elif isinstance(color, str):
-        return ImageColor.getrgb(color)
-    elif isinstance(color, (tuple, list)):
-        return color
-    else:
-        raise TypeError(f'Unsupported type: {type(color)}')
+    return ImageColor.getrgb(color)
 
 
 def color_to_integer(color: str) -> int:
@@ -48,7 +41,7 @@ def color_to_integer(color: str) -> int:
          An integer containing the packed RGB values.
 
     """
-    triple = color_to_triple(color)
+    triple = color_to_triple(color) if isinstance(color, str) else color
     r = triple[0] * (1 << 16)
     g = triple[1] * (1 << 8)
     b = triple[2] * (1 << 0)

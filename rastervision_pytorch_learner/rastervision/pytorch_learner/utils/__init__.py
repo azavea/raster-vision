@@ -10,7 +10,6 @@ __all__ = [
     Parallel.__name__,
     AddTensors.__name__,
     MinMaxNormalize.__name__,
-    color_to_triple.__name__,
     compute_conf_mat.__name__,
     compute_conf_mat_metrics.__name__,
     validate_albumentation_transform.__name__,
