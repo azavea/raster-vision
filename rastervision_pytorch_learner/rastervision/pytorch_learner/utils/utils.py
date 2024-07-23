@@ -6,7 +6,6 @@ import torch
 from torch import nn
 from torch.hub import _import_module
 import numpy as np
-from PIL import ImageColor
 import albumentations as A
 from albumentations.core.transforms_interface import ImageOnlyTransform
 import cv2
@@ -22,28 +21,6 @@ if TYPE_CHECKING:
     from rastervision.pytorch_learner import LearnerConfig
 
 log = logging.getLogger(__name__)
-
-
-def color_to_triple(color: str | None = None) -> tuple[int, int, int]:
-    """Given a PIL ImageColor string, return a triple of integers
-    representing the red, green, and blue values.
-
-    If color is None, return a random color.
-
-    Args:
-         color: A PIL ImageColor string
-
-    Returns:
-         An triple of integers
-
-    """
-    if color is None:
-        r = np.random.randint(0, 0x100)
-        g = np.random.randint(0, 0x100)
-        b = np.random.randint(0, 0x100)
-        return (r, g, b)
-    else:
-        return ImageColor.getrgb(color)
 
 
 def compute_conf_mat(out: torch.Tensor, y: torch.Tensor,

@@ -26,7 +26,7 @@ class RGBClassTransformer(RasterTransformer):
         self.rgb_int_to_class_tf = ReclassTransformer(self.rgb_int_to_class)
 
         class_to_color_triple = {
-            class_id: color_to_triple(col)
+            class_id: color_to_triple(col) if isinstance(col, str) else col
             for col, class_id in color_to_class.items()
         }
         # i-th row of this array is the color-triple of the i-th class

@@ -17,11 +17,10 @@ from rastervision.pytorch_learner import (DataConfig, LearnerConfig,
 from rastervision.pytorch_learner.utils import (
     compute_conf_mat, compute_conf_mat_metrics, MinMaxNormalize,
     adjust_conv_channels, Parallel, SplitTensor, AddTensors,
-    validate_albumentation_transform, A, color_to_triple,
-    channel_groups_to_imgs, plot_channel_groups,
-    serialize_albumentation_transform, deserialize_albumentation_transform,
-    aggregate_metrics, log_metrics_to_csv, log_system_details,
-    get_learner_config_from_bundle_dir)
+    validate_albumentation_transform, A, channel_groups_to_imgs,
+    plot_channel_groups, serialize_albumentation_transform,
+    deserialize_albumentation_transform, aggregate_metrics, log_metrics_to_csv,
+    log_system_details, get_learner_config_from_bundle_dir)
 from tests.data_files.lambda_transforms import lambda_transforms
 from tests import data_file_path
 
@@ -297,17 +296,6 @@ class TestOtherUtils(unittest.TestCase):
             fn()
         except Exception:
             self.fail(msg)
-
-    def test_color_to_triple(self):
-        rgb = color_to_triple()
-        self.assertEqual(len(rgb), 3)
-        self.assertTrue(all(0 <= c < 256 for c in rgb))
-
-        rgb = color_to_triple('red')
-        self.assertEqual(len(rgb), 3)
-        self.assertEqual(rgb, (255, 0, 0))
-
-        self.assertRaises(ValueError, lambda: color_to_triple('not_a_color'))
 
     def test_albu_serialization_and_deserialization_no_lambda(self):
         x = np.random.randn(20, 20, 3)

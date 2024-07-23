@@ -5,9 +5,10 @@ import numpy as np
 import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
 
+from rastervision.core.data.utils import color_to_triple
 from rastervision.pytorch_learner.dataset.visualizer import Visualizer
-from rastervision.pytorch_learner.utils import (
-    color_to_triple, plot_channel_groups, channel_groups_to_imgs)
+from rastervision.pytorch_learner.utils import (plot_channel_groups,
+                                                channel_groups_to_imgs)
 
 if TYPE_CHECKING:
     from matplotlib.pyplot import Axes
