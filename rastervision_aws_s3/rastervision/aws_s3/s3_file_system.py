@@ -37,14 +37,14 @@ def get_matching_s3_objects(
     )
     while True:
         resp: dict = s3.list_objects_v2(**kwargs)
-        dirs: list[dict] = resp.get('CommonPrefixes', {})
-        files: list[dict] = resp.get('Contents', {})
+        dirs: list[dict[str, Any]] = resp.get('CommonPrefixes', {})
+        files: list[dict[str, Any]] = resp.get('Contents', {})
         for obj in dirs:
-            key = obj['Prefix']
+            key: str = obj['Prefix']
             if key.startswith(prefix) and key.endswith(suffix):
                 yield key, obj
         for obj in files:
-            key = obj['Key']
+            key: str = obj['Key']
             if key.startswith(prefix) and key.endswith(suffix):
                 yield key, obj
         # The S3 API is paginated, returning up to 1000 keys at a time.
@@ -214,7 +214,7 @@ class S3FileSystem(FileSystem):
         file_size = len(data)
         with io.BytesIO(data) as str_buffer:
             try:
-                with progressbar(file_size, desc=f'Uploading') as bar:
+                with progressbar(file_size, desc='Uploading') as bar:
                     s3.upload_fileobj(
                         Fileobj=str_buffer,
                         Bucket=bucket,

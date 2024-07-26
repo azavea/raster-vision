@@ -138,9 +138,9 @@ class RVConfig:
         return cache_dir
 
     def set_everett_config(self,
-                           profile: str = None,
-                           rv_home: str = None,
-                           config_overrides: dict[str, str] = None):
+                           profile: str | None = None,
+                           rv_home: str | None = None,
+                           config_overrides: dict[str, str] | None = None):
         """Set Everett config.
 
         This sets up any other configuration using the Everett library.

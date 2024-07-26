@@ -245,6 +245,7 @@ class SlidingWindowGeoDataset(GeoDataset):
         self.stride: tuple[PosInt, PosInt] = ensure_tuple(stride)
         self.padding = padding
         self.pad_direction = pad_direction
+        self.windows = []
         self.init_windows()
 
     def init_windows(self) -> None:

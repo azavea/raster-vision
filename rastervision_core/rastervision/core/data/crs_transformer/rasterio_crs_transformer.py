@@ -63,8 +63,10 @@ class RasterioCRSTransformer(CRSTransformer):
         """
         return out
 
-    def _map_to_pixel(self, map_point: tuple[float, float] | np.ndarray
-                      ) -> tuple[int, int] | np.ndarray:
+    def _map_to_pixel(
+            self,
+            map_point: tuple[float, float] | tuple[np.ndarray, np.ndarray]
+    ) -> tuple[int, int] | tuple[np.ndarray, np.ndarray]:
         """Transform point from map to pixel-based coordinates.
 
         Args:
@@ -82,8 +84,9 @@ class RasterioCRSTransformer(CRSTransformer):
         pixel_point = (col, row)
         return pixel_point
 
-    def _pixel_to_map(self, pixel_point: tuple[int, int] | np.ndarray
-                      ) -> tuple[float, float] | np.ndarray:
+    def _pixel_to_map(
+            self, pixel_point: tuple[int, int] | tuple[np.ndarray, np.ndarray]
+    ) -> tuple[float, float] | tuple[np.ndarray, np.ndarray]:
         """Transform point from pixel to map-based coordinates.
 
         Args:

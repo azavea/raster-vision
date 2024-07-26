@@ -63,7 +63,7 @@ class AoiSampler:
 
     def triangulate_polygon(self, polygon: Polygon) -> dict:
         """Triangulate polygon.
-        
+
         Extracts vertices and edges from the polygon (and its holes, if any)
         and passes them to the Triangle library for triangulation.
         """

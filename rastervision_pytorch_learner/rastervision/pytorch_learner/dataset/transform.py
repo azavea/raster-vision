@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, overload
 from collections.abc import Callable
 from enum import Enum
 
@@ -58,9 +58,21 @@ def apply_transform(transform: A.BasicTransform, **kwargs) -> dict:
     return out
 
 
-def classification_transformer(inp: tuple[np.ndarray, int | None],
-                               transform=A.BasicTransform | None
-                               ) -> tuple[np.ndarray, np.ndarray | None]:
+@overload
+def classification_transformer(
+        inp: tuple[np.ndarray, int],
+        transform: A.BasicTransform | None) -> tuple[np.ndarray, np.ndarray]:
+    ...
+
+
+@overload
+def classification_transformer(
+        inp: tuple[np.ndarray, None],
+        transform: A.BasicTransform | None) -> tuple[np.ndarray, None]:
+    ...
+
+
+def classification_transformer(inp, transform):
     """Apply transform to image only."""
     x, y = inp
     x = np.array(x)
@@ -72,9 +84,21 @@ def classification_transformer(inp: tuple[np.ndarray, int | None],
     return x, y
 
 
-def regression_transformer(inp: tuple[np.ndarray, Any | None],
-                           transform=A.BasicTransform | None
-                           ) -> tuple[np.ndarray, np.ndarray | None]:
+@overload
+def regression_transformer(
+        inp: tuple[np.ndarray, Any],
+        transform: A.BasicTransform | None) -> tuple[np.ndarray, np.ndarray]:
+    ...
+
+
+@overload
+def regression_transformer(
+        inp: tuple[np.ndarray, None],
+        transform: A.BasicTransform | None) -> tuple[np.ndarray, None]:
+    ...
+
+
+def regression_transformer(inp, transform):
     """Apply transform to image only."""
     x, y = inp
     x = np.array(x)
@@ -143,10 +167,22 @@ def albu_to_yxyx(xyxy: np.ndarray,
     return yxyx
 
 
+@overload
 def object_detection_transformer(
-        inp: tuple[np.ndarray, tuple[np.ndarray, np.ndarray, str] | None],
-        transform: A.BasicTransform | None = None
+        inp: tuple[np.ndarray, tuple[np.ndarray, np.ndarray, str]],
+        transform: A.BasicTransform | None
 ) -> tuple[torch.Tensor, BoxList | None]:
+    ...
+
+
+@overload
+def object_detection_transformer(
+        inp: tuple[np.ndarray, None],
+        transform: A.BasicTransform | None) -> tuple[torch.Tensor, None]:
+    ...
+
+
+def object_detection_transformer(inp, transform):
     """Apply transform to image, bounding boxes, and labels. Also perform
     normalization and conversion to pytorch tensors.
 
@@ -214,10 +250,21 @@ def object_detection_transformer(
     return x, y
 
 
+@overload
 def semantic_segmentation_transformer(
-        inp: tuple[np.ndarray, np.ndarray | None],
-        transform=A.BasicTransform | None
+        inp: tuple[np.ndarray, np.ndarray], transform: A.BasicTransform | None
 ) -> tuple[np.ndarray, np.ndarray | None]:
+    ...
+
+
+@overload
+def semantic_segmentation_transformer(
+        inp: tuple[np.ndarray, None],
+        transform: A.BasicTransform | None) -> tuple[np.ndarray, None]:
+    ...
+
+
+def semantic_segmentation_transformer(inp, transform):
     """Apply transform to image and mask."""
     x, y = inp
     x = np.array(x)

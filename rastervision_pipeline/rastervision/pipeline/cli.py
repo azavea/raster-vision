@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 import sys
 import os
 import logging
@@ -44,7 +44,7 @@ def convert_bool_args(args: dict) -> dict:
 
 def get_configs(cfg_module_path: str,
                 runner: str | None = None,
-                args: dict[str, any] | None = None) -> list[PipelineConfig]:
+                args: dict[str, Any] | None = None) -> list[PipelineConfig]:
     """Get PipelineConfigs from a module.
 
     Calls a get_config(s) function with some arguments from the CLI
@@ -74,7 +74,7 @@ def get_configs(cfg_module_path: str,
 
 
 def get_configs_from_module(cfg_module_path: str, runner: str,
-                            args: dict[str, any]) -> list[PipelineConfig]:
+                            args: dict[str, Any]) -> list[PipelineConfig]:
     import importlib
     import importlib.util
 
@@ -82,6 +82,9 @@ def get_configs_from_module(cfg_module_path: str, runner: str,
         # From https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path  # noqa
         spec = importlib.util.spec_from_file_location('rastervision.pipeline',
                                                       cfg_module_path)
+        if spec is None:
+            raise ImportError(
+                f'Failed to read module spec from {cfg_module_path}.')
         cfg_module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(cfg_module)
     else:

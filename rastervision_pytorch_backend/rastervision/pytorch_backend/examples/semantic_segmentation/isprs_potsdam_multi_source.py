@@ -83,23 +83,23 @@ def get_config(runner,
     by RV, with arguments from the command line, when this example is run.
 
     Args:
-        runner (Runner): Runner for the pipeline.
-        raw_uri (str): Directory where the raw data resides
-        processed_uri (str): Directory for storing processed data.
+        runner: Runner for the pipeline.
+        raw_uri: Directory where the raw data resides
+        processed_uri: Directory for storing processed data.
                              E.g. crops for testing.
-        root_uri (str): Directory where all the output will be written.
-        nochip (bool): If True, read directly from the TIFF during
+        root_uri: Directory where all the output will be written.
+        nochip: If True, read directly from the TIFF during
             training instead of from pre-generated chips. The analyze and chip
             commands should not be run, if this is set to True. Defaults to
             True.
-        test (bool): If True, does the following simplifications:
+        test: If True, does the following simplifications:
             (1) Uses only the first 2 scenes
             (2) Uses only a 600x600 crop of the scenes
             (3) Trains for only 2 epochs and uses a batch size of 2.
             Defaults to False.
 
     Returns:
-        SemanticSegmentationConfig: A pipeline config.
+        A pipeline config.
     """
     if not test:
         train_ids, val_ids = TRAIN_IDS, VAL_IDS
@@ -256,7 +256,7 @@ def make_multi_raster_source(
 
 def make_crop(processed_uri: UriPath,
               raster_uri: UriPath,
-              label_uri: UriPath = None) -> tuple[UriPath, UriPath]:
+              label_uri: UriPath | None = None) -> tuple[UriPath, UriPath]:
     crop_uri = processed_uri / TEST_CROP_DIR / raster_uri.name
     if label_uri is not None:
         label_crop_uri = processed_uri / TEST_CROP_DIR / label_uri.name
