@@ -6,7 +6,6 @@ from datetime import datetime
 from urllib.parse import urlparse
 
 import boto3
-from everett.manager import ConfigurationMissingError
 from tqdm.auto import tqdm
 
 from rastervision.pipeline.file_system import (FileSystem, NotReadableError,
@@ -102,16 +101,18 @@ class S3FileSystem(FileSystem):
     """
 
     @staticmethod
-    def get_request_payer():
-        # Import here to avoid circular reference.
-        from rastervision.pipeline import rv_config_ as rv_config
-        try:
-            s3_config = rv_config.get_namespace_config(AWS_S3)
-            # 'None' needs the quotes because boto3 cannot handle None.
-            return ('requester' if s3_config(
-                'requester_pays', parser=bool, default='False') else 'None')
-        except ConfigurationMissingError:
-            return 'None'
+    def get_request_payer() -> str:
+        # attempt to get from environ
+        request_payer = os.getenv('AWS_REQUEST_PAYER', 'None')
+        # attempt to get from RV config
+        if request_payer == 'None':
+            # Import here to avoid circular reference.
+            from rastervision.pipeline import rv_config_ as rv_config
+            requester_pays = rv_config.get_namespace_option(
+                AWS_S3, 'requester_pays', as_bool=True)
+            if requester_pays:
+                request_payer = 'requester'
+        return request_payer
 
     @staticmethod
     def get_session():

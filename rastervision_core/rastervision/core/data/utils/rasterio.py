@@ -8,6 +8,7 @@ import rasterio as rio
 import rasterio.windows as rio_windows
 from rasterio.transform import from_origin
 from rasterio.enums import (ColorInterp, MaskFlags, Resampling)
+from rasterio.session import AWSSession
 
 from rastervision.pipeline.file_system.utils import (
     file_to_json, get_local_path, get_tmp_dir, make_dir, upload_or_copy,
@@ -16,6 +17,7 @@ from rastervision.core.box import Box
 
 if TYPE_CHECKING:
     from rasterio.io import DatasetReader
+    from rasterio.session import Session
 
 log = logging.getLogger(__name__)
 
@@ -168,7 +170,8 @@ def read_window(dataset: 'DatasetReader',
                 bands: int | Sequence[int] | None = None,
                 window: tuple[tuple[int, int], tuple[int, int]] | None = None,
                 is_masked: bool = False,
-                out_shape: tuple[int, ...] | None = None) -> np.ndarray:
+                out_shape: tuple[int, ...] | None = None,
+                session: 'Session | None' = None) -> np.ndarray:
     """Load a window of an image using Rasterio.
 
     Args:
@@ -181,19 +184,21 @@ def read_window(dataset: 'DatasetReader',
             Defaults to ``False``.
         out_shape: (height, width) of the output chip. If ``None``, no
             resizing is done. Defaults to ``None``.
+        session: Rasterio :class:`.Session`.
 
     Returns:
         np.ndarray: array of shape (height, width, channels).
     """
     if bands is not None:
         bands = tuple(bands)
-    im = dataset.read(
-        indexes=bands,
-        window=window,
-        boundless=True,
-        masked=is_masked,
-        out_shape=out_shape,
-        resampling=Resampling.bilinear)
+    with rio.Env(session=session):
+        im = dataset.read(
+            indexes=bands,
+            window=window,
+            boundless=True,
+            masked=is_masked,
+            out_shape=out_shape,
+            resampling=Resampling.bilinear)
 
     if is_masked:
         im = np.ma.filled(im, fill_value=0)
@@ -241,3 +246,15 @@ def is_masked(dataset: 'DatasetReader') -> bool:
     mask_flags = dataset.mask_flag_enums
     is_masked = any(m for m in mask_flags if m != MaskFlags.all_valid)
     return is_masked
+
+
+def get_aws_session() -> 'Session':
+    """Build a rasterio AWS session from environment variables."""
+    try:
+        from rastervision.aws_s3 import S3FileSystem
+        requester_pays = S3FileSystem.get_request_payer()
+    except ModuleNotFoundError:
+        requester_pays = os.getenv('AWS_REQUEST_PAYER',
+                                   '').lower() == 'requestor'
+    session = AWSSession.from_environ(requester_pays=requester_pays)
+    return session
