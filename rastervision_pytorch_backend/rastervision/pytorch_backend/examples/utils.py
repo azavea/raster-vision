@@ -8,7 +8,6 @@ from rastervision.core.data import (RasterioSource, GeoJSONVectorSource,
                                     ClassInferenceTransformer)
 from rastervision.core.data.utils import geoms_to_geojson, crop_geotiff
 from rastervision.pipeline.file_system import (file_to_str, json_to_file)
-from rastervision.aws_s3 import S3FileSystem
 
 if TYPE_CHECKING:
     from rastervision.core.data import ClassConfig
@@ -50,13 +49,10 @@ def save_image_crop(
     """
     print(f'Saving test crop to {image_crop_uri}...')
     if file_exists(image_crop_uri):
-        print(f'Already exists. Skipping.')
+        print('Already exists. Skipping.')
         return
     old_environ = os.environ.copy()
     try:
-        request_payer = S3FileSystem.get_request_payer()
-        if request_payer == 'requester':
-            os.environ['AWS_REQUEST_PAYER'] = request_payer
         rs = RasterioSource(image_uri, allow_streaming=True)
         if label_uri and vector_labels:
             crs_tf = rs.crs_transformer
