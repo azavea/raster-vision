@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 from os.path import join
 
 import numpy as np
@@ -7,7 +8,7 @@ import pyproj
 from rastervision.pipeline.file_system.utils import get_tmp_dir
 from rastervision.core.box import Box
 from rastervision.core.data.utils.rasterio import (
-    crop_geotiff, write_geotiff_like_geojson, write_bbox)
+    crop_geotiff, get_aws_session, write_geotiff_like_geojson, write_bbox)
 from rastervision.core.data import RasterioSource, GeoJSONVectorSource
 from tests import data_file_path
 
@@ -62,6 +63,17 @@ class TestRasterioUtils(unittest.TestCase):
                 np.array(list(geojson_bbox)),
                 decimal=3)
             self.assertEqual(rs.shape, (10, 10, 1))
+
+    @patch.dict('os.environ', AWS_REQUEST_PAYER='requester')
+    def test_get_aws_session(self):
+        session = get_aws_session()
+        self.assertTrue(session.requester_pays)
+
+    @patch.dict('sys.modules', {'rastervision.aws_s3': None})
+    @patch.dict('os.environ', AWS_S3_REQUESTER_PAYS='false')
+    def test_get_aws_session_no_rv_aws_s3_and_not_requester_pays(self):
+        session = get_aws_session()
+        self.assertFalse(session.requester_pays)
 
 
 if __name__ == '__main__':

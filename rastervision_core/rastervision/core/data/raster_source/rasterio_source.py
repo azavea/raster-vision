@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Any, Sequence
 import logging
 
 import numpy as np
-import rasterio
+import rasterio as rio
 
 from rastervision.pipeline.file_system import download_if_needed, get_tmp_dir
 from rastervision.core.box import Box
@@ -11,8 +11,8 @@ from rastervision.core.data.raster_source import RasterSource
 from rastervision.core.data.utils import (listify_uris, parse_array_slices_Nd)
 from rastervision.core.data.utils.raster import fill_overflow
 from rastervision.core.data.utils.rasterio import (
-    read_window, get_channel_order_from_dataset, download_and_build_vrt,
-    is_masked)
+    download_and_build_vrt, get_aws_session, get_channel_order_from_dataset,
+    is_masked, read_window)
 
 if TYPE_CHECKING:
     from rastervision.core.data import RasterTransformer
@@ -76,7 +76,11 @@ class RasterioSource(RasterSource):
 
         self.imagery_path = self.download_data(
             self.tmp_dir, stream=self.allow_streaming)
-        self.image_dataset = rasterio.open(self.imagery_path)
+        self.session = None
+        if 's3://' in self.imagery_path.lower():
+            self.session = get_aws_session()
+        with rio.Env(session=self.session):
+            self.image_dataset = rio.open(self.imagery_path)
 
         block_shapes = set(self.image_dataset.block_shapes)
         if len(block_shapes) > 1:
@@ -165,7 +169,8 @@ class RasterioSource(RasterSource):
             bands=bands,
             window=window.rasterio_format(),
             is_masked=self.is_masked,
-            out_shape=out_shape)
+            out_shape=out_shape,
+            session=self.session)
         chip = fill_overflow(self.bbox, window, chip)
         return chip
 
