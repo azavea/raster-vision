@@ -69,6 +69,8 @@ class SemanticSegmentationChipOptions(ChipOptions):
              True (the window does contain interesting pixels) or False.
         """
         target_count = 0
+        if self.target_class_ids is None:
+            raise ValueError('target_class_ids not specified.')
         for class_id in self.target_class_ids:
             target_count += (label_arr == class_id).sum()
         enough_target_pixels = target_count >= self.target_count_threshold

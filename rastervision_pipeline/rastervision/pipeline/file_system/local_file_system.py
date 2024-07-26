@@ -9,14 +9,16 @@ from tqdm.auto import tqdm
 from rastervision.pipeline.file_system import (FileSystem, NotReadableError)
 
 
-def make_dir(path, check_empty=False, force_empty=False, use_dirname=False):
+def make_dir(path: str,
+             check_empty: bool = False,
+             force_empty: bool = False,
+             use_dirname: bool = False):
     """Make a local directory.
 
     Args:
         path: path to directory
         check_empty: if True, check that directory is empty
-        force_empty: if True, delete files if necessary to make directory
-            empty
+        force_empty: if True, delete files if necessary to make directory empty
         use_dirname: if True, use the the parent directory as path
 
     Raises:

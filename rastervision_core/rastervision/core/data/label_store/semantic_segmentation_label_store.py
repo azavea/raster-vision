@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Sequence
+from typing import TYPE_CHECKING, Sequence, overload
 from os.path import join
 import logging
 
@@ -333,11 +333,17 @@ class SemanticSegmentationLabelStore(LabelStore):
         out_uri = vo.get_uri(vector_output_dir, self.class_config)
         json_to_file(geojson, out_uri)
 
-    def _clip_to_extent(self,
-                        extent: Box,
-                        window: Box,
-                        arr: np.ndarray | None = None
-                        ) -> tuple[Box, np.ndarray | None]:
+    @overload
+    def _clip_to_extent(self, extent: Box, window: Box,
+                        arr: np.ndarray) -> tuple[Box, np.ndarray]:
+        ...
+
+    @overload
+    def _clip_to_extent(self, extent: Box, window: Box,
+                        arr: None = ...) -> tuple[Box, None]:
+        ...
+
+    def _clip_to_extent(self, extent, window, arr=None):
         clipped_window = window.intersection(extent)
         if arr is not None:
             h, w = clipped_window.size
