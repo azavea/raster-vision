@@ -1,4 +1,4 @@
-from typing import Any, Sequence
+from typing import TYPE_CHECKING, Any, Sequence
 
 from pydantic import NonNegativeInt as NonNegInt
 import numpy as np
@@ -8,6 +8,9 @@ from rastervision.core.data.raster_source import (RasterSource,
                                                   MultiRasterSource)
 from rastervision.core.data.utils import all_equal, parse_array_slices_Nd
 
+if TYPE_CHECKING:
+    from rastervision.core.data import RasterTransformer
+
 
 class TemporalMultiRasterSource(MultiRasterSource):
     """Merge multiple ``RasterSources`` by stacking them along a new dim."""
@@ -15,25 +18,20 @@ class TemporalMultiRasterSource(MultiRasterSource):
     def __init__(self,
                  raster_sources: Sequence[RasterSource],
                  primary_source_idx: NonNegInt = 0,
-                 force_same_dtype: bool = False,
-                 raster_transformers: Sequence = [],
+                 raster_transformers: Sequence['RasterTransformer'] = [],
                  bbox: Box | None = None):
         """Constructor.
 
         Args:
-            raster_sources (Sequence[RasterSource]): Sequence of RasterSources.
-            primary_source_idx (0 <= int < len(raster_sources)): Index of the
-                raster source whose CRS, dtype, and other attributes will
-                override those of the other raster sources.
-            force_same_dtype (bool): If true, force all sub-chips to have the
-                same dtype as the primary_source_idx-th sub-chip. No careful
-                conversion is done, just a quick cast. Use with caution.
-            raster_transformers (Sequence): Sequence of transformers.
-                Defaults to [].
-            bbox (Box | None): User-specified crop of the extent.
-                If given, the primary raster source's bbox is set to this.
-                If None, the full extent available in the source file of the
-                primary raster source is used.
+            raster_sources: Sequence of RasterSources.
+            primary_source_idx: Index of the raster source whose CRS, dtype,
+                and other attributes will override those of the other raster
+                sources.
+            raster_transformers: Sequence of transformers. Defaults to ``[]``.
+            bbox: User-specified crop of the extent. If given, the primary
+                raster source's bbox is set to this. If ``None``, the full
+                extent available in the source file of the primary raster
+                source is used.
         """
         if not all_equal([rs.num_channels for rs in raster_sources]):
             raise ValueError(
@@ -62,7 +60,6 @@ class TemporalMultiRasterSource(MultiRasterSource):
             bbox=bbox,
             raster_transformers=raster_transformers)
 
-        self.force_same_dtype = force_same_dtype
         self.raster_sources = raster_sources
         self.primary_source_idx = primary_source_idx
 

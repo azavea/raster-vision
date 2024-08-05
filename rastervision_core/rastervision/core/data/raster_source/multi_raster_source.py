@@ -14,27 +14,25 @@ if TYPE_CHECKING:
 
 
 class MultiRasterSource(RasterSource):
-    """Merge multiple ``RasterSources`` by concatenating along channel dim."""
+    """
+    Merge multiple ``RasterSources`` by concatenating along the channel dim.
+    """
 
     def __init__(self,
                  raster_sources: Sequence[RasterSource],
                  primary_source_idx: NonNegInt = 0,
-                 force_same_dtype: bool = False,
                  channel_order: Sequence[NonNegInt] | None = None,
-                 raster_transformers: Sequence = [],
+                 raster_transformers: Sequence['RasterTransformer'] = [],
                  bbox: Box | None = None):
         """Constructor.
 
         Args:
             raster_sources: Sequence of RasterSources.
-            primary_source_idx (0 <= int < len(raster_sources)): Index of the
-                raster source whose CRS, dtype, and other attributes will
-                override those of the other raster sources.
-            force_same_dtype: If true, force all sub-chips to have the
-                same dtype as the primary_source_idx-th sub-chip. No careful
-                conversion is done, just a quick cast. Use with caution.
+            primary_source_idx: Index of the raster source whose CRS, dtype,
+                and other attributes will override those of the other raster
+                sources.
             channel_order: Channel ordering that will be used by
-                :meth:`MultiRasterSource.get_chip()`. Defaults to ``None``.
+                :meth:`.MultiRasterSource.get_chip`. Defaults to ``None``.
             raster_transformers: List of transformers. Defaults to ``[]``.
             bbox: User-specified crop of the extent. If specified, the primary
                 raster source's bbox is set to this. If ``None``, the full
@@ -65,14 +63,12 @@ class MultiRasterSource(RasterSource):
             bbox=bbox,
             raster_transformers=raster_transformers)
 
-        self.force_same_dtype = force_same_dtype
         self.raster_sources = raster_sources
         self.primary_source_idx = primary_source_idx
         self.non_primary_sources = [
             rs for i, rs in enumerate(raster_sources)
             if i != primary_source_idx
         ]
-
         self.validate_raster_sources()
 
     @classmethod
@@ -82,7 +78,6 @@ class MultiRasterSource(RasterSource):
             assets: list[str] | None,
             primary_source_idx: NonNegInt = 0,
             raster_transformers: list['RasterTransformer'] = [],
-            force_same_dtype: bool = False,
             channel_order: Sequence[int] | None = None,
             bbox: Box | tuple[int, int, int, int] | None = None,
             bbox_map_coords: Box | tuple[int, int, int, int] | None = None,
@@ -99,14 +94,11 @@ class MultiRasterSource(RasterSource):
             item: STAC Item.
             assets: List of names of assets to use. If ``None``, all assets
                 present in the item will be used. Defaults to ``None``.
-            primary_source_idx (0 <= int < len(raster_sources)): Index of the
-                raster source whose CRS, dtype, and other attributes will
-                override those of the other raster sources.
+            primary_source_idx: Index of the raster source whose CRS, dtype,
+                and other attributes will override those of the other raster
+                sources.
             raster_transformers: RasterTransformers to use to transform chips
-                after they are read.
-            force_same_dtype: If true, force all sub-chips to have the
-                same dtype as the primary_source_idx-th sub-chip. No careful
-                conversion is done, just a quick cast. Use with caution.
+                after they are read. Defaults to ``[]``.
             channel_order: List of indices of channels to extract from raw
                 imagery. Can be a subset of the available channels. If None,
                 all channels available in the image will be read.
@@ -148,25 +140,19 @@ class MultiRasterSource(RasterSource):
             primary_source_idx=primary_source_idx,
             raster_transformers=raster_transformers,
             channel_order=channel_order,
-            force_same_dtype=force_same_dtype,
             bbox=bbox)
         return raster_source
 
     def validate_raster_sources(self) -> None:
         """Validate sub-``RasterSources``.
 
-        Checks if:
-
-        - dtypes are same or ``force_same_dtype`` is True.
-
+        Checks if all raster sources have the same dtype.
         """
         dtypes = [rs.dtype for rs in self.raster_sources]
-        if not self.force_same_dtype and not all_equal(dtypes):
+        if not all_equal(dtypes):
             raise ValueError(
                 'dtypes of all sub raster sources must be the same. '
-                f'Got: {dtypes} '
-                '(Use force_same_dtype to cast all to the dtype of the '
-                'primary source)')
+                f'Got: {dtypes}.')
 
     @property
     def primary_source(self) -> RasterSource:
@@ -233,10 +219,6 @@ class MultiRasterSource(RasterSource):
             for rs in other_rses
         ]
         sub_chips.insert(self.primary_source_idx, primary_sub_chip)
-
-        if self.force_same_dtype:
-            dtype = sub_chips[self.primary_source_idx].dtype
-            sub_chips = [chip.astype(dtype) for chip in sub_chips]
 
         return sub_chips
 
