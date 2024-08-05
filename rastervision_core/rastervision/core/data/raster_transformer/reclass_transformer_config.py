@@ -10,5 +10,6 @@ class ReclassTransformerConfig(RasterTransformerConfig):
     mapping: dict[int, int] = Field(
         ..., description=('The reclassification mapping.'))
 
-    def build(self) -> ReclassTransformer:
+    def build(self,
+              channel_order: list[int] | None = None) -> ReclassTransformer:
         return ReclassTransformer(mapping=self.mapping)

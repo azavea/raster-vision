@@ -12,5 +12,5 @@ class NanTransformerConfig(RasterTransformerConfig):
     to_value: float | None = Field(
         0.0, description=('Turn all NaN values into this value.'))
 
-    def build(self):
+    def build(self, channel_order: list[int] | None = None):
         return NanTransformer(to_value=self.to_value)

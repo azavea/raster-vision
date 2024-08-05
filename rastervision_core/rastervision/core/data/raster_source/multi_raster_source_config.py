@@ -64,7 +64,10 @@ class MultiRasterSourceConfig(RasterSourceConfig):
     def build(self, tmp_dir: str | None = None,
               use_transformers: bool = True) -> MultiRasterSource:
         if use_transformers:
-            raster_transformers = [t.build() for t in self.transformers]
+            raster_transformers = [
+                t.build(channel_order=self.channel_order)
+                for t in self.transformers
+            ]
         else:
             raster_transformers = []
 

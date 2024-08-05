@@ -34,9 +34,15 @@ class RasterioSourceConfig(RasterSourceConfig):
         False,
         description='Stream assets as needed rather than downloading them.')
 
-    def build(self, tmp_dir, use_transformers=True):
-        raster_transformers = ([rt.build() for rt in self.transformers]
-                               if use_transformers else [])
+    def build(self, tmp_dir: str | None,
+              use_transformers: bool = True) -> RasterioSource:
+        if use_transformers:
+            raster_transformers = [
+                t.build(channel_order=self.channel_order)
+                for t in self.transformers
+            ]
+        else:
+            raster_transformers = []
         bbox = Box(*self.bbox) if self.bbox is not None else None
         return RasterioSource(
             uris=self.uris,

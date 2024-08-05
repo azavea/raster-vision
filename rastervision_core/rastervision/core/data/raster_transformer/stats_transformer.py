@@ -111,39 +111,53 @@ class StatsTransformer(RasterTransformer):
         return stats_transformer
 
     @classmethod
-    def from_stats_json(cls, uri: str, **kwargs) -> Self:
+    def from_stats_json(cls,
+                        uri: str,
+                        channel_order: list[int] | None = None,
+                        **kwargs) -> Self:
         """Build with stats from a JSON file.
 
         The file is expected to be in the same format as written by
         :meth:`.RasterStats.save`.
 
         Args:
-            uri (str): URI of the JSON file.
+            uri: URI of the JSON file.
+            channel_order: Channel order to apply to the means and stds in the
+                file.
             **kwargs: Extra args for :meth:`.__init__`.
 
         Returns:
-            StatsTransformer: A StatsTransformer.
+            A StatsTransformer.
         """
         stats = RasterStats.load(uri)
-        stats_transformer = StatsTransformer.from_raster_stats(stats, **kwargs)
+        stats_transformer = StatsTransformer.from_raster_stats(
+            stats, channel_order=channel_order, **kwargs)
         return stats_transformer
 
     @classmethod
-    def from_raster_stats(cls, stats: RasterStats, **kwargs) -> Self:
+    def from_raster_stats(cls,
+                          stats: RasterStats,
+                          channel_order: list[int] | None = None,
+                          **kwargs) -> Self:
         """Build with stats from a :class:`.RasterStats` instance.
 
         The file is expected to be in the same format as written by
         :meth:`.RasterStats.save`.
 
         Args:
-            stats (RasterStats): A :class:`.RasterStats` instance with
-                non-None stats.
+            stats: A :class:`.RasterStats` instance with non-None stats.
+            channel_order: Channel order to apply to the means and stds in the
+                :class:`.RasterStats`.
             **kwargs: Extra args for :meth:`.__init__`.
 
         Returns:
-            StatsTransformer: A StatsTransformer.
+            A StatsTransformer.
         """
-        stats_transformer = StatsTransformer(stats.means, stats.stds, **kwargs)
+        means, stds = stats.means, stats.stds
+        if channel_order is not None:
+            means = means[channel_order]
+            stds = stds[channel_order]
+        stats_transformer = StatsTransformer(means, stds, **kwargs)
         return stats_transformer
 
     @property

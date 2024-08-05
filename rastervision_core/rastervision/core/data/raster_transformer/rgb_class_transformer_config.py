@@ -13,5 +13,6 @@ class RGBClassTransformerConfig(RasterTransformerConfig):
         description=('The class config defining the mapping between '
                      'classes and colors.'))
 
-    def build(self) -> RGBClassTransformer:
+    def build(self,
+              channel_order: list[int] | None = None) -> RGBClassTransformer:
         return RGBClassTransformer(class_config=self.class_config)

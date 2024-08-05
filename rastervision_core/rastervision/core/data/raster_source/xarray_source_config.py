@@ -36,8 +36,13 @@ class XarraySourceConfig(RasterSourceConfig):
     def build(self, tmp_dir: str | None = None,
               use_transformers: bool = True) -> XarraySource:
         item_or_item_collection = self.stac.build()
-        raster_transformers = ([rt.build() for rt in self.transformers]
-                               if use_transformers else [])
+        if use_transformers:
+            raster_transformers = [
+                t.build(channel_order=self.channel_order)
+                for t in self.transformers
+            ]
+        else:
+            raster_transformers = []
         raster_source = XarraySource.from_stac(
             item_or_item_collection,
             raster_transformers=raster_transformers,

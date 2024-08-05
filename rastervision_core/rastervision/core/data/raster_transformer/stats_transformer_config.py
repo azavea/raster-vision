@@ -4,7 +4,6 @@ from os.path import join
 from rastervision.pipeline.config import register_config, Field
 from rastervision.core.data.raster_transformer import (RasterTransformerConfig,
                                                        StatsTransformer)
-from rastervision.core.raster_stats import RasterStats
 
 if TYPE_CHECKING:
     from rastervision.core.rv_pipeline import RVPipelineConfig
@@ -18,6 +17,8 @@ def stats_transformer_config_upgrader(cfg_dict: dict, version: int) -> dict:
         # `update_root()`, which is called by the predictor, knows to set
         # `stats_uri` to the old location of `stats.json`.
         cfg_dict['scene_group'] = '__N/A__'
+    elif version == 13:
+        cfg_dict['needs_channel_order'] = True
     return cfg_dict
 
 
@@ -35,6 +36,14 @@ class StatsTransformerConfig(RasterTransformerConfig):
         'train_scenes',
         description='Name of the group of scenes whose stats to use. Defaults'
         'to "train_scenes".')
+    needs_channel_order: bool = Field(
+        False,
+        description='Whether the means and stds in the stats_uri file need to '
+        'be re-ordered/subsetted using ``channel_order`` to be compatible '
+        'with the chips that will be passed to the :class:`.StatsTransformer` '
+        'by the :class:`.RasterSource`. This field exists for backward '
+        'compatibility with Raster Vision versions <= 0.30. It will be set '
+        'automatically when loading stats from older model-bundles.')
 
     def update(self,
                pipeline: 'RVPipelineConfig | None' = None,
@@ -43,9 +52,14 @@ class StatsTransformerConfig(RasterTransformerConfig):
             self.stats_uri = join(pipeline.analyze_uri, 'stats',
                                   self.scene_group, 'stats.json')
 
-    def build(self):
-        stats = RasterStats.load(self.stats_uri)
-        return StatsTransformer(means=stats.means, stds=stats.stds)
+    def build(self,
+              channel_order: list[int] | None = None) -> StatsTransformer:
+        if self.needs_channel_order:
+            tf = StatsTransformer.from_stats_json(
+                self.stats_uri, channel_order=channel_order)
+        else:
+            tf = StatsTransformer.from_stats_json(self.stats_uri)
+        return tf
 
     def update_root(self, root_dir: str) -> None:
         if self.scene_group == '__N/A__':
