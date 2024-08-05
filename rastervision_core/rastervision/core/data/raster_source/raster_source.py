@@ -6,6 +6,8 @@ from skimage.transform import resize
 
 from rastervision.core.box import Box
 from rastervision.core.data.utils import parse_array_slices_Nd
+from rastervision.core.data.raster_transformer.utils import (
+    get_transformed_num_channels, get_transformed_dtype)
 
 if TYPE_CHECKING:
     from rastervision.core.data import (CRSTransformer, RasterTransformer)
@@ -28,8 +30,10 @@ class RasterSource(ABC):
     """
 
     def __init__(self,
+                 *,
                  channel_order: list[int] | None,
                  num_channels_raw: int,
+                 dtype_raw: np.dtype,
                  bbox: Box,
                  raster_transformers: list['RasterTransformer'] = []):
         """Constructor.
@@ -39,7 +43,8 @@ class RasterSource(ABC):
                 from raw imagery.
             num_channels_raw: Number of channels in the raw imagery before
                 applying channel_order.
-            bbox (Box): Extent or a crop of the extent.
+            dtype_raw: dtype of the raw imagery before applying transformers.
+            bbox: Extent or a crop of the extent.
             raster_transformers: ``RasterTransformers`` for transforming chips
                 whenever they are retrieved. Defaults to ``[]``.
         """
@@ -51,13 +56,20 @@ class RasterSource(ABC):
 
         self.channel_order = channel_order
         self.num_channels_raw = num_channels_raw
+        self.dtype_raw = dtype_raw
         self.raster_transformers = raster_transformers
         self._bbox = bbox
+        self._num_channels = None
+        self._dtype = None
 
     @property
     def num_channels(self) -> int:
         """Number of channels in the chips read from this source."""
-        return len(self.channel_order)
+        if self._num_channels is None:
+            num_channels = len(self.channel_order)
+            self._num_channels = get_transformed_num_channels(
+                self.raster_transformers, num_channels)
+        return self._num_channels
 
     @property
     def shape(self) -> tuple[int, int, int]:
@@ -66,9 +78,13 @@ class RasterSource(ABC):
         return H, W, self.num_channels
 
     @property
-    @abstractmethod
     def dtype(self) -> 'np.dtype':
         """``numpy.dtype`` of the chips read from this source."""
+        if self._dtype is None:
+            dtype = self.dtype_raw
+            self._dtype = get_transformed_dtype(self.raster_transformers,
+                                                dtype)
+        return self._dtype
 
     @property
     def bbox(self) -> 'Box':

@@ -29,3 +29,6 @@ class CastTransformer(RasterTransformer):
             Array of shape (..., H, W, C)
         """
         return chip.astype(self.to_dtype)
+
+    def get_out_dtype(self, in_dtype: 'np.dtype') -> 'np.dtype':
+        return self.to_dtype

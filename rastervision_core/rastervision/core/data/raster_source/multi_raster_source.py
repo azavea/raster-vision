@@ -41,6 +41,8 @@ class MultiRasterSource(RasterSource):
                 extent available in the source file of the primary raster
                 source is used.
         """
+        dtype_raw = raster_sources[primary_source_idx].dtype
+
         num_channels_raw = sum(rs.num_channels for rs in raster_sources)
         if not channel_order:
             num_channels = sum(rs.num_channels for rs in raster_sources)
@@ -57,8 +59,9 @@ class MultiRasterSource(RasterSource):
             raster_sources[primary_source_idx].set_bbox(bbox)
 
         super().__init__(
-            channel_order,
-            num_channels_raw,
+            channel_order=channel_order,
+            num_channels_raw=num_channels_raw,
+            dtype_raw=dtype_raw,
             bbox=bbox,
             raster_transformers=raster_transformers)
 
@@ -175,10 +178,6 @@ class MultiRasterSource(RasterSource):
         """Shape of the raster as a (..., H, W, C) tuple."""
         *shape, _ = self.primary_source.shape
         return (*shape, self.num_channels)
-
-    @property
-    def dtype(self) -> np.dtype:
-        return self.primary_source.dtype
 
     @property
     def crs_transformer(self) -> 'CRSTransformer':

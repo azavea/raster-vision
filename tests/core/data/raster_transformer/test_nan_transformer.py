@@ -34,6 +34,16 @@ class TestNanTransformer(unittest.TestCase):
         chip_out = tf.transform(chip_in)
         np.testing.assert_array_equal(chip_out, chip_expexted)
 
+    def test_get_out_dtype(self):
+        tf = NanTransformer()
+        self.assertEqual(tf.get_out_dtype(np.float32), np.float32)
+        self.assertEqual(tf.get_out_dtype(np.uint8), np.uint8)
+
+    def test_get_out_channels(self):
+        tf = NanTransformer(1)
+        self.assertEqual(tf.get_out_channels(3), 3)
+        self.assertEqual(tf.get_out_channels(8), 8)
+
 
 if __name__ == '__main__':
     unittest.main()

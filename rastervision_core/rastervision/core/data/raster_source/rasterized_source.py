@@ -94,6 +94,7 @@ class RasterizedSource(RasterSource):
         super().__init__(
             channel_order=[0],
             num_channels_raw=1,
+            dtype_raw=np.uint8,
             bbox=bbox,
             raster_transformers=raster_transformers)
 

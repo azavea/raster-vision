@@ -17,10 +17,7 @@ log = logging.getLogger(__name__)
 
 
 class XarraySource(RasterSource):
-    """A RasterSource for reading an Xarry DataArray.
-
-    .. warning:: ``XarraySource`` API is in beta.
-    """
+    """A RasterSource for reading an Xarry DataArray."""
 
     def __init__(self,
                  data_array: DataArray,
@@ -62,17 +59,13 @@ class XarraySource(RasterSource):
         self.data_array = data_array.transpose(..., 'y', 'x', 'band')
         self.ndim = data_array.ndim
         self._crs_transformer = crs_transformer
+        dtype_raw = data_array.dtype
 
         num_channels_raw = len(data_array.band)
         if channel_order is None:
             channel_order = np.arange(num_channels_raw, dtype=int)
         else:
             channel_order = np.array(channel_order, dtype=int)
-        self._num_channels = None
-        self._dtype = None
-        if len(raster_transformers) == 0:
-            self._num_channels = len(channel_order)
-            self._dtype = data_array.dtype
 
         height, width = len(data_array.y), len(data_array.x)
         self.full_extent = Box(0, 0, height, width)
@@ -87,8 +80,9 @@ class XarraySource(RasterSource):
                 bbox = new_bbox
 
         super().__init__(
-            channel_order,
-            num_channels_raw,
+            channel_order=channel_order,
+            num_channels_raw=num_channels_raw,
+            dtype_raw=dtype_raw,
             raster_transformers=raster_transformers,
             bbox=bbox)
 
@@ -176,35 +170,8 @@ class XarraySource(RasterSource):
         return H, W, self.num_channels
 
     @property
-    def num_channels(self) -> int:
-        """Number of channels in the chips read from this source.
-
-        .. note::
-
-            Unlike the parent class, ``XarraySource`` applies
-            ``channel_order`` before ``raster_transformers``. So the number of
-            output channels is not guaranteed to be equal to
-            ``len(channel_order)``.
-        """
-        if self._num_channels is None:
-            self._set_info_from_chip()
-        return self._num_channels
-
-    @property
-    def dtype(self) -> np.dtype:
-        if self._dtype is None:
-            self._set_info_from_chip()
-        return self._dtype
-
-    @property
     def crs_transformer(self) -> RasterioCRSTransformer:
         return self._crs_transformer
-
-    def _set_info_from_chip(self):
-        """Read 1x1 chip to get info not statically inferable."""
-        test_chip = self.get_chip(Box(0, 0, 1, 1))
-        self._dtype = test_chip.dtype
-        self._num_channels = test_chip.shape[-1]
 
     def _get_chip(self,
                   window: Box,

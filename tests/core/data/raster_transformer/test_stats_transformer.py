@@ -121,6 +121,16 @@ class TestStatsTransformer(unittest.TestCase):
         self.assertTrue(np.all(tf.means == 1))
         self.assertTrue(np.all(tf.stds == 0))
 
+    def test_get_out_dtype(self):
+        tf = StatsTransformer(np.zeros((4, )), np.ones((4, )))
+        self.assertEqual(tf.get_out_dtype(np.float32), np.uint8)
+        self.assertEqual(tf.get_out_dtype(np.uint8), np.uint8)
+
+    def test_get_out_channels(self):
+        tf = StatsTransformer(np.zeros((4, )), np.ones((4, )))
+        self.assertEqual(tf.get_out_channels(3), 3)
+        self.assertEqual(tf.get_out_channels(8), 8)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
+from pydantic.types import PositiveInt as PosInt
 
 import numpy as np
 
@@ -55,3 +56,12 @@ class RGBClassTransformer(RasterTransformer):
 
     def class_to_rgb(self, class_labels: np.ndarray) -> np.ndarray:
         return self.class_to_rgb_arr[class_labels]
+
+    def get_out_channels(self, in_channels: PosInt) -> Literal[1]:
+        if in_channels != 3:
+            raise ValueError(
+                'RGBClassTransformer only accepts 3-channel inputs.')
+        return 1
+
+    def get_out_dtype(self, in_dtype: 'np.dtype') -> 'np.dtype':
+        return np.uint8

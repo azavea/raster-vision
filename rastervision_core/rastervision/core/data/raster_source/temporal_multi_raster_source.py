@@ -45,6 +45,7 @@ class TemporalMultiRasterSource(MultiRasterSource):
                              '[0, len(raster_sources)].')
 
         primary_rs = raster_sources[primary_source_idx]
+        dtype_raw = primary_rs.dtype
         num_channels_raw = primary_rs.num_channels_raw
         channel_order = None
 
@@ -55,8 +56,9 @@ class TemporalMultiRasterSource(MultiRasterSource):
 
         RasterSource.__init__(
             self,
-            channel_order,
-            num_channels_raw,
+            channel_order=channel_order,
+            num_channels_raw=num_channels_raw,
+            dtype_raw=dtype_raw,
             bbox=bbox,
             raster_transformers=raster_transformers)
 
