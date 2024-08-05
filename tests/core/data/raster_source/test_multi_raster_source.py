@@ -11,6 +11,8 @@ from rastervision.core.data import (
     RasterioSourceConfig, MultiRasterSource, MultiRasterSourceConfig,
     ReclassTransformerConfig, CastTransformerConfig, XarraySource,
     IdentityCRSTransformer, TemporalMultiRasterSource)
+from rastervision.core.data.raster_source.multi_raster_source_config import (
+    multi_rs_config_upgrader)
 
 from tests import data_file_path
 
@@ -83,6 +85,13 @@ class TestMultiRasterSourceConfig(unittest.TestCase):
         self.assertIsInstance(rs, TemporalMultiRasterSource)
         self.assertEqual(rs.shape, (3, 256, 256, 3))
 
+    def test_upgrader_v14(self):
+        cfg = make_cfg()
+        cfg_dict_old = cfg.dict()
+        cfg_dict_old['force_same_dtype'] = True
+        cfg_dict_new = multi_rs_config_upgrader(cfg_dict_old, 13)
+        self.assertNotIn('force_same_dtype', cfg_dict_new)
+
 
 class TestMultiRasterSource(unittest.TestCase):
     def assertNoError(self, fn: Callable, msg: str = ''):
@@ -113,25 +122,19 @@ class TestMultiRasterSource(unittest.TestCase):
 
     def test_primary_source_idx(self):
         primary_source_idx = 2
-        non_primary_source_idx = 1
 
-        cfg = make_cfg_diverse(
-            diff_dtypes=True,
-            force_same_dtype=True,
-            primary_source_idx=primary_source_idx)
+        cfg = make_cfg_diverse(primary_source_idx=primary_source_idx)
         rs = cfg.build(tmp_dir=self.tmp_dir)
         primary_rs = rs.raster_sources[primary_source_idx]
-        non_primary_rs = rs.raster_sources[non_primary_source_idx]
 
         self.assertEqual(rs.extent, primary_rs.extent)
-        self.assertNotEqual(rs.extent, non_primary_rs.extent)
-
         self.assertEqual(rs.dtype, primary_rs.dtype)
-        self.assertNotEqual(rs.dtype, non_primary_rs.dtype)
-
         self.assertEqual(rs.crs_transformer.transform,
                          primary_rs.crs_transformer.transform)
-        self.assertNotEqual(rs.crs_transformer, non_primary_rs.crs_transformer)
+
+    def test_dtype_validation(self):
+        cfg = make_cfg_diverse(diff_dtypes=True)
+        self.assertRaises(ValueError, lambda: cfg.build(tmp_dir=self.tmp_dir))
 
     def test_bbox(self):
         # /wo user specified extent

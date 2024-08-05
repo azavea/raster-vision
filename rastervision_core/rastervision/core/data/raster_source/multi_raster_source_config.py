@@ -14,10 +14,10 @@ def multi_rs_config_upgrader(cfg_dict: dict, version: int) -> dict:
     if version == 1:
         # field renamed in version 2
         cfg_dict['primary_source_idx'] = cfg_dict.get('crs_source', 0)
-        try:
-            del cfg_dict['crs_source']
-        except KeyError:
-            pass
+        cfg_dict.pop('crs_source', None)
+    elif version == 13:
+        # field removed in version 14
+        cfg_dict.pop('force_same_dtype', None)
     return cfg_dict
 
 
@@ -36,10 +36,6 @@ class MultiRasterSourceConfig(RasterSourceConfig):
         description=
         'Index of the raster source whose CRS, dtype, and other attributes '
         'will override those of the other raster sources. Defaults to 0.')
-    force_same_dtype: bool = Field(
-        False,
-        description='Force all subchips to be of the same dtype as the '
-        'primary_source_idx-th subchip.')
     temporal: bool = Field(
         False,
         description='Stack images from sub raster sources into a time-series '
@@ -82,14 +78,12 @@ class MultiRasterSourceConfig(RasterSourceConfig):
             multi_raster_source = TemporalMultiRasterSource(
                 raster_sources=built_raster_sources,
                 primary_source_idx=self.primary_source_idx,
-                force_same_dtype=self.force_same_dtype,
                 raster_transformers=raster_transformers,
                 bbox=bbox)
         else:
             multi_raster_source = MultiRasterSource(
                 raster_sources=built_raster_sources,
                 primary_source_idx=self.primary_source_idx,
-                force_same_dtype=self.force_same_dtype,
                 channel_order=self.channel_order,
                 raster_transformers=raster_transformers,
                 bbox=bbox)
