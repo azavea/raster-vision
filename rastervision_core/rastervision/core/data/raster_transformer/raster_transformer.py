@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 from abc import (ABC, abstractmethod)
+from pydantic.types import PositiveInt as PosInt
 
 if TYPE_CHECKING:
     import numpy as np
@@ -18,3 +19,11 @@ class RasterTransformer(ABC):
         Returns:
             Array of shape (..., H, W, C)
         """
+
+    def get_out_channels(self, in_channels: PosInt) -> PosInt:
+        """Number of channels in output of ``transform()``."""
+        return in_channels
+
+    def get_out_dtype(self, in_dtype: 'np.dtype') -> 'np.dtype':
+        """dtype of the output of ``transform()``."""
+        return in_dtype

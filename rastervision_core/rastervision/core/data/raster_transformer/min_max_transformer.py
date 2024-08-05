@@ -14,3 +14,6 @@ class MinMaxTransformer(RasterTransformer):
         chip_normalized = (chip - channel_mins) / (channel_maxs - channel_mins)
         chip_normalized = (255 * chip_normalized).astype(np.uint8)
         return chip_normalized
+
+    def get_out_dtype(self, in_dtype: 'np.dtype') -> 'np.dtype':
+        return np.uint8

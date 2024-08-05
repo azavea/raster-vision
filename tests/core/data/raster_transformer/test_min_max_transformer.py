@@ -33,6 +33,17 @@ class TestMinMaxTransformer(unittest.TestCase):
         chip_out = tf.transform(chip_in)
         np.testing.assert_array_equal(chip_out, chip_expexted)
 
+    def test_get_out_dtype(self):
+        tf = MinMaxTransformer()
+        self.assertEqual(tf.get_out_dtype(np.float32), np.uint8)
+        tf = MinMaxTransformer()
+        self.assertEqual(tf.get_out_dtype(np.uint8), np.uint8)
+
+    def test_get_out_channels(self):
+        tf = MinMaxTransformer()
+        self.assertEqual(tf.get_out_channels(3), 3)
+        self.assertEqual(tf.get_out_channels(8), 8)
+
 
 if __name__ == '__main__':
     unittest.main()

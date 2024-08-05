@@ -40,6 +40,14 @@ class TestRGBClassTransformer(unittest.TestCase):
         expected_rgb_image = self.rgb_image
         np.testing.assert_array_equal(rgb_image, expected_rgb_image)
 
+    def test_get_out_dtype(self):
+        self.assertEqual(self.transformer.get_out_dtype(np.float32), np.uint8)
+        self.assertEqual(self.transformer.get_out_dtype(np.uint8), np.uint8)
+
+    def test_get_out_channels(self):
+        self.assertEqual(self.transformer.get_out_channels(3), 1)
+        self.assertRaises(ValueError, self.transformer.get_out_channels, 8)
+
 
 if __name__ == '__main__':
     unittest.main()

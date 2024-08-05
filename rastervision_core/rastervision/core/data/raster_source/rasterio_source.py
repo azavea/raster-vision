@@ -76,9 +76,11 @@ class RasterioSource(RasterSource):
 
         self.imagery_path = self.download_data(
             self.tmp_dir, stream=self.allow_streaming)
+
         self.session = None
         if 's3://' in self.imagery_path.lower():
             self.session = get_aws_session()
+
         with rio.Env(session=self.session):
             self.image_dataset = rio.open(self.imagery_path)
 
@@ -91,15 +93,12 @@ class RasterioSource(RasterSource):
         self._crs_transformer = RasterioCRSTransformer.from_dataset(
             self.image_dataset)
 
+        dtype_raw = np.dtype(self.image_dataset.dtypes[0])
         num_channels_raw = self.image_dataset.count
         if channel_order is None:
             channel_order = get_channel_order_from_dataset(self.image_dataset)
         self.bands_to_read = np.array(channel_order, dtype=int) + 1
         self.is_masked = is_masked(self.image_dataset)
-
-        # number of output channels
-        if len(raster_transformers) == 0:
-            self._num_channels = len(self.bands_to_read)
 
         height = self.image_dataset.height
         width = self.image_dataset.width
@@ -107,41 +106,15 @@ class RasterioSource(RasterSource):
             bbox = Box(0, 0, height, width)
 
         super().__init__(
-            channel_order,
-            num_channels_raw,
+            channel_order=channel_order,
+            num_channels_raw=num_channels_raw,
+            dtype_raw=dtype_raw,
             bbox=bbox,
             raster_transformers=raster_transformers)
 
     @property
-    def num_channels(self) -> int:
-        """Number of channels in the chips read from this source.
-
-        .. note::
-
-            Unlike the parent class, ``RasterioSource`` applies channel_order
-            (via ``bands_to_read``) before ``raster_transformers``. So the
-            number of output channels is not guaranteed to be equal to
-            ``len(channel_order)``.
-        """
-        if self._num_channels is None:
-            self._set_info_from_chip()
-        return self._num_channels
-
-    @property
-    def dtype(self) -> np.dtype:
-        if self._dtype is None:
-            self._set_info_from_chip()
-        return self._dtype
-
-    @property
     def crs_transformer(self) -> RasterioCRSTransformer:
         return self._crs_transformer
-
-    def _set_info_from_chip(self):
-        """Read 1x1 chip to get info not statically inferable."""
-        test_chip = self.get_chip(Box(0, 0, 1, 1))
-        self._dtype = test_chip.dtype
-        self._num_channels = test_chip.shape[-1]
 
     def download_data(self, vrt_dir: str | None = None,
                       stream: bool = False) -> str:

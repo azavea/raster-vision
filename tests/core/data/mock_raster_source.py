@@ -9,8 +9,9 @@ class MockRasterSource(RasterSource):
     def __init__(self, channel_order, num_channels_raw,
                  raster_transformers=[]):
         super().__init__(
-            channel_order,
-            num_channels_raw,
+            channel_order=channel_order,
+            num_channels_raw=num_channels_raw,
+            dtype_raw=np.uint8,
             bbox=Box.make_square(0, 0, 2),
             raster_transformers=raster_transformers)
         self.mock = Mock()
