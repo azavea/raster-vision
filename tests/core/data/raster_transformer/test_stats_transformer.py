@@ -57,15 +57,6 @@ class TestStatsTransformer(unittest.TestCase):
         chip_out_expected = np.ones((2, 2, 4)) * 170
         np.testing.assert_equal(chip_out, chip_out_expected)
 
-    def test_transform_with_channel_order(self):
-        # All values have z-score of 1, which translates to
-        # uint8 value of 170.
-        tf = StatsTransformer(np.ones((4, )), np.ones((4, )) * 2)
-        chip_in = np.ones((2, 2, 2)) * 3
-        chip_out = tf.transform(chip_in, channel_order=[1, 2])
-        chip_out_expected = np.ones((2, 2, 2)) * 170
-        np.testing.assert_equal(chip_out, chip_out_expected)
-
     def test_transform_noop(self):
         tf = StatsTransformer(np.ones((4, )), np.ones((4, )) * 2)
         chip_in = np.ones((2, 2, 4), dtype=np.uint8)

@@ -115,7 +115,7 @@ class TemporalMultiRasterSource(MultiRasterSource):
         chip = np.stack(sub_chips)
 
         for transformer in self.raster_transformers:
-            chip = transformer.transform(chip, self.channel_order)
+            chip = transformer.transform(chip)
 
         return chip
 

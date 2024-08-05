@@ -278,6 +278,6 @@ class MultiRasterSource(RasterSource):
         chip = chip[..., self.channel_order]
 
         for transformer in self.raster_transformers:
-            chip = transformer.transform(chip, self.channel_order)
+            chip = transformer.transform(chip)
 
         return chip

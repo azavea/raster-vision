@@ -263,7 +263,7 @@ class XarraySource(RasterSource):
         chip = self._get_chip(
             window, bands=bands, time=time, out_shape=out_shape)
         for transformer in self.raster_transformers:
-            chip = transformer.transform(chip, bands)
+            chip = transformer.transform(chip)
         return chip
 
     def __getitem__(self, key: Any) -> 'np.ndarray':
