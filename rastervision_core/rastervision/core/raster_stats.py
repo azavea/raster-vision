@@ -250,7 +250,7 @@ def get_chip(raster_source: 'RasterSource',
              window: 'Box',
              nodata_value: float | None = 0) -> np.ndarray | None:
     """Return chip or None if all values are NODATA."""
-    chip = raster_source.get_raw_chip(window).astype(float)
+    chip = raster_source.get_chip(window).astype(float)
 
     if nodata_value is None:
         return chip
