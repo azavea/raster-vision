@@ -217,7 +217,7 @@ class RegressionModelConfig(ModelConfig):
 class RegressionLearnerConfig(LearnerConfig):
     """Configure a :class:`.RegressionLearner`."""
 
-    model: RegressionModelConfig | None
+    model: RegressionModelConfig | None = None
 
     def build(self,
               tmp_dir,

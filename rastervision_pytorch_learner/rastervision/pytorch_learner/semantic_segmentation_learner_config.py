@@ -212,7 +212,7 @@ class SemanticSegmentationModelConfig(ModelConfig):
 class SemanticSegmentationLearnerConfig(LearnerConfig):
     """Configure a :class:`.SemanticSegmentationLearner`."""
 
-    model: SemanticSegmentationModelConfig | None
+    model: SemanticSegmentationModelConfig | None = None
 
     def build(self,
               tmp_dir=None,

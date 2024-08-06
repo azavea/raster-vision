@@ -156,7 +156,7 @@ class ClassificationModelConfig(ModelConfig):
 class ClassificationLearnerConfig(LearnerConfig):
     """Configure a :class:`.ClassificationLearner`."""
 
-    model: ClassificationModelConfig | None
+    model: ClassificationModelConfig | None = None
 
     def build(self,
               tmp_dir=None,
