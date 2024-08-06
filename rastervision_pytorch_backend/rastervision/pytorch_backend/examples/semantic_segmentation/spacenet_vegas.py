@@ -75,7 +75,9 @@ class VegasRoads(SpacenetConfig):
 
     def get_class_config(self):
         return ClassConfig(
-            names=['road', 'background'], colors=['orange', 'black'])
+            names=['road', 'background'],
+            colors=['orange', 'black'],
+            null_class='background')
 
     def get_class_id_to_filter(self):
         return {0: ['has', 'highway']}
@@ -92,7 +94,9 @@ class VegasBuildings(SpacenetConfig):
 
     def get_class_config(self):
         return ClassConfig(
-            names=['building', 'background'], colors=['orange', 'black'])
+            names=['building', 'background'],
+            colors=['orange', 'black'],
+            null_class='background')
 
     def get_class_id_to_filter(self):
         return {0: ['has', 'building']}
