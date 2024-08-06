@@ -169,5 +169,5 @@ class StatsTransformer(RasterTransformer):
         return repr_with_args(
             self, means=self.means, stds=self.stds, max_stds=self.max_stds)
 
-    def get_out_dtype(self, in_dtype: 'np.dtype') -> 'np.dtype':
-        return np.uint8
+    def get_out_dtype(self, in_dtype: np.dtype) -> np.dtype:
+        return np.dtype(np.uint8)

@@ -56,7 +56,7 @@ class RasterSource(ABC):
 
         self.channel_order = channel_order
         self.num_channels_raw = num_channels_raw
-        self.dtype_raw = dtype_raw
+        self.dtype_raw = np.dtype(dtype_raw)
         self.raster_transformers = raster_transformers
         self._bbox = bbox
         self._num_channels = None

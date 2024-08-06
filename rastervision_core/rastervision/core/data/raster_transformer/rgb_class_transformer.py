@@ -63,5 +63,5 @@ class RGBClassTransformer(RasterTransformer):
                 'RGBClassTransformer only accepts 3-channel inputs.')
         return 1
 
-    def get_out_dtype(self, in_dtype: 'np.dtype') -> 'np.dtype':
-        return np.uint8
+    def get_out_dtype(self, in_dtype: np.dtype) -> np.dtype:
+        return np.dtype(np.uint8)
