@@ -6,9 +6,7 @@ from rastervision.core.data.raster_transformer import RasterTransformer
 class MinMaxTransformer(RasterTransformer):
     """Transforms chips by scaling values in each channel to span 0-255."""
 
-    def transform(self,
-                  chip: np.ndarray,
-                  channel_order: list[int] | None = None) -> np.ndarray:
+    def transform(self, chip: np.ndarray) -> np.ndarray:
         c = chip.shape[-1]
         pixels = chip.reshape(-1, c)
         channel_mins = pixels.min(axis=0)

@@ -3,10 +3,13 @@ from os.path import join
 
 import numpy as np
 
+from rastervision.pipeline.config import build_config
 from rastervision.pipeline.file_system import get_tmp_dir
 from rastervision.core.raster_stats import RasterStats
 from rastervision.core.data import (RasterioSource, StatsTransformer,
                                     StatsTransformerConfig)
+from rastervision.core.data.raster_transformer.stats_transformer_config import (  # noqa
+    stats_transformer_config_upgrader)
 
 from tests import data_file_path
 
@@ -46,6 +49,33 @@ class TestStatsTransformerConfig(unittest.TestCase):
             np.testing.assert_array_equal(tf.means, np.array([1, 2]))
             np.testing.assert_array_equal(tf.stds, np.array([3, 4]))
 
+    def test_upgrader_v2(self):
+        cfg = StatsTransformerConfig()
+        old_cfg_dict = cfg.dict()
+        old_cfg_dict.pop('needs_channel_order')
+        new_cfg_dict = stats_transformer_config_upgrader(old_cfg_dict, 2)
+        self.assertEqual(new_cfg_dict['scene_group'], '__N/A__')
+
+    def test_upgrader_v13(self):
+        stats = RasterStats(np.array([1, 2]), np.array([3, 4]))
+
+        with get_tmp_dir() as tmp_dir:
+            stats_uri = join(tmp_dir, 'stats.json')
+            stats.save(stats_uri)
+
+            cfg = StatsTransformerConfig(stats_uri=stats_uri)
+            old_cfg_dict = cfg.dict()
+            old_cfg_dict.pop('needs_channel_order')
+            new_cfg_dict = stats_transformer_config_upgrader(old_cfg_dict, 13)
+            self.assertTrue(new_cfg_dict['needs_channel_order'])
+
+            cfg = build_config(new_cfg_dict)
+            self.assertIsInstance(cfg, StatsTransformerConfig)
+
+            tf = cfg.build(channel_order=[1, 0])
+            np.testing.assert_array_equal(tf.means, np.array([2, 1]))
+            np.testing.assert_array_equal(tf.stds, np.array([4, 3]))
+
 
 class TestStatsTransformer(unittest.TestCase):
     def test_transform(self):
@@ -55,15 +85,6 @@ class TestStatsTransformer(unittest.TestCase):
         chip_in = np.ones((2, 2, 4)) * 3
         chip_out = tf.transform(chip_in)
         chip_out_expected = np.ones((2, 2, 4)) * 170
-        np.testing.assert_equal(chip_out, chip_out_expected)
-
-    def test_transform_with_channel_order(self):
-        # All values have z-score of 1, which translates to
-        # uint8 value of 170.
-        tf = StatsTransformer(np.ones((4, )), np.ones((4, )) * 2)
-        chip_in = np.ones((2, 2, 2)) * 3
-        chip_out = tf.transform(chip_in, channel_order=[1, 2])
-        chip_out_expected = np.ones((2, 2, 2)) * 170
         np.testing.assert_equal(chip_out, chip_out_expected)
 
     def test_transform_noop(self):
@@ -81,9 +102,9 @@ class TestStatsTransformer(unittest.TestCase):
 
     def test_from_raster_stats(self):
         stats = RasterStats(np.array([1, 2]), np.array([3, 4]))
-        tf = StatsTransformer.from_raster_stats(stats)
-        np.testing.assert_array_equal(tf.means, np.array([1, 2]))
-        np.testing.assert_array_equal(tf.stds, np.array([3, 4]))
+        tf = StatsTransformer.from_raster_stats(stats, channel_order=[1, 0])
+        np.testing.assert_array_equal(tf.means, np.array([2, 1]))
+        np.testing.assert_array_equal(tf.stds, np.array([4, 3]))
 
     def test_from_stats_json(self):
         stats = RasterStats(np.array([1, 2]), np.array([3, 4]))

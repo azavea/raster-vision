@@ -198,7 +198,7 @@ class RasterioSource(RasterSource):
             bands = self.bands_to_read[bands]
         chip = self._get_chip(window, out_shape=out_shape, bands=bands)
         for transformer in self.raster_transformers:
-            chip = transformer.transform(chip, self.channel_order)
+            chip = transformer.transform(chip)
         return chip
 
     def __getitem__(self, key: Any) -> 'np.ndarray':

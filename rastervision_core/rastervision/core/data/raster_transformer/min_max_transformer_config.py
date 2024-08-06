@@ -7,5 +7,5 @@ from rastervision.core.data.raster_transformer import (RasterTransformerConfig,
 class MinMaxTransformerConfig(RasterTransformerConfig):
     """Configure a :class:`.MinMaxTransformer`."""
 
-    def build(self):
+    def build(self, channel_order: list[int] | None = None):
         return MinMaxTransformer()

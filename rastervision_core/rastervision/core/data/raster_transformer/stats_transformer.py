@@ -32,33 +32,24 @@ class StatsTransformer(RasterTransformer):
         """Construct a new StatsTransformer.
 
         Args:
-            means (np.ndarray): Channel means.
-            means (np.ndarray): Channel standard deviations.
-            max_stds (float): Number of standard deviations to clip the
-                distribution to on both sides. Defaults to 3.
+            means: Channel means.
+            means: Channel standard deviations.
+            max_stds: Number of standard deviations to clip the distribution to
+                on both sides. Defaults to 3.
         """
         # shape = (1, 1, num_channels)
         self.means = np.array(means, dtype=float)
         self.stds = np.array(stds, dtype=float)
         self.max_stds = max_stds
 
-    def transform(self,
-                  chip: np.ndarray,
-                  channel_order: Sequence[int] | None = None) -> np.ndarray:
-        """Transform a chip.
-
-        Transforms non-uint8 to uint8 values using raster_stats.
+    def transform(self, chip: np.ndarray) -> np.ndarray:
+        """Clip values to +-max_stds std devs and convert to uint8 (0-255).
 
         Args:
-            chip: ndarray of shape [height, width, channels] This is assumed to already
-                have the channel_order applied to it if channel_order is set. In other
-                words, channels should be equal to len(channel_order).
-            channel_order: list of indices of channels that were extracted from the
-                raw imagery.
+            chip: Array of shape (..., H, W, C).
 
         Returns:
-            [height, width, channels] uint8 numpy array
-
+            Array of shape (..., H, W, C)
         """
         if chip.dtype == np.uint8:
             return chip
@@ -66,9 +57,6 @@ class StatsTransformer(RasterTransformer):
         means = self.means
         stds = self.stds
         max_stds = self.max_stds
-        if channel_order is not None:
-            means = means[channel_order]
-            stds = stds[channel_order]
 
         # Don't transform NODATA zero values.
         nodata_mask = chip == 0
@@ -123,39 +111,53 @@ class StatsTransformer(RasterTransformer):
         return stats_transformer
 
     @classmethod
-    def from_stats_json(cls, uri: str, **kwargs) -> Self:
+    def from_stats_json(cls,
+                        uri: str,
+                        channel_order: list[int] | None = None,
+                        **kwargs) -> Self:
         """Build with stats from a JSON file.
 
         The file is expected to be in the same format as written by
         :meth:`.RasterStats.save`.
 
         Args:
-            uri (str): URI of the JSON file.
+            uri: URI of the JSON file.
+            channel_order: Channel order to apply to the means and stds in the
+                file.
             **kwargs: Extra args for :meth:`.__init__`.
 
         Returns:
-            StatsTransformer: A StatsTransformer.
+            A StatsTransformer.
         """
         stats = RasterStats.load(uri)
-        stats_transformer = StatsTransformer.from_raster_stats(stats, **kwargs)
+        stats_transformer = StatsTransformer.from_raster_stats(
+            stats, channel_order=channel_order, **kwargs)
         return stats_transformer
 
     @classmethod
-    def from_raster_stats(cls, stats: RasterStats, **kwargs) -> Self:
+    def from_raster_stats(cls,
+                          stats: RasterStats,
+                          channel_order: list[int] | None = None,
+                          **kwargs) -> Self:
         """Build with stats from a :class:`.RasterStats` instance.
 
         The file is expected to be in the same format as written by
         :meth:`.RasterStats.save`.
 
         Args:
-            stats (RasterStats): A :class:`.RasterStats` instance with
-                non-None stats.
+            stats: A :class:`.RasterStats` instance with non-None stats.
+            channel_order: Channel order to apply to the means and stds in the
+                :class:`.RasterStats`.
             **kwargs: Extra args for :meth:`.__init__`.
 
         Returns:
-            StatsTransformer: A StatsTransformer.
+            A StatsTransformer.
         """
-        stats_transformer = StatsTransformer(stats.means, stats.stds, **kwargs)
+        means, stds = stats.means, stats.stds
+        if channel_order is not None:
+            means = means[channel_order]
+            stds = stds[channel_order]
+        stats_transformer = StatsTransformer(means, stds, **kwargs)
         return stats_transformer
 
     @property

@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 from rastervision.pipeline.config import Config, register_config
 
 if TYPE_CHECKING:
-    from rastervision.core.data import SceneConfig
+    from rastervision.core.data import RasterTransformer, SceneConfig
     from rastervision.core.rv_pipeline import RVPipelineConfig
 
 
@@ -17,3 +17,7 @@ class RasterTransformerConfig(Config):
 
     def update_root(self, root_dir: str):
         pass
+
+    def build(self,
+              channel_order: list[int] | None = None) -> 'RasterTransformer':
+        raise NotImplementedError()

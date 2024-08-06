@@ -16,9 +16,9 @@ class RasterStats:
     """Band-wise means and standard deviations."""
 
     def __init__(self,
-                 means: np.ndarray | None = None,
-                 stds: np.ndarray | None = None,
-                 counts: np.ndarray | None = None):
+                 means: Sequence[float] | None = None,
+                 stds: Sequence[float] | None = None,
+                 counts: Sequence[float] | None = None):
         """Constructor.
 
         Args:
@@ -27,9 +27,9 @@ class RasterStats:
             counts: Band pixel counts (used to compute the specified means and
                 stds). Defaults to ``None``.
         """
-        self.means = means
-        self.stds = stds
-        self.counts = counts
+        self.means = np.array(means) if means is not None else None
+        self.stds = np.array(stds) if stds is not None else None
+        self.counts = np.array(counts) if counts is not None else None
 
     @classmethod
     def load(cls, stats_uri: str) -> Self:
@@ -250,7 +250,7 @@ def get_chip(raster_source: 'RasterSource',
              window: 'Box',
              nodata_value: float | None = 0) -> np.ndarray | None:
     """Return chip or None if all values are NODATA."""
-    chip = raster_source.get_raw_chip(window).astype(float)
+    chip = raster_source.get_chip(window).astype(float)
 
     if nodata_value is None:
         return chip

@@ -37,19 +37,14 @@ class RGBClassTransformer(RasterTransformer):
             ],
             dtype=np.uint8)
 
-    def transform(self,
-                  chip: np.ndarray,
-                  channel_order: list[int] | None = None) -> np.ndarray:
+    def transform(self, chip: np.ndarray) -> np.ndarray:
         """Transform RGB array to array of class IDs or vice versa.
 
         Args:
-            chip (np.ndarray): Numpy array of shape (H, W, 3).
-            channel_order (list[int] | None): List of indices of
-                channels that were extracted from the raw imagery.
-                Defaults to None.
+            chip: Numpy array of shape (H, W, 3).
 
         Returns:
-            np.ndarray: An array of class IDs.
+            An array of class IDs of shape (H, W, 1).
         """
         return self.rgb_to_class(chip)
 

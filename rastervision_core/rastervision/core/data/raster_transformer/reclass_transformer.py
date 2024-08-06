@@ -9,30 +9,21 @@ class ReclassTransformer(RasterTransformer):
     """Maps class IDs in a label raster to other values."""
 
     def __init__(self, mapping: dict[int, int]):
-        """Construct a new ReclassTransformer.
+        """Constructor.
 
         Args:
-            mapping: (dict) Remapping dictionary
+            mapping: Remapping dictionary, value_from-->value_to.
         """
         self.mapping = mapping
 
-    def transform(self,
-                  chip: 'np.ndarray',
-                  channel_order: list[int] | None = None):
-        """Transform a chip.
-
-        Reclassify a label raster using the given mapping.
+    def transform(self, chip: 'np.ndarray'):
+        """Reclassify a label raster using the given mapping.
 
         Args:
-            chip: ndarray of shape [height, width, channels] This is assumed to already
-                have the channel_order applied to it if channel_order is set. In other
-                words, channels should be equal to len(channel_order).
-            channel_order: list of indices of channels that were extracted from the
-                raw imagery.
+            chip: Array of shape (..., H, W, C).
 
         Returns:
-            [height, width, channels] numpy array
-
+            Array of shape (..., H, W, C)
         """
         masks = []
         for (value_from, value_to) in self.mapping.items():
