@@ -157,6 +157,18 @@ RUN --mount=type=cache,target=/root/.cache/pip uv pip install -r docs/pandoc-req
 
 #------------------------------------------------------------------------
 
+# needed for this image to be used by the AWS SageMaker PyTorch Estimator
+RUN uv pip install sagemaker_pytorch_training==2.8.1
+ENV SAGEMAKER_TRAINING_MODULE=sagemaker_pytorch_container.training:main
+
+# Install a onnxruntime-gpu version compatible with CUDA 12. Specifying
+# --extra-index-url in requirements.txt seems to cause problems with the
+# RTD build.
+RUN if [ "${TARGETARCH}" != "arm64" ]; then \
+    uv pip install --upgrade onnxruntime-gpu==1.17 --extra-index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/; fi
+
+#------------------------------------------------------------------------
+
 ENV PYTHONPATH=/opt/src:$PYTHONPATH
 ENV PYTHONPATH=/opt/src/rastervision_aws_batch/:$PYTHONPATH
 ENV PYTHONPATH=/opt/src/rastervision_aws_s3/:$PYTHONPATH
@@ -182,15 +194,5 @@ COPY ./rastervision_pipeline/ /opt/src/rastervision_pipeline/
 COPY ./rastervision_aws_sagemaker/ /opt/src/rastervision_aws_sagemaker/
 COPY ./rastervision_pytorch_backend/ /opt/src/rastervision_pytorch_backend/
 COPY ./rastervision_pytorch_learner/ /opt/src/rastervision_pytorch_learner/
-
-# needed for this image to be used by the AWS SageMaker PyTorch Estimator
-RUN uv pip install sagemaker_pytorch_training==2.8.1
-ENV SAGEMAKER_TRAINING_MODULE=sagemaker_pytorch_container.training:main
-
-# Install a onnxruntime-gpu version compatible with CUDA 12. Specifying
-# --extra-index-url in requirements.txt seems to cause problems with the
-# RTD build.
-RUN if [ "${TARGETARCH}" != "arm64" ]; then \
-    uv pip install --upgrade onnxruntime-gpu==1.17 --extra-index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/; fi
 
 CMD ["bash"]
