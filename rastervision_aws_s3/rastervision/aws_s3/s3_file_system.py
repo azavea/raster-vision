@@ -297,6 +297,8 @@ class S3FileSystem(FileSystem):
     @staticmethod
     def list_paths(uri: str, ext: str = '', delimiter: str = '/') -> list[str]:
         request_payer = S3FileSystem.get_request_payer()
+        if not uri.endswith('/'):
+            uri += '/'
         parsed_uri = urlparse(uri)
         bucket = parsed_uri.netloc
         prefix = os.path.join(parsed_uri.path[1:])

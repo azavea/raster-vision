@@ -259,8 +259,8 @@ class TestS3Misc(unittest.TestCase):
 
     def test_list_paths_s3(self):
         path = os.path.join(self.tmp_dir.name, 'lorem', 'ipsum.txt')
-        s3_path = 's3://{}/xxx/lorem.txt'.format(self.bucket_name)
-        s3_directory = 's3://{}/xxx/'.format(self.bucket_name)
+        s3_path = f's3://{self.bucket_name}/xxx/lorem.txt'
+        s3_directory = f's3://{self.bucket_name}/xxx/'
         directory = os.path.dirname(path)
         make_dir(directory, check_empty=False)
 
@@ -268,6 +268,10 @@ class TestS3Misc(unittest.TestCase):
         upload_or_copy(path, s3_path)
 
         list_paths(s3_directory)
+        self.assertEqual(len(list_paths(s3_directory)), 1)
+
+        # without the trailing slash
+        list_paths(s3_directory[:-1])
         self.assertEqual(len(list_paths(s3_directory)), 1)
 
     def test_file_exists(self):
