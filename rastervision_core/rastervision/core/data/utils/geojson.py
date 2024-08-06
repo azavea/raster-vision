@@ -389,7 +389,7 @@ def filter_geojson_to_window(geojson: dict, window: Box) -> dict:
     gdf = geojson_to_geodataframe(geojson)
     window_geom = window.to_shapely()
     gdf: gpd.GeoDataFrame = gdf[gdf.intersects(window_geom)]
-    out_geojson = gdf._to_geo()
+    out_geojson = gdf.__geo_interface__
     return out_geojson
 
 
