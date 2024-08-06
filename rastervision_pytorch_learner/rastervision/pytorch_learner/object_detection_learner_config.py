@@ -203,7 +203,7 @@ class ObjectDetectionModelConfig(ModelConfig):
 class ObjectDetectionLearnerConfig(LearnerConfig):
     """Configure an :class:`.ObjectDetectionLearner`."""
 
-    model: ObjectDetectionModelConfig | None
+    model: ObjectDetectionModelConfig | None = None
 
     def build(self,
               tmp_dir=None,
