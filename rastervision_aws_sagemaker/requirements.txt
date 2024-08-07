@@ -1,2 +1,2 @@
 rastervision_pipeline==0.30.2-dev
-sagemaker==2.227.0
+sagemaker==2.228.0
