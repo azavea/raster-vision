@@ -28,3 +28,7 @@ updates:
     directory: "/rastervision_gdal_vsi"
     schedule:
       interval: "monthly"
+  - package-ecosystem: "pip"
+    directory: "/rastervision_aws_sagemaker"
+    schedule:
+      interval: "monthly"
