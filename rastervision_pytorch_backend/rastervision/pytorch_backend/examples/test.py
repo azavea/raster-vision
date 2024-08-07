@@ -11,17 +11,17 @@ from rastervision.pipeline.file_system import (
     file_to_json, sync_from_dir, download_or_copy, file_exists, sync_to_dir,
     NotReadableError, download_if_needed)
 
-NEW_VERSION_FULL = '0.30.0'  # x.y.z
-NEW_VERSION_MAJOR_MINOR = '0.30'  # x.y
+NEW_VERSION_FULL = '0.31.0'  # x.y.z
+NEW_VERSION_MAJOR_MINOR = '0.31'  # x.y
 
 EXAMPLES_MODULE_ROOT = 'rastervision.pytorch_backend.examples'
 EXAMPLES_PATH_ROOT = '/opt/src/rastervision_pytorch_backend/rastervision/pytorch_backend/examples'  # noqa
 REMOTE_PROCESSED_ROOT = f's3://raster-vision/examples/{NEW_VERSION_FULL}/processed-data'
 REMOTE_OUTPUT_ROOT = f's3://raster-vision/examples/{NEW_VERSION_FULL}/output'
 LOCAL_RAW_ROOT = '/opt/data/raw-data'
-LOCAL_PROCESSED_ROOT = '/opt/data/examples/processed-data'
-LOCAL_OUTPUT_ROOT = '/opt/data/examples/output'
-LOCAL_COLLECT_ROOT = '/opt/data/examples/collect'
+LOCAL_PROCESSED_ROOT = f'/opt/data/examples/{NEW_VERSION_FULL}/processed-data'
+LOCAL_OUTPUT_ROOT = f'/opt/data/examples/{NEW_VERSION_FULL}/output'
+LOCAL_COLLECT_ROOT = f'/opt/data/examples/{NEW_VERSION_FULL}/collect'
 ZOO_UPLOAD_ROOT = f's3://azavea-research-public-data/raster-vision/examples/model-zoo-{NEW_VERSION_MAJOR_MINOR}'  # noqa
 SAMPLE_IMG_DIR = f's3://azavea-research-public-data/raster-vision/examples/sample_images'  # noqa
 
