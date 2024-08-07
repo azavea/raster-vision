@@ -20,7 +20,7 @@ It has built-in support for chip classification, object detection, and semantic 
 **As a low-code framework**, Raster Vision allows users (who don't need to be experts in deep learning!) to quickly and repeatably configure experiments that execute a machine learning pipeline including: analyzing training data, creating training chips, training models, creating predictions, evaluating models, and bundling the model files and configuration for easy deployment.
 ![Overview of Raster Vision workflow](docs/img/rv-pipeline-overview.png)
 
-Raster Vision also has built-in support for running experiments in the cloud using [AWS Batch](https://github.com/azavea/raster-vision-aws).
+Raster Vision also has built-in support for running experiments in the cloud using [AWS Batch](https://docs.rastervision.io/en/stable/setup/aws.html#running-on-aws-batch) as well as [AWS Sagemaker](https://docs.rastervision.io/en/stable/setup/aws.html#running-on-aws-sagemaker).
 
 See the [documentation](https://docs.rastervision.io/en/stable/) for more details.
 
