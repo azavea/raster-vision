@@ -2,6 +2,34 @@ CHANGELOG
 =========
 
 
+Raster Vision 0.31.0
+--------------------
+
+This release migrates Raster Vision to pydantic v2 (it will no longer work with v1) and makes several other improvements and fixes. There are a few breaking changes; see the :doc:`migration guide <migration/v0-30_to_v0-31>`.
+
+* Features:
+
+  * Add ``MultiRasterSource.from_stac()`` constructor (`#2156 <https://github.com/azavea/raster-vision/pull/2156>`__)
+  * Use smarter default padding value for sliding windows (`#2190 <https://github.com/azavea/raster-vision/pull/2190>`__)
+  * Use rasterio AWS session in ``RasterioSource`` when reading files on S3 (`#2197 <https://github.com/azavea/raster-vision/pull/2197>`__)
+  * Determine ``num_channels`` and ``dtype`` in ``RasterSource`` statically without reading a chip (`#2212 <https://github.com/azavea/raster-vision/pull/2212>`__)
+
+* Refactor:
+
+  * Compute ``RasterStats`` from transformed ``RasterSource`` (`#2211 <https://github.com/azavea/raster-vision/pull/2211>`__)
+
+* Fixes:
+
+  * Migrate to pydantic v2 (`#2178 <https://github.com/azavea/raster-vision/pull/2178>`__)
+  * Fix bug in ``ChipClassificationSource.__getitem__()`` when bbox is specified (`#2193 <https://github.com/azavea/raster-vision/pull/2193>`__)
+
+* Maintenance:
+
+  * Update codecov action to v4 and use token (`#2172 <https://github.com/azavea/raster-vision/pull/2172>`__)
+  * Type hint improvements (`#2192 <https://github.com/azavea/raster-vision/pull/2192>`__, `#2195 <https://github.com/azavea/raster-vision/pull/2195>`__, `#2210 <https://github.com/azavea/raster-vision/pull/2210>`__)
+  * Update CLA instructions (`#2196 <https://github.com/azavea/raster-vision/pull/2196>`__)
+
+
 Raster Vision 0.30.1
 --------------------
 

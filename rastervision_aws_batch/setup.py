@@ -5,7 +5,7 @@ from setuptools import setup, find_namespace_packages
 import re
 
 name = 'rastervision_aws_batch'
-version = '0.30.2-dev'
+version = '0.31.0'
 description = 'A rastervision plugin that adds an AWS Batch pipeline runner'
 requirement_constraints = {}
 

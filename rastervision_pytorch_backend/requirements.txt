@@ -1,3 +1,3 @@
-rastervision_pipeline==0.30.2-dev
-rastervision_core==0.30.2-dev
-rastervision_pytorch_learner==0.30.2-dev
+rastervision_pipeline==0.31.0
+rastervision_core==0.31.0
+rastervision_pytorch_learner==0.31.0

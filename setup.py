@@ -4,7 +4,7 @@ from os.path import abspath, dirname, join
 from setuptools import setup, find_namespace_packages
 import re
 
-__version__ = '0.30.2-dev'
+__version__ = '0.31.0'
 requirement_constraints = {}
 
 here = abspath(dirname(__file__))
