@@ -264,7 +264,13 @@ language = 'en'
 # directories to ignore when looking for source files.
 # These patterns also affect html_static_path and html_extra_path
 exclude_patterns = [
-    '_build', 'Thumbs.db', '.DS_Store', 'README.md', '**.ipynb_checkpoints'
+    '_build',
+    'Thumbs.db',
+    '.DS_Store',
+    'README.md',
+    '**.ipynb_checkpoints',
+    '**/data/**',
+    '**/.*/**',
 ]
 
 # The reST default role (used for this markup: `text`) to use for all
