@@ -3,19 +3,28 @@ Release Process
 
 This is a guide to the process of creating a new release, and is meant for the maintainers of Raster Vision.
 
-.. note:: The following instructions assume that Python 3 is the default Python on your local system. Using Python 2 will not work.
-
 Minor or Major Version Release
 ------------------------------
 
 #.  It's a good idea to update any major dependencies before the release.
-#.  Update THIRD_PARTY_LICENSES.txt:
+#.  Update ``THIRD_PARTY_LICENSES.txt``:
 
-    #. Use ``third_party_license_file_generator`` (``pip install third_party_license_file_generator``) to auto generate the file. Update ``third_party_license_file_generator_overrides.yml``, if necessary.
+    #. Install `third_party_license_file_generator <https://github.com/ftpsolutions/python-third-party-license-file-generator>`_:
+
+       .. code-block:: console
+
+           pip install third_party_license_file_generator
+
+    #. Update ``third_party_license_file_generator_overrides.yml``, if necessary.
+    #. Collect all ``requirements.txt`` files into a single file, ``requirements-all.txt``:
 
        .. code-block:: console
 
            cat `find **/requirements.txt` requirements.txt requirements-dev.txt > requirements-all.txt;
+
+    #. Generate new ``THIRD_PARTY_LICENSES.txt`` file:
+
+       .. code-block:: console
 
            python -m third_party_license_file_generator \
             -r requirements-all.txt \
@@ -78,10 +87,12 @@ Minor or Major Version Release
     .. code-block:: console
 
         [pypi]
-        username = azavea
+        username=__token__
+        password=<password>
 
         [testpypi]
-        username = azavea
+        username=__token__
+        password=<password>
 
     Once packages are published they cannot be changed, so be careful. (It's possible to practice using TestPyPI.) Navigate to the repo's root directory on your local filesystem. With the version branch checked out, run the following scripts to build packages and publish to PyPI. 
     
@@ -91,7 +102,7 @@ Minor or Major Version Release
 
         scripts/pypi_build
 
-    Publish to TestPyPI. (You will be prompted for the PyPI password multiple times--once for each package.)
+    Publish to TestPyPI:
 
     .. code-block:: console
 
@@ -103,7 +114,7 @@ Minor or Major Version Release
 
         pip install --index-url https://test.pypi.org/simple/ rastervision
 
-    Finally, if everything looks okay, publish to Pypi.  (You will be prompted for the PyPI password multiple times--once for each package.)
+    Finally, if everything looks okay, publish to Pypi:
 
     .. code-block:: console
 
