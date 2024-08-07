@@ -26,4 +26,6 @@ This PR ...
 * Include test case, and expected output if not captured by automated tests.
 -->
 
+---
+
 Closes #XXX
