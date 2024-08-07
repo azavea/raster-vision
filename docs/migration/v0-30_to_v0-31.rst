@@ -1,0 +1,12 @@
+v0.30 to v0.31
+==============
+
+
+* You will need to have ``pydantic>=2`` installed.
+* :class:`.StatsTransformer` no longer applies ``channel_order`` to the stats. The stats are now expected to already be in the same order as the channels in the output of the ``RasterSource``.
+
+  * Backward compatibility has been maintained for older model-bundles, so they should work as before without modification.
+
+* Default padding behavior has changed. See `SlidingWindowGeoDataset <https://docs.rastervision.io/en/0.31/usage/tutorials/sampling_training_data.html#SlidingWindowGeoDataset>`_.
+* You no longer need to manually figure out the right padding value to use when using ``crop_sz`` during prediction. It is determined automatically such that no pixels around the edges are left out.
+* ``force_same_dtype`` has been removed from :class:`.MultiRasterSource` and :class:`.MultiRasterSourceConfig`. Sub-raster sources are now always expected to have the same dtype.
