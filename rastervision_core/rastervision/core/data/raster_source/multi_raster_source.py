@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Sequence, Self
+from typing import TYPE_CHECKING, Sequence
 
 from pydantic import NonNegativeInt as NonNegInt
 import numpy as np
@@ -10,6 +10,7 @@ from rastervision.core.data.raster_source.stac_config import subset_assets
 from rastervision.core.data.utils import all_equal
 
 if TYPE_CHECKING:
+    from typing import Self
     from rastervision.core.data import RasterTransformer, CRSTransformer
 
 
@@ -81,7 +82,7 @@ class MultiRasterSource(RasterSource):
             channel_order: Sequence[int] | None = None,
             bbox: Box | tuple[int, int, int, int] | None = None,
             bbox_map_coords: Box | tuple[int, int, int, int] | None = None,
-            allow_streaming: bool = False) -> Self:
+            allow_streaming: bool = False) -> 'Self':
         """Construct a ``MultiRasterSource`` from a STAC Item.
 
         This creates a :class:`.RasterioSource` for each asset and puts all

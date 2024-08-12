@@ -1,4 +1,4 @@
-from typing import Self
+from typing import TYPE_CHECKING
 
 from typing_extensions import Annotated
 from pydantic import NonNegativeInt as NonNegInt
@@ -8,6 +8,9 @@ from rastervision.pipeline.config import (Field, register_config,
 from rastervision.core.box import Box
 from rastervision.core.data.raster_source import (RasterSourceConfig,
                                                   MultiRasterSource)
+
+if TYPE_CHECKING:
+    from typing import Self
 
 
 def multi_rs_config_upgrader(cfg_dict: dict, version: int) -> dict:
@@ -42,7 +45,7 @@ class MultiRasterSourceConfig(RasterSourceConfig):
         'of shape (T, H, W, C) instead of concatenating bands.')
 
     @model_validator(mode='after')
-    def validate_primary_source_idx(self) -> Self:
+    def validate_primary_source_idx(self) -> 'Self':
         primary_source_idx = self.primary_source_idx
         raster_sources = self.raster_sources
         if not (0 <= primary_source_idx < len(raster_sources)):
@@ -51,7 +54,7 @@ class MultiRasterSourceConfig(RasterSourceConfig):
         return self
 
     @model_validator(mode='after')
-    def validate_temporal(self) -> Self:
+    def validate_temporal(self) -> 'Self':
         if self.temporal and self.channel_order is not None:
             raise ValueError(
                 'Setting channel_order is not allowed if temporal=True.')

@@ -1,4 +1,4 @@
-from typing import (TYPE_CHECKING, Any, Iterable, Self, Sequence)
+from typing import (TYPE_CHECKING, Any, Iterable, Sequence)
 from abc import abstractmethod
 
 import numpy as np
@@ -10,6 +10,7 @@ from rastervision.core.data.label import Labels
 from rastervision.core.data.label.utils import discard_prediction_edges
 
 if TYPE_CHECKING:
+    from typing import Self
     from shapely.geometry import Polygon
     from rastervision.core.data import (ClassConfig, CRSTransformer,
                                         VectorOutputConfig)
@@ -32,7 +33,7 @@ class SemanticSegmentationLabels(Labels):
         self.dtype = dtype
 
     @abstractmethod
-    def __add__(self, other: Self) -> Self:
+    def __add__(self, other: 'Self') -> 'Self':
         """Merge self with other labels."""
 
     def __setitem__(self, window: Box, values: np.ndarray) -> None:
@@ -94,7 +95,7 @@ class SemanticSegmentationLabels(Labels):
         return self.extent.get_windows(size, size, **kwargs)
 
     def filter_by_aoi(self, aoi_polygons: list['Polygon'], null_class_id: int,
-                      **kwargs) -> Self:
+                      **kwargs) -> 'Self':
         """Keep only the values that lie inside the AOI.
 
         This is an inplace operation.
@@ -155,7 +156,7 @@ class SemanticSegmentationLabels(Labels):
 
     @classmethod
     def make_empty(cls, extent: Box, num_classes: int,
-                   smooth: bool = False) -> Self:
+                   smooth: bool = False) -> 'Self':
         """Instantiate an empty instance.
 
         Args:
@@ -188,7 +189,7 @@ class SemanticSegmentationLabels(Labels):
                          extent: Box,
                          num_classes: int,
                          smooth: bool = False,
-                         crop_sz: int | None = None) -> Self:
+                         crop_sz: int | None = None) -> 'Self':
         """Instantiate from windows and their corresponding predictions.
 
         Args:
@@ -270,7 +271,7 @@ class SemanticSegmentationDiscreteLabels(SemanticSegmentationLabels):
         # track which pixels have been hit at all
         self.hit_mask = np.zeros((self.height, self.width), dtype=bool)
 
-    def __add__(self, other: Self) -> Self:
+    def __add__(self, other: 'Self') -> 'Self':
         """Merge self with other labels by adding the pixel counts."""
         if self.extent != other.extent:
             raise ValueError('Cannot add labels with unqeual extents.')
@@ -278,7 +279,7 @@ class SemanticSegmentationDiscreteLabels(SemanticSegmentationLabels):
         self.pixel_counts += other.pixel_counts
         return self
 
-    def __eq__(self, other: Self) -> bool:
+    def __eq__(self, other: 'Self') -> bool:
         if not isinstance(other, SemanticSegmentationDiscreteLabels):
             return False
         if self.extent != other.extent:
@@ -347,7 +348,7 @@ class SemanticSegmentationDiscreteLabels(SemanticSegmentationLabels):
         self.pixel_counts[class_id, y0:y1, x0:x1][mask] = 1
 
     @classmethod
-    def make_empty(cls, extent: Box, num_classes: int) -> Self:
+    def make_empty(cls, extent: Box, num_classes: int) -> 'Self':
         """Instantiate an empty instance."""
         return cls(extent=extent, num_classes=num_classes)
 
@@ -357,7 +358,7 @@ class SemanticSegmentationDiscreteLabels(SemanticSegmentationLabels):
                          predictions: Iterable[Any],
                          extent: Box,
                          num_classes: int,
-                         crop_sz: int | None = None) -> Self:
+                         crop_sz: int | None = None) -> 'Self':
         labels = cls.make_empty(extent, num_classes)
         labels.add_predictions(windows, predictions, crop_sz=crop_sz)
         return labels
@@ -447,7 +448,7 @@ class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
             (self.num_classes, self.height, self.width), dtype=self.dtype)
         self.pixel_hits = np.zeros((self.height, self.width), dtype=dtype_hits)
 
-    def __add__(self, other: Self) -> Self:
+    def __add__(self, other: 'Self') -> 'Self':
         """Merge self with other by adding pixel scores and hits."""
         if self.extent != other.extent:
             raise ValueError('Cannot add labels with unqeual extents.')
@@ -456,7 +457,7 @@ class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
         self.pixel_hits += other.pixel_hits
         return self
 
-    def __eq__(self, other: Self) -> bool:
+    def __eq__(self, other: 'Self') -> bool:
         if not isinstance(other, SemanticSegmentationSmoothLabels):
             return False
         if self.extent != other.extent:
@@ -523,7 +524,7 @@ class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
         self.pixel_hits[y0:y1, x0:x1][mask] = 1
 
     @classmethod
-    def make_empty(cls, extent: Box, num_classes: int) -> Self:
+    def make_empty(cls, extent: Box, num_classes: int) -> 'Self':
         """Instantiate an empty instance."""
         return cls(extent=extent, num_classes=num_classes)
 
@@ -533,7 +534,7 @@ class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
                          predictions: Iterable[Any],
                          extent: Box,
                          num_classes: int,
-                         crop_sz: int | None = None) -> Self:
+                         crop_sz: int | None = None) -> 'Self':
         labels = cls.make_empty(extent, num_classes)
         labels.add_predictions(windows, predictions, crop_sz=crop_sz)
         return labels

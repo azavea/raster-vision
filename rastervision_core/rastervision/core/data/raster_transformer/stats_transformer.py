@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Self, Sequence
+from typing import TYPE_CHECKING, Sequence
 
 import numpy as np
 
@@ -7,6 +7,7 @@ from rastervision.core.raster_stats import RasterStats
 from rastervision.pipeline.utils import repr_with_args
 
 if TYPE_CHECKING:
+    from typing import Self
     from rastervision.core.data import RasterSource
 
 
@@ -86,7 +87,7 @@ class StatsTransformer(RasterTransformer):
                             raster_sources: list['RasterSource'],
                             sample_prob: float | None = 0.1,
                             max_stds: float = 3.,
-                            chip_sz: int = 300) -> Self:
+                            chip_sz: int = 300) -> 'Self':
         """Build with stats from the given raster sources.
 
         Args:
@@ -114,7 +115,7 @@ class StatsTransformer(RasterTransformer):
     def from_stats_json(cls,
                         uri: str,
                         channel_order: list[int] | None = None,
-                        **kwargs) -> Self:
+                        **kwargs) -> 'Self':
         """Build with stats from a JSON file.
 
         The file is expected to be in the same format as written by
@@ -138,7 +139,7 @@ class StatsTransformer(RasterTransformer):
     def from_raster_stats(cls,
                           stats: RasterStats,
                           channel_order: list[int] | None = None,
-                          **kwargs) -> Self:
+                          **kwargs) -> 'Self':
         """Build with stats from a :class:`.RasterStats` instance.
 
         The file is expected to be in the same format as written by
