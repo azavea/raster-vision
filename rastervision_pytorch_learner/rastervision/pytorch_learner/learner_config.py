@@ -1,4 +1,4 @@
-from typing import (TYPE_CHECKING, Any, Iterable, Literal, Self, Sequence)
+from typing import (TYPE_CHECKING, Any, Iterable, Literal, Sequence)
 from collections.abc import Callable
 import os
 from os.path import join, isdir
@@ -33,6 +33,7 @@ from rastervision.pytorch_learner.utils import (
     torch_hub_load_local, torch_hub_load_github, torch_hub_load_uri)
 
 if TYPE_CHECKING:
+    from typing import Self
     from rastervision.core.data import SceneConfig
     from rastervision.pytorch_learner.learner import Learner
 
@@ -159,7 +160,7 @@ class ExternalModuleConfig(Config):
         False, description='Force reload of module definition.')
 
     @model_validator(mode='after')
-    def check_either_uri_or_repo(self) -> Self:
+    def check_either_uri_or_repo(self) -> 'Self':
         has_uri = self.uri is not None
         has_repo = self.github_repo is not None
         if has_uri == has_repo:
@@ -368,7 +369,7 @@ class SolverConfig(Config):
         'from this external source, using Torch Hub.')
 
     @model_validator(mode='after')
-    def check_no_loss_opts_if_external(self) -> Self:
+    def check_no_loss_opts_if_external(self) -> 'Self':
         has_external_loss_def = self.external_loss_def is not None
         has_ignore_class_index = self.ignore_class_index is not None
         has_class_loss_weights = self.class_loss_weights is not None
@@ -687,7 +688,7 @@ class DataConfig(Config):
         return v
 
     @model_validator(mode='after')
-    def validate_plot_options(self) -> Self:
+    def validate_plot_options(self) -> 'Self':
         if self.plot_options is not None and self.img_channels is not None:
             self.plot_options.update(img_channels=self.img_channels)
         return self
@@ -834,7 +835,7 @@ class ImageDataConfig(DataConfig):
         '(one for each group).')
 
     @model_validator(mode='after')
-    def validate_group_uris(self) -> Self:
+    def validate_group_uris(self) -> 'Self':
         group_train_sz = self.group_train_sz
         group_train_sz_rel = self.group_train_sz_rel
         group_uris = self.group_uris
@@ -1183,7 +1184,7 @@ class GeoDataConfig(DataConfig):
         return out
 
     @model_validator(mode='after')
-    def validate_sampling(self) -> Self:
+    def validate_sampling(self) -> 'Self':
         if not isinstance(self.sampling, dict):
             return self
 
@@ -1203,7 +1204,7 @@ class GeoDataConfig(DataConfig):
         return self
 
     @model_validator(mode='after')
-    def get_class_config_from_dataset_if_needed(self) -> Self:
+    def get_class_config_from_dataset_if_needed(self) -> 'Self':
         if self.class_config is None and self.scene_dataset is not None:
             self.class_config = self.scene_dataset.class_config
         return self
@@ -1377,14 +1378,14 @@ class LearnerConfig(Config):
             'is the epoch number.'))
 
     @model_validator(mode='after')
-    def validate_run_tensorboard(self) -> Self:
+    def validate_run_tensorboard(self) -> 'Self':
         if self.run_tensorboard and not self.log_tensorboard:
             raise ConfigError(
                 'Cannot run tensorboard if log_tensorboard is False')
         return self
 
     @model_validator(mode='after')
-    def validate_class_loss_weights(self) -> Self:
+    def validate_class_loss_weights(self) -> 'Self':
         if self.solver is None:
             return self
         class_loss_weights = self.solver.class_loss_weights

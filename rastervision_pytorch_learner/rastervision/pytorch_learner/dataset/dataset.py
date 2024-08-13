@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Literal, Self
+from typing import TYPE_CHECKING, Any, Literal
 import logging
 
 import numpy as np
@@ -16,6 +16,7 @@ from rastervision.pytorch_learner.dataset.transform import (TransformType,
                                                             TF_TYPE_TO_TF_FUNC)
 
 if TYPE_CHECKING:
+    from typing import Self
     from shapely.geometry import MultiPolygon, Polygon
 
 log = logging.getLogger(__name__)
@@ -173,7 +174,7 @@ class GeoDataset(AlbumentationsDataset):
         raise NotImplementedError()
 
     @classmethod
-    def from_uris(cls, *args, **kwargs) -> Self:
+    def from_uris(cls, *args, **kwargs) -> 'Self':
         raise NotImplementedError()
 
 

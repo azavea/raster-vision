@@ -1,4 +1,4 @@
-from typing import (TYPE_CHECKING, Iterable, Iterator, Self, Sequence)
+from typing import (TYPE_CHECKING, Iterable, Iterator, Sequence)
 
 import numpy as np
 from tqdm.auto import tqdm
@@ -8,6 +8,7 @@ from rastervision.pipeline.file_system import file_to_json, json_to_file
 from rastervision.core.data.utils import ensure_json_serializable
 
 if TYPE_CHECKING:
+    from typing import Self
     from rastervision.core.box import Box
     from rastervision.core.data import RasterSource
 
@@ -32,7 +33,7 @@ class RasterStats:
         self.counts = np.array(counts) if counts is not None else None
 
     @classmethod
-    def load(cls, stats_uri: str) -> Self:
+    def load(cls, stats_uri: str) -> 'Self':
         """Load stats from file."""
         stats_json = file_to_json(stats_uri)
         assert 'means' in stats_json and 'stds' in stats_json

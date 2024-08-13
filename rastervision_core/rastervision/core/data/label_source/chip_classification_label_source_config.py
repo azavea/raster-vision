@@ -1,4 +1,4 @@
-from typing import Self
+from typing import TYPE_CHECKING
 
 from rastervision.core.data.vector_source import (VectorSourceConfig)
 from rastervision.core.data.label_source import (LabelSourceConfig,
@@ -7,6 +7,9 @@ from rastervision.pipeline.config import (ConfigError, register_config, Field,
                                           field_validator, model_validator)
 from rastervision.core.data.vector_transformer import (
     ClassInferenceTransformerConfig, BufferTransformerConfig)
+
+if TYPE_CHECKING:
+    from typing import Self
 
 
 def cc_label_source_config_upgrader(cfg_dict: dict, version: int) -> dict:
@@ -86,7 +89,7 @@ class ChipClassificationLabelSourceConfig(LabelSourceConfig):
         return v
 
     @model_validator(mode='after')
-    def ensure_bg_class_id_if_inferring(self) -> Self:
+    def ensure_bg_class_id_if_inferring(self) -> 'Self':
         infer_cells = self.infer_cells
         has_bg_class_id = self.background_class_id is not None
         if infer_cells and not has_bg_class_id:

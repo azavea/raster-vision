@@ -1,4 +1,4 @@
-from typing import Literal, Self
+from typing import TYPE_CHECKING, Literal
 import logging
 
 from pydantic import NonNegativeInt as NonNegInt
@@ -12,6 +12,9 @@ from rastervision.core.rv_pipeline.chip_options import (ChipOptions,
                                                         WindowSamplingConfig)
 from rastervision.core.data import SemanticSegmentationLabelStoreConfig
 from rastervision.core.evaluation import SemanticSegmentationEvaluatorConfig
+
+if TYPE_CHECKING:
+    from typing import Self
 
 log = logging.getLogger(__name__)
 
@@ -94,7 +97,7 @@ class SemanticSegmentationPredictOptions(PredictOptions):
         'if stride is less than chip_sz. Defaults to None.')
 
     @model_validator(mode='after')
-    def set_auto_crop_sz(self) -> Self:
+    def set_auto_crop_sz(self) -> 'Self':
         if self.crop_sz == 'auto':
             if self.stride is None:
                 self.validate_stride()

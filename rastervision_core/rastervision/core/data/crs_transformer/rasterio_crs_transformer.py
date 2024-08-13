@@ -1,4 +1,4 @@
-from typing import Any, Self
+from typing import TYPE_CHECKING, Any
 from pyproj import Transformer
 
 import numpy as np
@@ -8,6 +8,9 @@ from rasterio import Affine
 
 from rastervision.core.data.crs_transformer import (CRSTransformer,
                                                     IdentityCRSTransformer)
+
+if TYPE_CHECKING:
+    from typing import Self
 
 
 class RasterioCRSTransformer(CRSTransformer):

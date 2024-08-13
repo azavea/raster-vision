@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Iterable, Self
+from typing import TYPE_CHECKING, Iterable
 import numpy as np
 from shapely.geometry import shape
 
@@ -10,6 +10,7 @@ from rastervision.core.data.label.tfod_utils.np_box_list_ops import (
     non_max_suppression)
 
 if TYPE_CHECKING:
+    from typing import Self
     from rastervision.core.data import (ClassConfig, CRSTransformer)
     from shapely.geometry import Polygon
 
@@ -43,10 +44,10 @@ class ObjectDetectionLabels(Labels):
             scores = np.ones(class_ids.shape)
         self.boxlist.add_field('scores', scores)
 
-    def __add__(self, other: Self) -> Self:
+    def __add__(self, other: 'Self') -> 'Self':
         return ObjectDetectionLabels.concatenate(self, other)
 
-    def __eq__(self, other: Self) -> bool:
+    def __eq__(self, other: 'Self') -> bool:
         return (isinstance(other, ObjectDetectionLabels)
                 and self.to_dict() == other.to_dict())
 
@@ -60,10 +61,10 @@ class ObjectDetectionLabels(Labels):
         concatenated_labels = self + new_labels
         self.boxlist = concatenated_labels.boxlist
 
-    def __getitem__(self, window: Box) -> Self:
+    def __getitem__(self, window: Box) -> 'Self':
         return ObjectDetectionLabels.get_overlapping(self, window)
 
-    def assert_equal(self, expected_labels: Self):
+    def assert_equal(self, expected_labels: 'Self'):
         np.testing.assert_array_equal(self.get_npboxes(),
                                       expected_labels.get_npboxes())
         np.testing.assert_array_equal(self.get_class_ids(),
@@ -95,7 +96,7 @@ class ObjectDetectionLabels(Labels):
             np.array(new_boxes), np.array(new_class_ids), np.array(new_scores))
 
     @classmethod
-    def make_empty(cls) -> Self:
+    def make_empty(cls) -> 'Self':
         npboxes = np.empty((0, 4))
         class_ids = np.empty((0, ))
         scores = np.empty((0, ))
@@ -113,7 +114,7 @@ class ObjectDetectionLabels(Labels):
     def from_geojson(geojson: dict,
                      bbox: Box | None = None,
                      ioa_thresh: float = 0.8,
-                     clip: bool = True) -> Self:
+                     clip: bool = True) -> 'Self':
         """Convert GeoJSON to ObjectDetectionLabels object.
 
         If bbox is provided, filter out the boxes that lie "more than a little
@@ -228,10 +229,10 @@ class ObjectDetectionLabels(Labels):
         return npboxes * np.array([[height, width, height, width]])
 
     @staticmethod
-    def get_overlapping(labels: Self,
+    def get_overlapping(labels: 'Self',
                         window: Box,
                         ioa_thresh: float = 0.5,
-                        clip: bool = False) -> Self:
+                        clip: bool = False) -> 'Self':
         """Return subset of labels that overlap with window.
 
         Args:
@@ -253,16 +254,16 @@ class ObjectDetectionLabels(Labels):
         return ObjectDetectionLabels.from_boxlist(boxlist)
 
     @staticmethod
-    def concatenate(labels1: Self, labels2: Self) -> Self:
+    def concatenate(labels1: 'Self', labels2: 'Self') -> 'Self':
         """Return concatenation of labels."""
         new_boxlist = concatenate([labels1.to_boxlist(), labels2.to_boxlist()])
         return ObjectDetectionLabels.from_boxlist(new_boxlist)
 
     @staticmethod
-    def prune_duplicates(labels: Self,
+    def prune_duplicates(labels: 'Self',
                          score_thresh: float,
                          merge_thresh: float,
-                         max_output_size: int | None = None) -> Self:
+                         max_output_size: int | None = None) -> 'Self':
         """Remove duplicate boxes via non-maximum suppression.
 
         Args:

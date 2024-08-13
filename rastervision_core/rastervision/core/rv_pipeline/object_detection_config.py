@@ -1,4 +1,4 @@
-from typing import Self
+from typing import TYPE_CHECKING
 
 from rastervision.pipeline.config import (Field, register_config,
                                           model_validator)
@@ -6,6 +6,9 @@ from rastervision.core.rv_pipeline import (
     ChipOptions, RVPipelineConfig, PredictOptions, WindowSamplingConfig)
 from rastervision.core.data.label_store import ObjectDetectionGeoJSONStoreConfig
 from rastervision.core.evaluation import ObjectDetectionEvaluatorConfig
+
+if TYPE_CHECKING:
+    from typing import Self
 
 
 @register_config('object_detection_window_sampling')
@@ -61,7 +64,7 @@ class ObjectDetectionPredictOptions(PredictOptions):
          ))
 
     @model_validator(mode='after')
-    def validate_stride(self) -> Self:
+    def validate_stride(self) -> 'Self':
         if self.stride is None:
             self.stride = self.chip_sz // 2
         return self
