@@ -1,8 +1,11 @@
-from typing import Self
+from typing import TYPE_CHECKING
 
 from rastervision.pipeline.config import (Config, register_config, ConfigError,
                                           Field, model_validator)
 from rastervision.core.data.utils import color_to_triple, normalize_color
+
+if TYPE_CHECKING:
+    from typing import Self
 
 DEFAULT_NULL_CLASS_NAME = 'null'
 DEFAULT_NULL_CLASS_COLOR = 'black'
@@ -33,7 +36,7 @@ class ClassConfig(Config):
         'added automatically.')
 
     @model_validator(mode='after')
-    def validate_colors(self) -> Self:
+    def validate_colors(self) -> 'Self':
         """Compare length w/ names. Also auto-generate if not specified."""
         names = self.names
         colors = self.colors
@@ -47,7 +50,7 @@ class ClassConfig(Config):
         return self
 
     @model_validator(mode='after')
-    def validate_null_class(self) -> Self:
+    def validate_null_class(self) -> 'Self':
         """Check if in names. If 'null' in names, use it as null class."""
         names = self.names
         null_class = self.null_class

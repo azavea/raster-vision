@@ -1,4 +1,4 @@
-from typing import Any, Iterable, Self, Sequence
+from typing import TYPE_CHECKING, Any, Iterable, Sequence
 from collections.abc import Callable
 from collections import defaultdict
 from os.path import join
@@ -19,8 +19,11 @@ import numpy as np
 from rastervision.pipeline.file_system import json_to_file, get_tmp_dir
 from rastervision.pytorch_learner.utils.utils import ONNXRuntimeAdapter
 
+if TYPE_CHECKING:
+    from typing import Self
 
-def get_coco_gt(targets: Iterable[Self],
+
+def get_coco_gt(targets: Iterable['Self'],
                 num_class_ids: int) -> dict[str, list[dict]]:
     images = []
     annotations = []
@@ -60,7 +63,7 @@ def get_coco_gt(targets: Iterable[Self],
     return coco
 
 
-def get_coco_preds(outputs: Iterable[Self]) -> list[dict]:
+def get_coco_preds(outputs: Iterable['Self']) -> list[dict]:
     preds = []
     for img_id, output in enumerate(outputs, 1):
         boxes = output.convert_boxes('xywh').float().tolist()
@@ -157,13 +160,13 @@ class BoxList():
 
         return new_extras
 
-    def copy(self) -> Self:
+    def copy(self) -> 'Self':
         return BoxList(
             self.boxes.copy(),
             **self._map_extras(lambda k, v: v.copy()),
             cond=lambda k, v: torch.is_tensor(v))
 
-    def to(self, *args, **kwargs) -> Self:
+    def to(self, *args, **kwargs) -> 'Self':
         """Recursively apply :meth:`torch.Tensor.to` to Tensors.
 
         Args:
@@ -190,7 +193,7 @@ class BoxList():
         return len(self.boxes)
 
     @staticmethod
-    def cat(box_lists: Iterable[Self]) -> Self:
+    def cat(box_lists: Iterable['Self']) -> 'Self':
         boxes = []
         extras = defaultdict(list)
         for bl in box_lists:
@@ -202,7 +205,7 @@ class BoxList():
             extras[k] = torch.cat(v)
         return BoxList(boxes, **extras)
 
-    def equal(self, other: Self) -> bool:
+    def equal(self, other: 'Self') -> bool:
         if len(other) != len(self):
             return False
 
@@ -218,20 +221,20 @@ class BoxList():
         other_tups = set([tuple([x.item() for x in row]) for row in cat_arr])
         return self_tups == other_tups
 
-    def ind_filter(self, inds: Sequence[int]) -> Self:
+    def ind_filter(self, inds: Sequence[int]) -> 'Self':
         boxes = self.boxes[inds]
         extras = self._map_extras(
             func=lambda k, v: v[inds], cond=lambda k, v: torch.is_tensor(v))
         return BoxList(boxes, **extras)
 
-    def score_filter(self, score_thresh: float = 0.25) -> Self:
+    def score_filter(self, score_thresh: float = 0.25) -> 'Self':
         scores = self.extras.get('scores')
         if scores is not None:
             return self.ind_filter(scores > score_thresh)
         else:
             raise ValueError('must have scores as key in extras')
 
-    def clip_boxes(self, img_height: int, img_width: int) -> Self:
+    def clip_boxes(self, img_height: int, img_width: int) -> 'Self':
         boxes = clip_boxes_to_image(self.boxes, (img_height, img_width))
         return BoxList(boxes, **self.extras)
 
@@ -243,7 +246,7 @@ class BoxList():
                                 self.get_field('class_ids'), iou_thresh)
         return self.ind_filter(good_inds)
 
-    def scale(self, yscale: float, xscale: float) -> Self:
+    def scale(self, yscale: float, xscale: float) -> 'Self':
         """Scale box coords by the given scaling factors."""
         dtype = self.boxes.dtype
         boxes = self.boxes.float()
@@ -252,7 +255,7 @@ class BoxList():
         self.boxes = boxes.to(dtype=dtype)
         return self
 
-    def pin_memory(self) -> Self:
+    def pin_memory(self) -> 'Self':
         self.boxes = self.boxes.pin_memory()
         for k, v in self.extras.items():
             if torch.is_tensor(v):
