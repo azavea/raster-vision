@@ -9,3 +9,4 @@ jupyter==1.0.0
 jupyterlab==4.1.8
 jupyter_contrib_nbextensions==0.7.0
 pystac_client==0.8.3
+awscli==1.33.40
