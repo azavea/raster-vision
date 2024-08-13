@@ -1,4 +1,4 @@
-from typing import (Any, Literal, Self)
+from typing import (TYPE_CHECKING, Any, Literal)
 from enum import Enum
 
 from pydantic import NonNegativeInt as NonNegInt, PositiveInt as PosInt
@@ -8,6 +8,9 @@ from rastervision.core.rv_pipeline.utils import nodata_below_threshold
 from rastervision.core.utils import Proportion
 from rastervision.pipeline.config import (Config, ConfigError, Field,
                                           register_config, model_validator)
+
+if TYPE_CHECKING:
+    from typing import Self
 
 
 class WindowSamplingMethod(Enum):
@@ -87,7 +90,7 @@ class WindowSamplingConfig(Config):
         'intersecting the AOI will also be allowed.')
 
     @model_validator(mode='after')
-    def validate_options(self) -> Self:
+    def validate_options(self) -> 'Self':
         method = self.method
         size = self.size
         if method == WindowSamplingMethod.sliding:

@@ -1,10 +1,11 @@
+from typing import TYPE_CHECKING
 from os.path import join
-from typing import TYPE_CHECKING, Self
 
 from rastervision.pipeline.config import Config, Field
 from rastervision.pipeline.config import register_config
 
 if TYPE_CHECKING:
+    from typing import Self
     from rastervision.pipeline.pipeline import Pipeline
 
 
@@ -51,7 +52,7 @@ class PipelineConfig(Config):
         return cfg_dict
 
     @classmethod
-    def from_dict(cls, cfg_dict: dict) -> Self:
+    def from_dict(cls, cfg_dict: dict) -> 'Self':
         # override to retain plugin_versions
         from rastervision.pipeline.config import build_config, upgrade_config
         cfg_dict: dict = upgrade_config(cfg_dict)

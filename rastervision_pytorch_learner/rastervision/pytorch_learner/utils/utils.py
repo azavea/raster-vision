@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Container, Iterable, Self, Sequence
+from typing import TYPE_CHECKING, Any, Container, Iterable, Sequence
 from os.path import basename, join, isfile
 import logging
 
@@ -17,6 +17,7 @@ from rastervision.pipeline.config import (build_config, Config, ConfigError,
                                           upgrade_config)
 
 if TYPE_CHECKING:
+    from typing import Self
     import onnxruntime as ort
     from rastervision.pytorch_learner import LearnerConfig
 
@@ -457,7 +458,8 @@ class ONNXRuntimeAdapter:
         self.input_key = inputs[0].name
 
     @classmethod
-    def from_file(cls, path: str, providers: list[str] | None = None) -> Self:
+    def from_file(cls, path: str,
+                  providers: list[str] | None = None) -> 'Self':
         """Construct from file.
 
         Args:
