@@ -283,12 +283,13 @@ class RandomWindowGeoDataset(GeoDataset):
     def __init__(
             self,
             scene: Scene,
+            *,
             out_size: PosInt | tuple[PosInt, PosInt] | None,
             size_lims: tuple[PosInt, PosInt] | None = None,
             h_lims: tuple[PosInt, PosInt] | None = None,
             w_lims: tuple[PosInt, PosInt] | None = None,
             padding: NonNegInt | tuple[NonNegInt, NonNegInt] | None = None,
-            max_windows: NonNegInt | None = None,
+            max_windows: NonNegInt,
             max_sample_attempts: PosInt = 100,
             efficient_aoi_sampling: bool = True,
             within_aoi: bool = True,
@@ -316,8 +317,7 @@ class RandomWindowGeoDataset(GeoDataset):
                 sides of the raster source. If ``None``, ``padding = size``.
                 Defaults to ``None``.
             max_windows: Max allowed reads. Will raise ``StopIteration`` on
-                further read attempts. If None, will be set to ``np.inf``.
-                Defaults to ``None``.
+                further read attempts.
             transform: Albumentations
                 transform to apply to the windows. Defaults to ``None``.
                 Each transform in Albumentations takes images of type uint8, and
@@ -383,9 +383,6 @@ class RandomWindowGeoDataset(GeoDataset):
                 max_h, max_w = h_lims[1], w_lims[1]
                 padding = (max_h // 2, max_w // 2)
         padding: tuple[NonNegInt, NonNegInt] = ensure_tuple(padding)
-
-        if max_windows is None:
-            max_windows = np.iinfo('int').max
 
         self.size_lims = size_lims
         self.h_lims = h_lims
