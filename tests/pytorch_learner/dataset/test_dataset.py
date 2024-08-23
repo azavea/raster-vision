@@ -213,8 +213,9 @@ class TestRandomWindowGeoDataset(unittest.TestCase):
 
         ds = RandomWindowGeoDataset(
             scene,
-            10,
-            (5, 6),
+            out_size=10,
+            size_lims=(5, 6),
+            max_windows=10,
             within_aoi=True,
             transform_type=TransformType.noop,
         )
@@ -222,8 +223,9 @@ class TestRandomWindowGeoDataset(unittest.TestCase):
 
         ds = RandomWindowGeoDataset(
             scene,
-            10,
-            (12, 13),
+            out_size=10,
+            size_lims=(12, 13),
+            max_windows=10,
             within_aoi=True,
             transform_type=TransformType.noop,
         )
@@ -231,8 +233,9 @@ class TestRandomWindowGeoDataset(unittest.TestCase):
 
         ds = RandomWindowGeoDataset(
             scene,
-            10,
-            (12, 13),
+            out_size=10,
+            size_lims=(12, 13),
+            max_windows=10,
             within_aoi=False,
             transform_type=TransformType.noop,
         )
@@ -245,6 +248,7 @@ class TestRandomWindowGeoDataset(unittest.TestCase):
         args = dict(
             scene=scene,
             out_size=10,
+            max_windows=10,
             transform_type=TransformType.noop,
         )
         self.assertRaises(ValueError, lambda: RandomWindowGeoDataset(**args))
@@ -255,6 +259,7 @@ class TestRandomWindowGeoDataset(unittest.TestCase):
             out_size=10,
             size_lims=(10, 11),
             h_lims=(10, 11),
+            max_windows=10,
             transform_type=TransformType.noop,
         )
         self.assertRaises(ValueError, lambda: RandomWindowGeoDataset(**args))
@@ -266,6 +271,7 @@ class TestRandomWindowGeoDataset(unittest.TestCase):
             size_lims=(10, 11),
             h_lims=(10, 11),
             w_lims=(10, 11),
+            max_windows=10,
             transform_type=TransformType.noop,
         )
         self.assertRaises(ValueError, lambda: RandomWindowGeoDataset(**args))
@@ -275,6 +281,7 @@ class TestRandomWindowGeoDataset(unittest.TestCase):
             scene=scene,
             out_size=10,
             w_lims=(10, 11),
+            max_windows=10,
             transform_type=TransformType.noop,
         )
         self.assertRaises(ValueError, lambda: RandomWindowGeoDataset(**args))
@@ -284,6 +291,7 @@ class TestRandomWindowGeoDataset(unittest.TestCase):
             scene,
             out_size=None,
             size_lims=(12, 13),
+            max_windows=10,
             transform_type=TransformType.noop,
         )
         self.assertFalse(ds.normalize)
@@ -295,6 +303,7 @@ class TestRandomWindowGeoDataset(unittest.TestCase):
             out_size=None,
             h_lims=(10, 11),
             w_lims=(10, 11),
+            max_windows=10,
             transform_type=TransformType.noop,
         )
         self.assertTupleEqual(ds.padding, (5, 5))
@@ -305,6 +314,7 @@ class TestRandomWindowGeoDataset(unittest.TestCase):
             scene,
             out_size=None,
             size_lims=(10, 15),
+            max_windows=10,
             transform_type=TransformType.noop,
         )
         self.assertTupleEqual(ds.min_size, (10, 10))
@@ -315,6 +325,7 @@ class TestRandomWindowGeoDataset(unittest.TestCase):
             out_size=None,
             h_lims=(10, 15),
             w_lims=(8, 12),
+            max_windows=10,
             transform_type=TransformType.noop,
         )
         self.assertTupleEqual(ds.min_size, (10, 8))
@@ -326,6 +337,7 @@ class TestRandomWindowGeoDataset(unittest.TestCase):
             scene,
             out_size=None,
             size_lims=(10, 15),
+            max_windows=10,
             transform_type=TransformType.noop,
         )
         sampled_h, sampled_w = ds.sample_window_size()
@@ -337,6 +349,7 @@ class TestRandomWindowGeoDataset(unittest.TestCase):
             out_size=None,
             h_lims=(10, 15),
             w_lims=(8, 12),
+            max_windows=10,
             transform_type=TransformType.noop,
         )
         sampled_h, sampled_w = ds.sample_window_size()
@@ -360,6 +373,7 @@ class TestRandomWindowGeoDataset(unittest.TestCase):
             scene,
             out_size=10,
             size_lims=(5, 6),
+            max_windows=10,
             transform_type=TransformType.noop,
             return_window=True,
         )
@@ -376,6 +390,7 @@ class TestRandomWindowGeoDataset(unittest.TestCase):
             scene=scene,
             out_size=10,
             size_lims=(5, 6),
+            max_windows=10,
             transform_type=TransformType.noop,
         )
         self.assertNoError(lambda: RandomWindowGeoDataset(**args))
