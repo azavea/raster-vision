@@ -2,6 +2,20 @@ CHANGELOG
 =========
 
 
+Raster Vision 0.31.1
+--------------------
+
+* Fixes:
+
+  * Restore compatibility with python<3.11 by only importing ``typing.Self`` under ``if TPYE_CHECKING`` (`#2221 <https://github.com/azavea/raster-vision/pull/2221>`__)
+  * Remove ``awscli`` as a dependency from ``rastervision_aws_s3`` and make it a dev dependency instead (`#2220 <https://github.com/azavea/raster-vision/pull/2220>`__)
+  * Make ``max_windows`` a required argument for ``RandomWindowGeoDataset`` (`#2223 <https://github.com/azavea/raster-vision/pull/2223>`__)
+
+* Maintenance:
+
+  * Update docker dependency: Bump jupyterlab from 4.1.8 to 4.2.5 (`#2224 <https://github.com/azavea/raster-vision/pull/2224>`__)
+
+
 Raster Vision 0.31.0
 --------------------
 
