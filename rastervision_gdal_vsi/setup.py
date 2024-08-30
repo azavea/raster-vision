@@ -5,7 +5,7 @@ from setuptools import setup, find_namespace_packages
 import re
 
 name = 'rastervision_gdal_vsi'
-version = '0.31.1-dev'
+version = '0.31.2-dev'
 description = 'A rastervision plugin that adds a GDAL VSI file system'
 requirement_constraints = {}
 
