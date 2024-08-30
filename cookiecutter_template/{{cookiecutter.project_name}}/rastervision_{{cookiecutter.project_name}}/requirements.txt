@@ -1,1 +1,1 @@
-rastervision==0.31.1-dev
+rastervision==0.31.2-dev
