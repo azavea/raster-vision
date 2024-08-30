@@ -5,7 +5,7 @@ from setuptools import setup, find_namespace_packages
 import re
 
 name = 'rastervision_pytorch_learner'
-version = '0.31.0'
+version = '0.31.1'
 description = 'A rastervision plugin that adds PyTorch training pipelines'
 requirement_constraints = {}
 
