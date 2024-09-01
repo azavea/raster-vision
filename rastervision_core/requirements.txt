@@ -1,5 +1,5 @@
 rastervision_pipeline==0.31.2-dev
-shapely==2.0.5
+shapely==2.0.6
 geopandas==1.0.1
 numpy==1.26.4
 pillow==10.4.0
