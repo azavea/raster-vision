@@ -443,6 +443,11 @@ class TestBox(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             _ = '' in Box(0, 0, 1, 1)
 
+    def test_error_on_nonfinite_inputs(self):
+        self.assertRaises(ValueError, lambda: Box(np.inf, 0, 0, 0))
+        self.assertRaises(ValueError, lambda: Box(-np.inf, 0, 0, 0))
+        self.assertRaises(ValueError, lambda: Box(np.nan, 0, 0, 0))
+
 
 if __name__ == '__main__':
     unittest.main()

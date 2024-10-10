@@ -40,6 +40,10 @@ class Box:
             ymax: maximum y value
             xmax: maximum x value
         """
+        if not all(math.isfinite(v) for v in (ymin, xmin, ymax, xmax)):
+            raise ValueError(
+                f'Invalid Box coordinates: {(ymin, xmin, ymax, xmax)}.')
+
         self.ymin = ymin
         self.xmin = xmin
         self.ymax = ymax
