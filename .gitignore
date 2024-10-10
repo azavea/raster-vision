@@ -101,6 +101,9 @@ deployment/ansible/*.retry
 *.tfstate
 *.tfstate.backup
 
+# Apple filesystem
+.DS*
+
 # Emacs
 \#*#
 *~
