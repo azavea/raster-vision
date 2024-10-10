@@ -1,6 +1,8 @@
 from typing import TYPE_CHECKING, Any
-from pyproj import Transformer
+import logging
 
+from pyproj import Transformer
+from pyproj.exceptions import ProjError
 import numpy as np
 import rasterio as rio
 from rasterio.transform import (rowcol, xy)
@@ -11,6 +13,8 @@ from rastervision.core.data.crs_transformer import (CRSTransformer,
 
 if TYPE_CHECKING:
     from typing import Self
+
+log = logging.getLogger(__name__)
 
 
 class RasterioCRSTransformer(CRSTransformer):
@@ -61,7 +65,7 @@ class RasterioCRSTransformer(CRSTransformer):
         out = f"""{cls_name}(
             image_crs="{image_crs_str}",
             map_crs="{map_crs_str}",
-            round_pixels="{self.round_pixels}",
+            round_pixels={self.round_pixels},
             transform={transform_str})
         """
         return out
@@ -78,7 +82,29 @@ class RasterioCRSTransformer(CRSTransformer):
         Returns:
             (x, y) tuple in pixel coordinates
         """
-        image_point = self.map2image(*map_point)
+        # For some transformations, pyproj attempts to download transformation
+        # grids from the internet for improved accuracy when
+        # Transformer.transform() is called. If it fails to connect to the
+        # internet, it silently returns (inf, inf) and silently modifies its
+        # behavior to not access the internet on subsequent calls, causing
+        # them to succeed (though possibly with a loss of accuracy). See
+        # https://github.com/pyproj4/pyproj/issues/705 for details.
+        #
+        # The below workaround forces an error to be raised by setting
+        # errcheck=True and ignoring the first error.
+        try:
+            image_point = self.map2image(*map_point, errcheck=True)
+        except ProjError as e:
+            log.debug(f'pyproj: {e}')
+            if 'network' in str(e).lower():
+                log.warning(
+                    'pyproj tried and failed to connect to the internet to '
+                    'download transformation grids for the transformation from\n'
+                    f'{self.map_crs}\nto\n{self.image_crs}.\nSee '
+                    'https://github.com/pyproj4/pyproj/issues/705 for details.'
+                )
+            image_point = self.map2image(*map_point, errcheck=True)
+
         x, y = image_point
         if self.round_pixels:
             row, col = rowcol(self.transform, x, y)
@@ -103,7 +129,29 @@ class RasterioCRSTransformer(CRSTransformer):
             col = col.astype(int) if isinstance(col, np.ndarray) else int(col)
             row = row.astype(int) if isinstance(row, np.ndarray) else int(row)
         image_point = xy(self.transform, row, col, offset='center')
-        map_point = self.image2map(*image_point)
+
+        # For some transformations, pyproj attempts to download transformation
+        # grids from the internet for improved accuracy when
+        # Transformer.transform() is called. If it fails to connect to the
+        # internet, it silently returns (inf, inf) and silently modifies its
+        # behavior to not access the internet on subsequent calls, causing
+        # them to succeed (though possibly with a loss of accuracy). See
+        # https://github.com/pyproj4/pyproj/issues/705 for details.
+        #
+        # The below workaround forces an error to be raised by setting
+        # errcheck=True and ignoring the first error.
+        try:
+            map_point = self.image2map(*image_point, errcheck=True)
+        except ProjError as e:
+            log.debug(f'pyproj: {e}')
+            if 'network' in str(e).lower():
+                log.warning(
+                    'pyproj tried and failed to connect to the internet to '
+                    'download transformation grids for the transformation from'
+                    f'\n{self.image_crs}\nto\n{self.map_crs}.\nSee '
+                    'https://github.com/pyproj4/pyproj/issues/705 for details.'
+                )
+            map_point = self.image2map(*image_point, errcheck=True)
         return map_point
 
     @classmethod
