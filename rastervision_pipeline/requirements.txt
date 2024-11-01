@@ -1,6 +1,6 @@
 click==8.1.7
 pydantic==2.8.2
-everett==3.3.0
+everett==3.4.0
 everett[ini]==3.3.0
 six==1.16.*
 tqdm==4.66.5
