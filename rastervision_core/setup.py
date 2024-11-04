@@ -7,7 +7,9 @@ import re
 name = 'rastervision_core'
 version = '0.31.2-dev'
 description = 'A rastervision plugin that adds geospatial machine learning pipelines'
-requirement_constraints = {}
+requirement_constraints = {
+    'pyproj': '<=3.7.0',
+}
 
 here = abspath(dirname(__file__))
 
