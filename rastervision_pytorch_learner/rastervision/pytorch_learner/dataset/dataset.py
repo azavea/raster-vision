@@ -257,7 +257,7 @@ class SlidingWindowGeoDataset(GeoDataset):
             padding=self.padding,
             pad_direction=self.pad_direction)
         if len(self.scene.aoi_polygons_bbox_coords) > 0:
-            windows = Box.filter_by_aoi(
+            windows, _ = Box.filter_by_aoi(
                 windows,
                 self.scene.aoi_polygons_bbox_coords,
                 within=self.within_aoi)

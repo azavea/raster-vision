@@ -448,9 +448,9 @@ class Box:
         return cls(d['ymin'], d['xmin'], d['ymax'], d['xmax'])
 
     @staticmethod
-    def filter_by_aoi(windows: list['Self'],
+    def filter_by_aoi(windows: Sequence['Box'],
                       aoi_polygons: list[Polygon],
-                      within: bool = True) -> list['Self']:
+                      within: bool = True) -> tuple[list['Box'], list[int]]:
         """Filters windows by a list of AOI polygons
 
         Args:
@@ -458,19 +458,16 @@ class Box:
                 AOI polygon. Otherwise, windows are kept if they intersect an
                 AOI polygon.
         """
-        # merge overlapping polygons, if any
-        aoi_polygons: Polygon | MultiPolygon = unary_union(aoi_polygons)
-
-        if within:
-            keep_window = aoi_polygons.contains
-        else:
-            keep_window = aoi_polygons.intersects
-
-        out = [w for w in windows if keep_window(w.to_shapely())]
-        return out
+        aoi: Polygon | MultiPolygon = unary_union(aoi_polygons)
+        keep_window = aoi.contains if within else aoi.intersects
+        inds = [
+            i for i, w in enumerate(windows) if keep_window(w.to_shapely())
+        ]
+        filtered_windows = [windows[i] for i in inds]
+        return filtered_windows, inds
 
     @staticmethod
-    def within_aoi(window: 'Self',
+    def within_aoi(window: 'Box',
                    aoi_polygons: Polygon | list[Polygon]) -> bool:
         """Check if window is within the union of given AOI polygons."""
         aoi_polygons: Polygon | MultiPolygon = unary_union(aoi_polygons)
@@ -479,7 +476,7 @@ class Box:
         return out
 
     @staticmethod
-    def intersects_aoi(window: 'Self',
+    def intersects_aoi(window: 'Box',
                        aoi_polygons: Polygon | list[Polygon]) -> bool:
         """Check if window intersects with the union of given AOI polygons."""
         aoi_polygons: Polygon | MultiPolygon = unary_union(aoi_polygons)
