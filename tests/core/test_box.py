@@ -279,10 +279,10 @@ class TestBox(unittest.TestCase):
         extent = Box(10, 10, 20, 20)
         windows = set(extent.get_windows(size=6, stride=6))
         expected_windows = set([
-            Box.make_square(10, 10, 6),
-            Box.make_square(10, 16, 6),
-            Box.make_square(16, 10, 6),
-            Box.make_square(16, 16, 6)
+            Box(10, 10, 16, 16),
+            Box(10, 16, 16, 22),
+            Box(16, 10, 22, 16),
+            Box(16, 16, 22, 22)
         ])
         self.assertSetEqual(windows, expected_windows)
 
@@ -394,14 +394,18 @@ class TestBox(unittest.TestCase):
         self.assertEqual(box.__repr__(), 'Box(ymin=1, xmin=2, ymax=3, xmax=4)')
 
     def test_filter_by_aoi(self):
-        windows = [Box.make_square(0, 0, 2), Box.make_square(0, 2, 2)]
-        aoi_polygons = [Box.make_square(0, 0, 3).to_shapely()]
+        windows = [Box(0, 0, 2, 2), Box(0, 2, 2, 4)]
+        aoi_polygons = [Box(0, 0, 3, 3).to_shapely()]
 
-        filt_windows = Box.filter_by_aoi(windows, aoi_polygons, within=False)
+        filt_windows, filt_inds = Box.filter_by_aoi(
+            windows, aoi_polygons, within=False)
         self.assertListEqual(filt_windows, windows)
+        self.assertListEqual(filt_inds, [0, 1])
 
-        filt_windows = Box.filter_by_aoi(windows, aoi_polygons, within=True)
-        self.assertListEqual(filt_windows, windows[0:1])
+        filt_windows, filt_inds = Box.filter_by_aoi(
+            windows, aoi_polygons, within=True)
+        self.assertListEqual(filt_windows, windows[:1])
+        self.assertListEqual(filt_inds, [0])
 
     def test_within_aoi(self):
         extent = Box(0, 0, 6, 6)
