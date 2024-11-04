@@ -166,7 +166,7 @@ class RasterSource(ABC):
                                **kwargs) -> 'np.ndarray':
         """Same as get_chip(), but input is a window in map coords."""
         window_pixel_coords = self.crs_transformer.map_to_pixel(
-            window_map_coords, bbox=self.bbox).normalize()
+            window_map_coords, bbox=self.bbox)
         chip = self.get_chip(window_pixel_coords, *args, **kwargs)
         return chip
 

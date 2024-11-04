@@ -244,10 +244,14 @@ class TestMultiRasterSource(unittest.TestCase):
 
         # test bbox_map_coords
         bbox_map_coords = Box(
-            ymin=29.978710, xmin=31.134949, ymax=29.977309, xmax=31.136567)
+            ymin=29.977309,
+            xmin=31.134949,
+            ymax=29.978710,
+            xmax=31.136567,
+        )
         rs = MultiRasterSource.from_stac(
             item, assets=['red', 'green'], bbox_map_coords=bbox_map_coords)
-        self.assertEqual(rs.bbox, Box(ymin=50, xmin=50, ymax=206, xmax=206))
+        self.assertEqual(rs.bbox, Box(ymin=51, xmin=50, ymax=207, xmax=206))
 
         # test error if both bbox and bbox_map_coords specified
         args = dict(
