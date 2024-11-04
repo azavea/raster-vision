@@ -381,3 +381,25 @@ def get_tmp_dir() -> 'TemporaryDirectory':
         TemporaryDirectory: A context manager.
     """
     return rv_config.get_tmp_dir()
+
+
+def uri_to_vsi_path(uri: str) -> str:
+    """A function to convert URIs to VSI path strings.
+
+    Args:
+        uri: URI of the file. Acceptable URI schemes are file, s3, gs, http,
+            https, and ftp.
+    """
+    URI_SCHEME_TO_VSI = {
+        'http': 'vsicurl',
+        'https': 'vsicurl',
+        'ftp': 'vsicurl',
+        's3': 'vsis3',
+        'gs': 'vsigs',
+    }
+    parsed = urlparse(uri)
+    scheme, netloc, path = parsed.scheme, parsed.netloc, parsed.path
+    if scheme in URI_SCHEME_TO_VSI:
+        return join('/', URI_SCHEME_TO_VSI[scheme], f'{netloc}{path}')
+    # assume file schema
+    return abspath(join(netloc, path))
