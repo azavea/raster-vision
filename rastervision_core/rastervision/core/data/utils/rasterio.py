@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Sequence
 import os
+from os.path import join
 import subprocess
 import logging
 
@@ -12,7 +13,7 @@ from rasterio.session import AWSSession
 
 from rastervision.pipeline.file_system.utils import (
     file_to_json, get_local_path, get_tmp_dir, make_dir, upload_or_copy,
-    download_if_needed)
+    download_if_needed, uri_to_vsi_path)
 from rastervision.core.box import Box
 
 if TYPE_CHECKING:
@@ -141,8 +142,10 @@ def build_vrt(vrt_path: str, image_uris: list[str]) -> None:
     """
     log.info('Building VRT...')
     cmd = ['gdalbuildvrt', vrt_path]
-    cmd.extend(image_uris)
-    subprocess.run(cmd)
+    image_uris_vsi = [uri_to_vsi_path(uri) for uri in image_uris]
+    cmd.extend(image_uris_vsi)
+    make_dir(vrt_path, use_dirname=True)
+    subprocess.run(cmd, env=os.environ)
 
 
 def download_and_build_vrt(image_uris: list[str],
@@ -161,7 +164,7 @@ def download_and_build_vrt(image_uris: list[str],
     """
     if not stream:
         image_uris = [download_if_needed(uri) for uri in image_uris]
-    vrt_path = os.path.join(vrt_dir, 'index.vrt')
+    vrt_path = join(vrt_dir, 'index.vrt')
     build_vrt(vrt_path, image_uris)
     return vrt_path
 

@@ -8,7 +8,8 @@ from moto import mock_aws
 from rastervision.pipeline.file_system import (
     file_to_str, str_to_file, download_if_needed, upload_or_copy, make_dir,
     get_local_path, file_exists, sync_from_dir, sync_to_dir, list_paths,
-    get_tmp_dir, NotReadableError, NotWritableError, FileSystem)
+    get_tmp_dir, uri_to_vsi_path, NotReadableError, NotWritableError,
+    FileSystem)
 
 LOREM = """ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
         eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
@@ -464,6 +465,16 @@ class TestHttpMisc(unittest.TestCase):
         fs = FileSystem.get_file_system(uri, 'r')
         self.assertRaises(NotWritableError,
                           lambda: fs.write_bytes(uri, bytes([0x00, 0x01])))
+
+
+class TestUtils(unittest.TestCase):
+    def test_uri_to_vsi_path(self):
+        self.assertEqual(uri_to_vsi_path('/a/b/c'), '/a/b/c')
+        self.assertEqual(uri_to_vsi_path('http://a/b/c'), '/vsicurl/a/b/c')
+        self.assertEqual(uri_to_vsi_path('https://a/b/c'), '/vsicurl/a/b/c')
+        self.assertEqual(uri_to_vsi_path('ftp://a/b/c'), '/vsicurl/a/b/c')
+        self.assertEqual(uri_to_vsi_path('s3://a/b/c'), '/vsis3/a/b/c')
+        self.assertEqual(uri_to_vsi_path('gs://a/b/c'), '/vsigs/a/b/c')
 
 
 if __name__ == '__main__':
