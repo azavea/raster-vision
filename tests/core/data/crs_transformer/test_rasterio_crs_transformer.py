@@ -14,8 +14,8 @@ class TestRasterioCRSTransformer(unittest.TestCase):
         self.im_path = data_file_path('3857.tif')
         self.im_dataset = rasterio.open(self.im_path)
         self.crs_trans = RasterioCRSTransformer.from_dataset(self.im_dataset)
-        self.lon_lat = (-115.3063715, 36.1268253)
-        self.pix_point = (50, 61)
+        self.lon_lat = (-115.306372, 36.126825)
+        self.pix_point = (51, 62)
 
     def test_map_to_pixel_point(self):
         # w/o bbox

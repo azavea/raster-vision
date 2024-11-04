@@ -100,7 +100,7 @@ def write_geotiff_like_geojson(path: str,
             crs = 'epsg:4326'
     crs_wkt = pyproj.CRS(crs).to_wkt()
     geoms = unary_union(list(geojson_to_geoms(geojson)))
-    bbox = Box.from_shapely(geoms).normalize()
+    bbox = Box.from_shapely(geoms)
     write_bbox(path, arr, bbox=bbox, crs_wkt=crs_wkt, **kwargs)
 
 

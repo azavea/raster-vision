@@ -24,16 +24,14 @@ class TestRasterioUtils(unittest.TestCase):
             geotiff_path = join(tmp_dir, 'test.geotiff')
             write_bbox(geotiff_path, arr1, bbox=bbox, crs_wkt=crs_wkt)
             rs = RasterioSource(geotiff_path)
-            geotiff_bbox = rs.crs_transformer.pixel_to_map(
-                rs.extent).normalize()
+            geotiff_bbox = rs.crs_transformer.pixel_to_map(rs.extent)
             np.testing.assert_array_almost_equal(
                 np.array(list(geotiff_bbox)), np.array(list(bbox)), decimal=3)
             self.assertEqual(rs.shape, (*arr1.shape, 1))
 
             write_bbox(geotiff_path, arr2, bbox=bbox, crs_wkt=crs_wkt)
             rs = RasterioSource(geotiff_path)
-            geotiff_bbox = rs.crs_transformer.pixel_to_map(
-                rs.extent).normalize()
+            geotiff_bbox = rs.crs_transformer.pixel_to_map(rs.extent)
             np.testing.assert_array_almost_equal(
                 np.array(list(geotiff_bbox)), np.array(list(bbox)), decimal=3)
             self.assertEqual(rs.shape, arr2.shape)

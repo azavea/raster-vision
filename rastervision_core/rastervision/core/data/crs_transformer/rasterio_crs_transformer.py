@@ -6,8 +6,10 @@ from pyproj.exceptions import ProjError
 import numpy as np
 import rasterio as rio
 from rasterio.transform import (rowcol, xy)
+from rasterio.windows import bounds, from_bounds, Window
 from rasterio import Affine
 
+from rastervision.core.box import Box
 from rastervision.core.data.crs_transformer import (CRSTransformer,
                                                     IdentityCRSTransformer)
 
@@ -15,6 +17,9 @@ if TYPE_CHECKING:
     from typing import Self
 
 log = logging.getLogger(__name__)
+
+PIXEL_PRECISION = 6
+MAP_PRECISION = 6
 
 
 def pyproj_wrapper(
@@ -54,18 +59,18 @@ class RasterioCRSTransformer(CRSTransformer):
 
     def __init__(self,
                  transform: Affine,
-                 image_crs: Any,
-                 map_crs: Any = 'epsg:4326',
+                 image_crs: str,
+                 map_crs: str = 'epsg:4326',
                  round_pixels: bool = True):
         """Constructor.
 
         Args:
-            transform (Affine): Rasterio affine transform.
-            image_crs (Any): CRS of image in format that PyProj can handle
-                eg. wkt or init string.
-            map_crs (Any): CRS of the labels. Defaults to "epsg:4326".
-            round_pixels (bool): If True, round outputs of map_to_pixel and
-                inputs of pixel_to_map to integers. Defaults to False.
+            transform: Rasterio affine transform.
+            image_crs: CRS of image in format that PyProj can handle eg. WKT or
+                init string.
+            map_crs: CRS of the labels. Defaults to "epsg:4326".
+            round_pixels: If ``True``, round outputs of :meth:`.map_to_pixel`.
+                Defaults to ``False``.
         """
 
         if (image_crs is None) or (image_crs == map_crs):
@@ -106,7 +111,7 @@ class RasterioCRSTransformer(CRSTransformer):
         """
         return out
 
-    def _map_to_pixel(
+    def _map_to_pixel_point(
             self,
             map_point: tuple[float, float] | tuple[np.ndarray, np.ndarray]
     ) -> tuple[int, int] | tuple[np.ndarray, np.ndarray]:
@@ -120,14 +125,42 @@ class RasterioCRSTransformer(CRSTransformer):
         """
         image_point = self.map2image(*map_point)
         x, y = image_point
+        row, col = rowcol(
+            self.transform, x, y, op=lambda x: np.round(x, PIXEL_PRECISION))
         if self.round_pixels:
-            row, col = rowcol(self.transform, x, y)
-        else:
-            row, col = rowcol(self.transform, x, y, op=lambda x: x)
+            row, col = np.round(row), np.round(col)
         pixel_point = (col, row)
         return pixel_point
 
-    def _pixel_to_map(
+    def _map_to_pixel_box(self, box: Box) -> Box:
+        ymin, xmin, ymax, xmax = box
+        xmin, ymin = self.map2image(xmin, ymin)
+        xmax, ymax = self.map2image(xmax, ymax)
+        rio_window = from_bounds(
+            left=xmin,
+            bottom=ymin,
+            right=xmax,
+            top=ymax,
+            transform=self.transform,
+        )
+        (ymin, ymax), (xmin, xmax) = rio_window.toranges()
+        ymin, xmin, ymax, xmax = (
+            round(ymin, PIXEL_PRECISION),
+            round(xmin, PIXEL_PRECISION),
+            round(ymax, PIXEL_PRECISION),
+            round(xmax, PIXEL_PRECISION),
+        )
+        if self.round_pixels:
+            ymin, xmin, ymax, xmax = (
+                round(ymin),
+                round(xmin),
+                round(ymax),
+                round(xmax),
+            )
+        pixel_box = Box(ymin, xmin, ymax, xmax)
+        return pixel_box
+
+    def _pixel_to_map_point(
             self, pixel_point: tuple[int, int] | tuple[np.ndarray, np.ndarray]
     ) -> tuple[float, float] | tuple[np.ndarray, np.ndarray]:
         """Transform point from pixel to map-based coordinates.
@@ -139,12 +172,23 @@ class RasterioCRSTransformer(CRSTransformer):
             (x, y) tuple in map coordinates
         """
         col, row = pixel_point
-        if self.round_pixels:
-            col = col.astype(int) if isinstance(col, np.ndarray) else int(col)
-            row = row.astype(int) if isinstance(row, np.ndarray) else int(row)
-        image_point = xy(self.transform, row, col, offset='center')
-        map_point = self.image2map(*image_point)
+        x, y = xy(self.transform, row, col, offset='center')
+        map_point = self.image2map(x, y)
         return map_point
+
+    def _pixel_to_map_box(self, box: Box) -> Box:
+        rio_window = Window(*box.to_xywh())
+        xmin, ymin, xmax, ymax = bounds(rio_window, transform=self.transform)
+        xmin, ymin, xmax, ymax = (
+            round(xmin, PIXEL_PRECISION),
+            round(ymin, PIXEL_PRECISION),
+            round(xmax, PIXEL_PRECISION),
+            round(ymax, PIXEL_PRECISION),
+        )
+        xmin, ymin = self.image2map(xmin, ymin)
+        xmax, ymax = self.image2map(xmax, ymax)
+        map_box = Box(ymin, xmin, ymax, xmax)
+        return map_box
 
     @classmethod
     def from_dataset(cls,

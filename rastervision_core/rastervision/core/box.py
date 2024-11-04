@@ -271,7 +271,7 @@ class Box:
 
     def to_rasterio(self) -> RioWindow:
         """Convert to a Rasterio Window."""
-        return RioWindow.from_slices(*self.normalize().to_slices())
+        return RioWindow.from_slices(*self.to_slices())
 
     def to_slices(self, h_step: int | None = None,
                   w_step: int | None = None) -> tuple[slice, slice]:

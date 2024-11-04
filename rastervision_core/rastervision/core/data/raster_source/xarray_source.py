@@ -147,7 +147,7 @@ class XarraySource(RasterSource):
             bbox = Box(*bbox)
         elif bbox_map_coords is not None:
             bbox_map_coords = Box(*bbox_map_coords)
-            bbox = crs_transformer.map_to_pixel(bbox_map_coords).normalize()
+            bbox = crs_transformer.map_to_pixel(bbox_map_coords)
         else:
             bbox = None
 
