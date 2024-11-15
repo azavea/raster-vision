@@ -18,59 +18,65 @@ It has built-in support for chip classification, object detection, and semantic 
 **As a library**, Raster Vision provides a full suite of utilities for dealing with all aspects of a geospatial deep learning workflow: reading geo-referenced data, training models, making predictions, and writing out predictions in geo-referenced formats.
 
 **As a low-code framework**, Raster Vision allows users (who don't need to be experts in deep learning!) to quickly and repeatably configure experiments that execute a machine learning pipeline including: analyzing training data, creating training chips, training models, creating predictions, evaluating models, and bundling the model files and configuration for easy deployment.
-![Overview of Raster Vision workflow](docs/img/rv-pipeline-overview.png)
 
-Raster Vision also has built-in support for running experiments in the cloud using [AWS Batch](https://docs.rastervision.io/en/stable/setup/aws.html#running-on-aws-batch) as well as [AWS Sagemaker](https://docs.rastervision.io/en/stable/setup/aws.html#running-on-aws-sagemaker).
+For more details, see the [documentation](https://docs.rastervision.io/en/stable/).
 
-See the [documentation](https://docs.rastervision.io/en/stable/) for more details.
+---
 
-## Installation
+### Prerequisites
+- Python 3.6+
+- Docker (optional but recommended for running pre-built images)
 
-*For more details, see the [Setup documentation](https://docs.rastervision.io/en/stable/setup/)*.
+For cloud experiments, ensure AWS CLI and AWS Batch or AWS Sagemaker are configured.
 
-### Install via `pip`
+---
 
-You can install Raster Vision directly via `pip`.
+### Installation Steps
 
+#### Option 1: Install via `pip`
+You can install Raster Vision directly via pip:
 ```sh
 pip install rastervision
 ```
 
-### Use Pre-built Docker Image
+#### Option 2: Use Pre-built Docker Image
+Alternatively, use a pre-built Docker image. Docker images are published to [quay.io](https://quay.io/repository/azavea/raster-vision).
 
-Alternatively, you may use a Docker image. Docker images are published to [quay.io](https://quay.io/repository/azavea/raster-vision) (see the *tags* tab).
+To pull the latest version:
+```sh
+docker pull quay.io/azavea/raster-vision:pytorch-latest
+```
 
-We publish a new tag per merge into `master`, which is tagged with the first 7 characters of the commit hash. To use the latest version, pull the `latest` suffix, e.g. `raster-vision:pytorch-latest`. Git tags are also published, with the Github tag name as the Docker tag suffix.
+#### Option 3: Build Docker Image
+You can also build a Docker image from scratch. Clone the repo and run the following commands:
+```sh
+docker/build
+docker/run
+```
 
-### Build Docker Image
+---
 
-You can also build a Docker image from scratch yourself. After cloning this repo, run `docker/build`, and run then the container using `docker/run`.
+### Usage Examples and Tutorials
 
-## Usage Examples and Tutorials
+#### Non-developers
+Refer to the [*Quickstart guide*](https://docs.rastervision.io/en/stable/framework/quickstart.html) for a simple entry point into using Raster Vision.
 
-**Non-developers** may find it easiest to use Raster Vision as a low-code framework where Raster Vision handles all the complexities and the user only has to configure a few parameters. The [*Quickstart guide*](https://docs.rastervision.io/en/stable/framework/quickstart.html) is a good entry-point into this. More advanced examples can be found on the [*Examples*](https://docs.rastervision.io/en/stable/framework/examples.html) page.
+#### Developers
+Developers can start with [*Usage Overview*](https://docs.rastervision.io/en/stable/usage/overview.html), followed by [*Basic Concepts*](https://docs.rastervision.io/en/stable/usage/basics.html) and [*Tutorials*](https://docs.rastervision.io/en/stable/usage/tutorials/index.html).
 
-For **developers** and those looking to dive deeper or combine Raster Vision with their own code, the best starting point is [*Usage Overview*](https://docs.rastervision.io/en/stable/usage/overview.html), followed by [*Basic Concepts*](https://docs.rastervision.io/en/stable/usage/basics.html) and [*Tutorials*](https://docs.rastervision.io/en/stable/usage/tutorials/index.html).
+---
 
+### Contributing
 
-## Contact and Support
+We are happy to take contributions! It is best to get in touch with the maintainers about larger features or design changes *before* starting the work. See [Contributing](https://docs.rastervision.io/en/stable/CONTRIBUTING.html) for instructions.
 
-You can ask questions and talk to developers (let us know what you're working on!) at:
-* [Discussion Forum](https://github.com/azavea/raster-vision/discussions)
-* [Mailing List](https://groups.google.com/forum/#!forum/raster-vision)
+---
 
-## Contributing
-
-*For more information, see [Contributing](https://docs.rastervision.io/en/stable/CONTRIBUTING.html).*
-
-We are happy to take contributions! It is best to get in touch with the maintainers
-about larger features or design changes *before* starting the work,
-as it will make the process of accepting changes smoother.
-
-Everyone who contributes code to Raster Vision will be asked to sign a Contributor License Agreement. See [Contributing](https://docs.rastervision.io/en/stable/CONTRIBUTING.html) for instructions.
-
-## Licenses
+### Licenses
 
 Raster Vision is licensed under the Apache 2 license. See license [here](./LICENSE).
 
-3rd party licenses for all dependecies used by Raster Vision can be found [here](./THIRD_PARTY_LICENSES.txt).
+3rd party licenses for all dependencies used by Raster Vision can be found [here](./THIRD_PARTY_LICENSES.txt).
+
+---
+
