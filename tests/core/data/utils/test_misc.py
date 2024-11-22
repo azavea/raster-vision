@@ -32,10 +32,10 @@ class TestMatchBboxes(unittest.TestCase):
         self.crs_tf = self.raster_source.crs_transformer
 
         self.bbox_ls = Box(0, 0, 12, 12)
-        geoms = [b.to_shapely() for b in self.bbox_ls.get_windows(2, 2)]
-        geoms = [self.crs_tf.pixel_to_map(g) for g in geoms]
-        properties = [dict(class_id=0) for _ in geoms]
-        geojson = geoms_to_geojson(geoms, properties)
+        geoms_pixel = [b.to_shapely() for b in self.bbox_ls.get_windows(2, 2)]
+        geoms_map = [self.crs_tf.pixel_to_map(g) for g in geoms_pixel]
+        properties = [dict(class_id=0) for _ in geoms_map]
+        geojson = geoms_to_geojson(geoms_map, properties)
         self._tmp_dir = get_tmp_dir()
         self.tmp_dir = self._tmp_dir.name
         uri = join(self.tmp_dir, 'labels.json')
