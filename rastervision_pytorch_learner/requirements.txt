@@ -12,4 +12,4 @@ psutil==6.0.0
 opencv-python-headless==4.10.0.84
 matplotlib==3.9.1
 tqdm==4.66.5
-onnx==1.16.0
+onnx==1.17.0
