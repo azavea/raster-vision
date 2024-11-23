@@ -165,7 +165,7 @@ ENV SAGEMAKER_TRAINING_MODULE=sagemaker_pytorch_container.training:main
 # --extra-index-url in requirements.txt seems to cause problems with the
 # RTD build.
 RUN if [ "${TARGETARCH}" != "arm64" ]; then \
-    uv pip install --upgrade onnxruntime-gpu==1.17 --extra-index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/; fi
+    uv pip install onnxruntime-gpu==1.19; fi
 
 #------------------------------------------------------------------------
 
