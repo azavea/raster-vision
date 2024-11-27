@@ -134,7 +134,7 @@ def get_kernel(rectangle: RotatedRectange,
     element_rect: RotatedRectange = (pos, dim, angle)
     element_contour = cv2.boxPoints(box=element_rect)
     # https://stackoverflow.com/questions/48350693/what-is-numpy-method-int0
-    element_contour = np.int0(element_contour)
+    element_contour = np.intp(element_contour)
 
     cv2.drawContours(
         image=kernel,
