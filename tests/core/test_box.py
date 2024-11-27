@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 from shapely.geometry import box as ShapelyBox
 
-from rastervision.core.box import Box, BoxSizeError, RioWindow
+from rastervision.core.box import Box, BoxSizeError, RioWindow, SlidingWindows
 
 np.random.seed(1)
 
@@ -447,6 +447,22 @@ class TestBox(unittest.TestCase):
         self.assertRaises(ValueError, lambda: Box(np.inf, 0, 0, 0))
         self.assertRaises(ValueError, lambda: Box(-np.inf, 0, 0, 0))
         self.assertRaises(ValueError, lambda: Box(np.nan, 0, 0, 0))
+
+
+class TestSlidingWindows(unittest.TestCase):
+    def test_getitem(self):
+        ws = SlidingWindows(Box(0, 0, 2, 4), size=2, stride=1, padding=0)
+        self.assertEqual(ws[0], Box(0, 0, 2, 2))
+        self.assertEqual(ws[-1], Box(0, 2, 2, 4))
+        self.assertListEqual(ws[1:], [Box(0, 1, 2, 3), Box(0, 2, 2, 4)])
+        self.assertListEqual(ws[::2], [Box(0, 0, 2, 2), Box(0, 2, 2, 4)])
+        self.assertListEqual(
+            ws[np.array([1, 0])],
+            [Box(0, 1, 2, 3), Box(0, 0, 2, 2)],
+        )
+        self.assertRaises(TypeError, lambda: ws['1':])
+        self.assertRaises(IndexError, lambda: ws[100])
+        self.assertRaises(IndexError, lambda: ws.get_by_rowcol(10, 0))
 
 
 if __name__ == '__main__':
