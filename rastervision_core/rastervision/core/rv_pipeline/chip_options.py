@@ -66,6 +66,10 @@ class WindowSamplingConfig(Config):
         None,
         description='[min, max] interval from which window widths will be '
         'uniformly randomly sampled. Only used if method = random.')
+    normalize: bool = Field(
+        True,
+        description='If True, the sampled chips are normalized to [0, 1] '
+        'based on their data type. Defaults to True.')
     max_windows: NonNegInt = Field(
         10_000,
         description='Max number of windows to sample. Only used if '
