@@ -14,15 +14,16 @@ class ShiftTransformerConfig(VectorTransformerConfig):
 
     x_shift: float = Field(
         0.0,
-        descriptions='Distance in meters to shift along the x-axis. '
+        description='Distance in meters to shift along the x-axis. '
         'Postive values shift eastward.')
     y_shift: float = Field(
         0.0,
-        descriptions='Distance in meters to shift along the y-axis. '
+        description='Distance in meters to shift along the y-axis. '
         'Postive values shift northward.')
     round_pixels: bool = Field(
         True,
-        descriptions='Whether to round shifted pixel values to integers.')
+        description='Whether to round shifted pixel values to integers.',
+    )
 
     def build(self,
               class_config: 'ClassConfig | None' = None) -> ShiftTransformer:
