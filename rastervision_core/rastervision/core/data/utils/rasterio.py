@@ -59,7 +59,7 @@ def write_bbox(path: str, arr: np.ndarray, bbox: Box, crs_wkt: str, **kwargs):
     else:
         h_arr, w_arr, num_channels = arr.shape
     h_bbox, w_bbox = bbox.size
-    resolution = h_bbox / h_arr, w_bbox / w_arr
+    resolution = w_bbox / w_arr, h_bbox / h_arr
     transform = from_origin(bbox.xmin, bbox.ymax, *resolution)
     out_profile = dict(
         driver='GTiff',

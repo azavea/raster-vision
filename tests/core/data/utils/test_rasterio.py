@@ -18,8 +18,8 @@ class TestRasterioUtils(unittest.TestCase):
         bbox = Box(ymin=48.815, xmin=2.224, ymax=48.902, xmax=2.469)
         crs_wkt = pyproj.CRS('epsg:4326').to_wkt()
         r = bbox.width / bbox.height
-        arr1 = np.zeros((100, int(100 * r)))
-        arr2 = np.zeros((100, int(100 * r), 4))
+        arr1 = np.zeros((50, int(100 * r)))
+        arr2 = np.zeros((50, int(100 * r), 4))
         with get_tmp_dir() as tmp_dir:
             geotiff_path = join(tmp_dir, 'test.geotiff')
             write_bbox(geotiff_path, arr1, bbox=bbox, crs_wkt=crs_wkt)
