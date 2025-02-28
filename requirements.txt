@@ -663,8 +663,6 @@ rpds-py==0.23.1
     #   referencing
 rsa==4.7.2
     # via awscli
-ruff==0.9.9
-    # via rastervision (pyproject.toml)
 s3transfer==0.10.4
     # via
     #   awscli
@@ -865,5 +863,7 @@ xarray==2025.1.2
     #   stackstac
 xmltodict==0.14.2
     # via moto
+yapf==0.23.0
+    # via rastervision (pyproject.toml)
 zipp==3.21.0
     # via importlib-metadata
