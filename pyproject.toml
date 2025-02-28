@@ -37,6 +37,7 @@ dependencies = [
 
 [project.optional-dependencies]
 debugging = []
+full = ["rastervision_aws_sagemaker==0.31.1", "rastervision_gdal_vsi==0.31.1"]
 dev = [
     "awscli==1.33.40",
     "coverage==7.2.0",
@@ -51,7 +52,19 @@ dev = [
     "unify==0.5",
     "yapf==0.23.0",
 ]
-full = ["rastervision_aws_sagemaker==0.31.1", "rastervision_gdal_vsi==0.31.1"]
+docs = [
+    "autodoc-pydantic==2.2.0",
+    "furo==2022.9.29",
+    # Needed to make syntax highlighting work correctly on readthedocs.
+    # See https://github.com/spatialaudio/nbsphinx/issues/24.
+    "ipython>=8.26.0",
+    "myst-parser==0.18.1",
+    "nbsphinx==0.8.9",
+    "sphinx-copybutton==0.5.*",
+    # update when this is resolved: https://github.com/spatialaudio/nbsphinx/issues/655
+    "sphinx-gallery>=0.10,<0.11",
+    "sphinx==5.3.0",
+]
 
 [project.urls]
 "Homepage" = "https://github.com/azavea/raster-vision"
