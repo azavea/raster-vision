@@ -1,0 +1,97 @@
+[build-system]
+requires = ["setuptools", "setuptools_scm", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rastervision_pipeline"
+version = "0.31.2-dev"
+description = "The main rastervision package for configuring, defining, and running pipelines."
+readme = "README.md"
+authors = [{ name = "Azavea", email = "info@azavea.com" }]
+license = { text = "Apache License 2.0" }
+classifiers = [
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+keywords = [
+    "computer-vision",
+    "deep-learning",
+    "earth-observation",
+    "machine-learning",
+    "ml",
+    "geospatial",
+    "geospatial-machine-learning",
+    "geospatial-processing",
+    "raster",
+]
+dependencies = [
+    "click==8.1.7",
+    "everett[ini]==3.3.0",
+    "everett==3.3.0",
+    "pydantic>=2",
+    "requests==2.32.3",
+    "six==1.16.*",
+    "tqdm==4.66.5",
+]
+
+[project.optional-dependencies]
+debugging = []
+dev = []
+
+[project.scripts]
+rastervision = "rastervision.pipeline.cli:_main"
+
+[project.urls]
+"Homepage" = "https://github.com/azavea/raster-vision"
+"GitHub" = "https://github.com/azavea/raster-vision"
+
+[tool.setuptools]
+include-package-data = true
+packages = { find = { exclude = ["integration_tests*", "tests*"] } }
+
+[tool.ruff]
+line-length = 79
+extend-exclude = ["notebooks/", ".history/"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint]
+# http://docs.astral.sh/ruff/rules/
+select = ['ALL']
+ignore = [
+    # Unnecessary assignment before return statement
+    'RET504',
+    # Trailing comma missing
+    'COM812',
+    # Missing docstring for module
+    'D100',
+    # Missing docstring in magic method
+    'D105',
+    # 1 blank line required before class docstring
+    'D203',
+    # Multi-line docstring summary should start at the second line
+    'D213',
+]
+
+[tool.ruff.lint.per-file-ignores]
+'__init__.py' = [
+    # Module level import not at top of cell
+    'E402',
+    # Imported but unused
+    'F401',
+]
+'tests/**/*' = [
+    # Use of assert detected
+    'S101',
+    # Missing return type annotation for public function
+    'ANN201',
+    # Missing docstrings
+    'D1',
+    # Private member accessed
+    'SLF001',
+    # magic values
+    'PLR2004',
+]
