@@ -69,13 +69,6 @@ Minor or Major Version Release
         docker push quay.io/azavea/raster-vision:pytorch-<version>
 
 #.  Make a GitHub `tag <https://github.com/azavea/raster-vision/tags>`_ and `release <https://github.com/azavea/raster-vision/releases>`_ using the previous release as a template.
-#. Remove artifacts from previous builds. From the repo root:
-
-    .. code-block:: console
-
-        rm -rf build/ dist/ *.egg-info
-        rm -rf rastervision_*/build rastervision_*/dist rastervision_*/*.egg-info
-
 #.  Publish all packages to PyPI. This step requires `twine <https://twine.readthedocs.io/en/stable/>`__ which you can install with
 
     .. code-block:: console

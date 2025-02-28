@@ -40,6 +40,7 @@ debugging = []
 full = ["rastervision_aws_sagemaker==0.31.1", "rastervision_gdal_vsi==0.31.1"]
 dev = [
     "awscli==1.33.40",
+    "build",
     "coverage==7.2.0",
     "flake8==5.0.4",
     "jupyter_contrib_nbextensions==0.7.0",

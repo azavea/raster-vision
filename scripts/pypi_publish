@@ -7,7 +7,16 @@ SCRIPTS_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
 SRC_DIR="$(cd -P "$(dirname "$SCRIPTS_DIR")" && pwd)"
 
 # List of plugins to publish
-plugins=("rastervision_pipeline" "rastervision_aws_batch" "rastervision_aws_s3" "rastervision_core" "rastervision_pytorch_learner" "rastervision_pytorch_backend" "rastervision_gdal_vsi" "rastervision_aws_sagemaker")
+plugins=(
+    "rastervision_pipeline"
+    "rastervision_aws_batch"
+    "rastervision_aws_s3"
+    "rastervision_core"
+    "rastervision_pytorch_learner"
+    "rastervision_pytorch_backend"
+    "rastervision_gdal_vsi"
+    "rastervision_aws_sagemaker"
+)
 
 # Usage documentation
 function usage() {
@@ -35,10 +44,10 @@ function publish_package() {
 # publish a plugin
 function publish_plugin() {
     local plugin_name="$1"
-    cd "$SRC_DIR/$plugin_name"
+    cd "$SRC_DIR/$plugin_name" || exit
     echo "Publishing $plugin_name ... "
     publish_package
-    cd "$SRC_DIR"
+    cd "$SRC_DIR" || exit
 }
 
 # publish all plugins and the top-level package
@@ -81,12 +90,11 @@ else
 fi
 
 case "$response" in
-    [yY][eE][sS]|[yY])
-        echo "Publishing to PyPI..."
-        publish_all
-        ;;
-    *)
-        echo "Aborting."
-        ;;
+[yY][eE][sS] | [yY])
+    echo "Publishing to PyPI..."
+    publish_all
+    ;;
+*)
+    echo "Aborting."
+    ;;
 esac
-
