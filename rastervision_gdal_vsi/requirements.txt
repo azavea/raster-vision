@@ -12,8 +12,6 @@ configobj==5.0.9
     # via everett
 everett==3.4.0
     # via rastervision-pipeline
-gdal==3.6.3
-    # via rastervision-gdal-vsi (rastervision_gdal_vsi/pyproject.toml)
 idna==3.10
     # via requests
 pydantic==2.10.6

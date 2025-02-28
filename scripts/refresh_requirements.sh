@@ -30,9 +30,11 @@ for dir in "$SRC_DIR/${plugins[@]}"; do
         --refresh --all-extras \
         "$dir/pyproject.toml" \
         --output-file "$dir/requirements.txt"
+    sed -i '/^gdal==/d' requirements.txt
 done
 
 uv pip compile \
     --refresh --all-extras \
     "$SRC_DIR/pyproject.toml" \
     --output-file "$SRC_DIR/requirements.txt"
+sed -i '/^gdal==/d' requirements.txt
