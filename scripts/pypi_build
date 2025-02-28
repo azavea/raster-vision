@@ -2,13 +2,21 @@
 
 # Determine the script's directory (even if it's a symbolic link)
 SOURCE="${BASH_SOURCE[0]}"
-while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
-SCRIPTS_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-SRC_DIR="$( cd -P "$( dirname "$SCRIPTS_DIR" )" && pwd )"
+while [ -h "$SOURCE" ]; do SOURCE="$(readlink "$SOURCE")"; done
+SCRIPTS_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+SRC_DIR="$(cd -P "$(dirname "$SCRIPTS_DIR")" && pwd)"
 
 # List of plugins to build
-plugins=("rastervision_pipeline" "rastervision_aws_batch" "rastervision_aws_s3" "rastervision_core" "rastervision_pytorch_learner" "rastervision_pytorch_backend" "rastervision_gdal_vsi" "rastervision_aws_sagemaker")
-
+plugins=(
+    "rastervision_pipeline"
+    "rastervision_aws_batch"
+    "rastervision_aws_s3"
+    "rastervision_core"
+    "rastervision_pytorch_learner"
+    "rastervision_pytorch_backend"
+    "rastervision_gdal_vsi"
+    "rastervision_aws_sagemaker"
+)
 # Usage documentation
 function usage() {
     echo "Usage: $(basename "$0") [--test]"
@@ -24,11 +32,12 @@ fi
 
 # Function to build a plugin
 function build_plugin() {
-    cd "$SRC_DIR/$1"
+    cd "$SRC_DIR/$1" || exit
     echo "Building $1 ... "
-    python setup.py sdist bdist_wheel
+    rm -rf build/ dist/ *.egg-info
+    python -m build
     echo "Done."
-    cd "$SRC_DIR"
+    cd "$SRC_DIR" || exit
 }
 
 # Build each plugin
@@ -37,6 +46,7 @@ for plugin in "${plugins[@]}"; do
 done
 
 # Build the top-level package
-echo "rastervision ... "
-python setup.py sdist bdist_wheel
+echo "Building top-level package ... "
+rm -rf build/ dist/ *.egg-info
+python -m build
 echo "Done."

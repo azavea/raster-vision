@@ -60,6 +60,8 @@ botocore==1.34.158
     #   moto
     #   rastervision-aws-s3
     #   s3transfer
+build==1.2.2.post1
+    # via rastervision (pyproject.toml)
 certifi==2025.1.31
     # via
     #   httpcore
@@ -439,6 +441,7 @@ overrides==7.7.0
     # via jupyter-server
 packaging==24.2
     # via
+    #   build
     #   dask
     #   geopandas
     #   ipykernel
@@ -554,6 +557,8 @@ pyproj==3.7.1
     #   geopandas
     #   rastervision-core
     #   stackstac
+pyproject-hooks==1.2.0
+    # via build
 pystac==1.12.2
     # via
     #   pystac-client
