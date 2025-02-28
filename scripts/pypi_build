@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 # Determine the script's directory (even if it's a symbolic link)
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do SOURCE="$(readlink "$SOURCE")"; done
@@ -32,12 +34,12 @@ fi
 
 # Function to build a plugin
 function build_plugin() {
-    cd "$SRC_DIR/$1" || exit
+    pushd "$SRC_DIR/$1" >/dev/null
     echo "Building $1 ... "
     rm -rf build/ dist/ *.egg-info
     python -m build
     echo "Done."
-    cd "$SRC_DIR" || exit
+    popd >/dev/null
 }
 
 # Build each plugin
@@ -46,7 +48,9 @@ for plugin in "${plugins[@]}"; do
 done
 
 # Build the top-level package
+pushd "$SRC_DIR" >/dev/null
 echo "Building top-level package ... "
 rm -rf build/ dist/ *.egg-info
 python -m build
 echo "Done."
+popd >/dev/null

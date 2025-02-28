@@ -26,15 +26,19 @@ plugins=(
 # compile requirements
 for dir in "$SRC_DIR/${plugins[@]}"; do
     echo "Processing $dir"
+    pushd "$dir" >/dev/null
     uv pip compile \
         --refresh --all-extras \
-        "$dir/pyproject.toml" \
-        --output-file "$dir/requirements.txt"
+        "pyproject.toml" \
+        --output-file "requirements.txt"
     sed -i '/^gdal==/d' requirements.txt
+    popd >/dev/null
 done
 
+pushd "$SRC_DIR" >/dev/null
 uv pip compile \
     --refresh --all-extras \
     "$SRC_DIR/pyproject.toml" \
     --output-file "$SRC_DIR/requirements.txt"
 sed -i '/^gdal==/d' requirements.txt
+popd >/dev/null
