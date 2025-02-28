@@ -27,12 +27,12 @@ keywords = [
     "raster",
 ]
 dependencies = [
-    "rastervision_pipeline==0.31.2-dev",
-    "rastervision_aws_s3==0.31.2-dev",
-    "rastervision_aws_batch==0.31.2-dev",
-    "rastervision_core==0.31.2-dev",
-    "rastervision_pytorch_learner==0.31.2-dev",
-    "rastervision_pytorch_backend==0.31.2-dev",
+    "rastervision_pipeline==0.31.1",
+    "rastervision_aws_s3==0.31.1",
+    "rastervision_aws_batch==0.31.1",
+    "rastervision_core==0.31.1",
+    "rastervision_pytorch_learner==0.31.1",
+    "rastervision_pytorch_backend==0.31.1",
 ]
 
 [project.optional-dependencies]
@@ -51,6 +51,7 @@ dev = [
     "unify==0.5",
     "yapf==0.23.0",
 ]
+full = ["rastervision_aws_sagemaker==0.31.1", "rastervision_gdal_vsi==0.31.1"]
 
 [project.urls]
 "Homepage" = "https://github.com/azavea/raster-vision"
