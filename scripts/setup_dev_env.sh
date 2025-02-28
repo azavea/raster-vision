@@ -12,6 +12,8 @@ while [ -h "$SOURCE" ]; do SOURCE="$(readlink "$SOURCE")"; done
 SCRIPTS_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
 SRC_DIR="$(cd -P "$(dirname "$SCRIPTS_DIR")" && pwd)"
 
+pip install --upgrade uv
+
 plugins=(
     "rastervision_pipeline"
     "rastervision_aws_batch"
@@ -23,9 +25,10 @@ plugins=(
     "rastervision_aws_sagemaker"
 )
 
+uv pip sync "$SRC_DIR/requirements.txt"
+
 for dir in "${plugins[@]}"; do
-    uv pip install -r "$SRC_DIR/$dir/requirements.txt"
     uv pip install -e "$SRC_DIR/$dir" --no-deps
 done
-uv pip install -r "$SRC_DIR/requirements.txt"
+
 uv pip install -e "$SRC_DIR" --no-deps
