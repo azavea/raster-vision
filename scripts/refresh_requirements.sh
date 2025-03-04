@@ -23,22 +23,19 @@ plugins=(
     "rastervision_aws_sagemaker"
 )
 
-# compile requirements
-for dir in "$SRC_DIR/${plugins[@]}"; do
-    echo "Processing $dir"
-    pushd "$dir" >/dev/null
-    uv pip compile \
-        --refresh --all-extras \
-        "pyproject.toml" \
-        --output-file "requirements.txt"
-    sed -i '/^gdal==/d' requirements.txt
-    popd >/dev/null
+toml_files=("pyproject.toml")
+exclusion_options=(--no-emit-package "gdal")
+for plugin in "${plugins[@]}"; do
+    toml_files+=("$plugin/pyproject.toml")
+    exclusion_options+=(--no-emit-package "$plugin")
 done
 
 pushd "$SRC_DIR" >/dev/null
+
 uv pip compile \
     --refresh --all-extras \
-    "$SRC_DIR/pyproject.toml" \
-    --output-file "$SRC_DIR/requirements.txt"
-sed -i '/^gdal==/d' requirements.txt
+    "${toml_files[@]}" \
+    "${exclusion_options[@]}" \
+    --output-file "requirements.txt"
+
 popd >/dev/null
