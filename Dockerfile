@@ -4,7 +4,7 @@ ARG UBUNTU_VERSION
 
 ########################################################################
 
-FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu${UBUNTU_VERSION} as thinbuild
+FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu${UBUNTU_VERSION} AS thinbuild
 
 ARG PYTHON_VERSION=3.11
 
@@ -22,7 +22,7 @@ RUN --mount=type=cache,target=/var/cache/apt apt update && \
 
 ########################################################################
 
-FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu${UBUNTU_VERSION} as fullbuild
+FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu${UBUNTU_VERSION} AS fullbuild
 
 ARG TARGETPLATFORM
 ARG PYTHON_VERSION=3.11
@@ -50,8 +50,8 @@ RUN wget -q -O ~/micromamba.sh https://github.com/conda-forge/miniforge/releases
     chmod +x ~/micromamba.sh && \
     bash ~/micromamba.sh -b -p /opt/conda && \
     rm ~/micromamba.sh
-ENV PATH /opt/conda/bin:$PATH
-ENV LD_LIBRARY_PATH /opt/conda/lib/:$LD_LIBRARY_PATH
+ENV PATH=/opt/conda/bin:$PATH
+ENV LD_LIBRARY_PATH=/opt/conda/lib/:$LD_LIBRARY_PATH
 RUN mamba init
 RUN mamba install -y python=${PYTHON_VERSION}
 RUN python -m pip install --upgrade pip
@@ -65,7 +65,7 @@ RUN pip install uv
 RUN mamba update mamba -y && mamba install -y -c conda-forge gdal=3.6.3
 ENV GDAL_DATA=/opt/conda/lib/python${PYTHON_VERSION}/site-packages/rasterio/gdal_data/
 # Needed for GDAL 3.0
-ENV PROJ_LIB /opt/conda/share/proj/
+ENV PROJ_LIB=/opt/conda/share/proj/
 
 # This is to prevent the following error when starting the container.
 # bash: /opt/conda/lib/libtinfo.so.6: no version information available (required by bash)
@@ -86,8 +86,8 @@ FROM ${BUILD_TYPE:-fullbuild} AS final_stage
 
 ARG TARGETARCH
 
-ENV LC_ALL C.UTF-8
-ENV LANG C.UTF-8
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
 
 WORKDIR /opt/src/
 
