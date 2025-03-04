@@ -112,7 +112,7 @@ RUN sed -i '/^rastervision/d' requirements.txt
 RUN if [ "${TARGETARCH}" = "arm64" ]; \
     then sed -i '/^triangle.*$/d' /opt/src/requirements.txt; fi
 
-RUN --mount=type=cache,target=/root/.cache/pip uv pip install -r requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip uv pip sync requirements.txt
 
 #------------------------------------------------------------------------
 
