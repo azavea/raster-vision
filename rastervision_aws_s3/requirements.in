@@ -1,0 +1,4 @@
+boto3
+botocore
+rastervision_pipeline==0.31.1
+tqdm

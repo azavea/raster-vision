@@ -1,0 +1,2 @@
+boto3
+rastervision_pipeline==0.31.1

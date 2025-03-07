@@ -26,16 +26,7 @@ keywords = [
     "geospatial-processing",
     "raster",
 ]
-dependencies = [
-    "boto3==1.34.155",
-    "botocore==1.34.158",
-    "rastervision_pipeline==0.31.1",
-    "tqdm==4.66.5",
-]
-
-[project.optional-dependencies]
-debugging = []
-dev = []
+dynamic = ["dependencies"]
 
 [project.urls]
 "Homepage" = "https://github.com/azavea/raster-vision"
@@ -44,3 +35,6 @@ dev = []
 [tool.setuptools]
 include-package-data = true
 packages = { find = { exclude = ["integration_tests*", "tests*"] } }
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.in"] }
