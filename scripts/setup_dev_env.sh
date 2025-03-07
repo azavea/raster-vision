@@ -25,7 +25,14 @@ plugins=(
     "rastervision_aws_sagemaker"
 )
 
-uv pip sync "$SRC_DIR/requirements.txt"
+if [[ ${1:-} == "--rtd" ]]; then
+    # exclude gdal when building for ReadTheDocs
+    sed '/^gdal/d' "$SRC_DIR/requirements.txt" >"$SRC_DIR/requirements-rtd.txt"
+    uv pip sync "$SRC_DIR/requirements-rtd.txt"
+    rm "$SRC_DIR/requirements-rtd.txt"
+else
+    uv pip sync "$SRC_DIR/requirements.txt"
+fi
 
 for dir in "${plugins[@]}"; do
     uv pip install -e "$SRC_DIR/$dir" --no-deps
