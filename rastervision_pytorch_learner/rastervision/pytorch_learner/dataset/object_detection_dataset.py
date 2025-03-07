@@ -235,7 +235,7 @@ class ObjectDetectionRandomWindowGeoDataset(RandomWindowGeoDataset):
 
     def append_resize_transform(self, transform: A.BasicTransform,
                                 out_size: tuple[int, int]) -> A.BasicTransform:
-        resize_tf = A.Resize(*out_size, always_apply=True)
+        resize_tf = A.Resize(*out_size, p=1.)
         if transform is None:
             transform = resize_tf
         else:

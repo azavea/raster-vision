@@ -18,6 +18,6 @@ def swap(image: 'np.ndarray', **kwargs) -> 'np.ndarray':
 
 
 lambda_transforms = {
-    'ndvi': A.Lambda(name='ndvi', image=ndvi, always_apply=True),
-    'swap': A.Lambda(name='swap', image=swap, always_apply=True)
+    'ndvi': A.Lambda(name='ndvi', image=ndvi, p=1.),
+    'swap': A.Lambda(name='swap', image=swap, p=1.)
 }

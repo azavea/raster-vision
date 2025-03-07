@@ -222,7 +222,6 @@ class MinMaxNormalize(ImageOnlyTransform):
             min_val=0.0,
             max_val=1.0,
             dtype=cv2.CV_32F,
-            always_apply=False,
             p=1.0,
     ):
         """Constructor.
@@ -232,7 +231,7 @@ class MinMaxNormalize(ImageOnlyTransform):
             max_val: the maximum value that output should have
             dtype: the dtype of output image
         """
-        super(MinMaxNormalize, self).__init__(always_apply, p)
+        super(MinMaxNormalize, self).__init__(p)
         self.min_val = min_val
         self.max_val = max_val
         self.dtype = dtype
