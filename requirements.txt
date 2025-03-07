@@ -160,6 +160,10 @@ fsspec==2025.2.0
     #   torch
 furo==2022.9.29
     # via rastervision (pyproject.toml)
+gdal==3.6.3
+    # via
+    #   rastervision-gdal-vsi (rastervision_gdal_vsi/pyproject.toml)
+    #   rastervision-gdal-vsi
 geopandas==1.0.1
     # via
     #   rastervision-core (rastervision_core/pyproject.toml)
@@ -906,7 +910,6 @@ zipp==3.21.0
     # via importlib-metadata
 
 # The following packages were excluded from the output:
-# gdal
 # rastervision-pipeline
 # rastervision-aws-batch
 # rastervision-aws-s3

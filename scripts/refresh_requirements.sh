@@ -24,7 +24,7 @@ plugins=(
 )
 
 toml_files=("pyproject.toml")
-exclusion_options=(--no-emit-package "gdal")
+exclusion_options=()
 for plugin in "${plugins[@]}"; do
     toml_files+=("$plugin/pyproject.toml")
     exclusion_options+=(--no-emit-package "$plugin")
