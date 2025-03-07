@@ -27,7 +27,7 @@ FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu${UBUNTU_VERSION} AS fullb
 ARG TARGETPLATFORM
 ARG PYTHON_VERSION=3.11
 
-# wget: needed below to install conda
+# wget: needed below to install mamba
 # build-essential: installs gcc which is needed to install some deps like rasterio
 # libGL1: needed to avoid following error when using cv2
 # ImportError: libGL.so.1: cannot open shared object file: No such file or directory
@@ -45,24 +45,29 @@ RUN case ${TARGETPLATFORM} in \
 RUN curl -fsSL https://deb.nodesource.com/node_16.x | bash - && \
     apt-get install -y nodejs
 
-# Install Python and conda/mamba (mamba installs conda as well)
+# Install Python and mamba
 RUN wget -q -O ~/micromamba.sh https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-$(cat /root/linux_arch).sh && \
     chmod +x ~/micromamba.sh && \
     bash ~/micromamba.sh -b -p /opt/conda && \
     rm ~/micromamba.sh
-ENV PATH=/opt/conda/bin:$PATH
+ENV PATH=/opt/conda/bin:/opt/conda/condabin:$PATH
 ENV LD_LIBRARY_PATH=/opt/conda/lib/:$LD_LIBRARY_PATH
-RUN mamba init
-RUN mamba install -y python=${PYTHON_VERSION}
-RUN python -m pip install --upgrade pip
+
+RUN mamba init bash
+RUN mamba create -n rv python=${PYTHON_VERSION} -y
+RUN echo "mamba activate rv" >> ~/.bashrc
+
+# Make RUN commands use the new mamba environment:
+SHELL ["mamba", "run", "-n", "rv", "bash", "-l", "-c"]
 
 # env variable required by uv
-ENV CONDA_PREFIX=/opt/conda
+ENV CONDA_PREFIX=/opt/conda/envs/rv/bin/
+RUN python -m pip install --upgrade pip
 RUN pip install uv
 
 # We need to install GDAL first to install Rasterio on non-AMD64 architectures.
 # The Rasterio wheels contain GDAL in them, but they are only built for AMD64 now.
-RUN mamba update mamba -y && mamba install -y -c conda-forge gdal=3.6.3
+RUN mamba install -y -c conda-forge gdal=3.6.3
 ENV GDAL_DATA=/opt/conda/lib/python${PYTHON_VERSION}/site-packages/rasterio/gdal_data/
 # Needed for GDAL 3.0
 ENV PROJ_LIB=/opt/conda/share/proj/
@@ -103,6 +108,21 @@ RUN --mount=type=cache,target=/root/.cache/pip wget \
 #------------------------------------------------------------------------
 
 COPY ./requirements.txt /opt/src/requirements.txt
+COPY scripts /opt/src/scripts/
+COPY scripts/rastervision /usr/local/bin/rastervision
+COPY tests /opt/src/tests/
+COPY integration_tests /opt/src/integration_tests/
+COPY .flake8 /opt/src/.flake8
+COPY .coveragerc /opt/src/.coveragerc
+
+COPY ./rastervision_aws_batch/ /opt/src/rastervision_aws_batch/
+COPY ./rastervision_aws_s3/ /opt/src/rastervision_aws_s3/
+COPY ./rastervision_core/ /opt/src/rastervision_core/
+COPY ./rastervision_gdal_vsi/ /opt/src/rastervision_gdal_vsi/
+COPY ./rastervision_pipeline/ /opt/src/rastervision_pipeline/
+COPY ./rastervision_aws_sagemaker/ /opt/src/rastervision_aws_sagemaker/
+COPY ./rastervision_pytorch_backend/ /opt/src/rastervision_pytorch_backend/
+COPY ./rastervision_pytorch_learner/ /opt/src/rastervision_pytorch_learner/
 
 # remove rastervision dependencies
 RUN sed -i '/^rastervision/d' requirements.txt
@@ -112,7 +132,17 @@ RUN sed -i '/^rastervision/d' requirements.txt
 RUN if [ "${TARGETARCH}" = "arm64" ]; \
     then sed -i '/^triangle.*$/d' /opt/src/requirements.txt; fi
 
-RUN --mount=type=cache,target=/root/.cache/pip uv pip sync requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip uv pip sync /opt/src/requirements.txt
+
+RUN uv pip install -e /opt/src/rastervision_pipeline/ --no-deps
+RUN uv pip install -e /opt/src/rastervision_aws_s3/ --no-deps
+RUN uv pip install -e /opt/src/rastervision_aws_batch/ --no-deps
+RUN uv pip install -e /opt/src/rastervision_core/ --no-deps
+RUN uv pip install -e /opt/src/rastervision_pytorch_learner/ --no-deps
+RUN uv pip install -e /opt/src/rastervision_pytorch_backend/ --no-deps
+RUN uv pip install -e /opt/src/rastervision_aws_sagemaker/ --no-deps
+RUN uv pip install -e /opt/src/rastervision_gdal_vsi/ --no-deps
+
 
 #------------------------------------------------------------------------
 
@@ -130,30 +160,5 @@ RUN if [ "${TARGETARCH}" != "arm64" ]; then \
 
 #------------------------------------------------------------------------
 
-ENV PYTHONPATH=/opt/src:$PYTHONPATH
-ENV PYTHONPATH=/opt/src/rastervision_aws_batch/:$PYTHONPATH
-ENV PYTHONPATH=/opt/src/rastervision_aws_s3/:$PYTHONPATH
-ENV PYTHONPATH=/opt/src/rastervision_core/:$PYTHONPATH
-ENV PYTHONPATH=/opt/src/rastervision_gdal_vsi/:$PYTHONPATH
-ENV PYTHONPATH=/opt/src/rastervision_pipeline/:$PYTHONPATH
-ENV PYTHONPATH=/opt/src/rastervision_aws_sagemaker/:$PYTHONPATH
-ENV PYTHONPATH=/opt/src/rastervision_pytorch_backend/:$PYTHONPATH
-ENV PYTHONPATH=/opt/src/rastervision_pytorch_learner/:$PYTHONPATH
-
-COPY scripts /opt/src/scripts/
-COPY scripts/rastervision /usr/local/bin/rastervision
-COPY tests /opt/src/tests/
-COPY integration_tests /opt/src/integration_tests/
-COPY .flake8 /opt/src/.flake8
-COPY .coveragerc /opt/src/.coveragerc
-
-COPY ./rastervision_aws_batch/ /opt/src/rastervision_aws_batch/
-COPY ./rastervision_aws_s3/ /opt/src/rastervision_aws_s3/
-COPY ./rastervision_core/ /opt/src/rastervision_core/
-COPY ./rastervision_gdal_vsi/ /opt/src/rastervision_gdal_vsi/
-COPY ./rastervision_pipeline/ /opt/src/rastervision_pipeline/
-COPY ./rastervision_aws_sagemaker/ /opt/src/rastervision_aws_sagemaker/
-COPY ./rastervision_pytorch_backend/ /opt/src/rastervision_pytorch_backend/
-COPY ./rastervision_pytorch_learner/ /opt/src/rastervision_pytorch_learner/
-
+ENTRYPOINT ["mamba", "run", "--no-capture-output", "-n", "rv", "bash", "-l", "-c"]
 CMD ["bash"]
