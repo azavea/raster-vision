@@ -59,6 +59,13 @@ You can ask questions and talk to developers (let us know what you're working on
 * [Discussion Forum](https://github.com/azavea/raster-vision/discussions)
 * [Mailing List](https://groups.google.com/forum/#!forum/raster-vision)
 
+## Developing
+
+To set up the development environment:
+- For and clone the repo and navigate to it.
+- Create and activate a new Python virtual environment via your environment manager of choice (`mamba`, `uv`, `pyenv`, etc.).
+- Run `scripts/setup_dev_env.sh` to install all Raster Vision plugins in editable mode along with all the dependencies.
+
 ## Contributing
 
 *For more information, see [Contributing](https://docs.rastervision.io/en/stable/CONTRIBUTING.html).*
