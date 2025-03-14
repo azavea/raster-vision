@@ -25,9 +25,8 @@ else
     UNIFY="unify --in-place --quote ' --recursive"
     $UNIFY tests/* \
           integration_tests/* \
-          docs/conf.py \
-          setup.py
-    find . -name '*.py' -print0 | xargs -0 $UNIFY
+          docs/conf.py
+    find . \( -path "./data" -o -path "./docs" -o -path "./.history" \) -prune -o -name '*.py' -print0 | xargs -0 $UNIFY
 
     echo "Running yapf..."
     yapf -ipr "$SRC_DIR" \
@@ -39,5 +38,6 @@ else
         -e "**/setup.py" \
         -e "*.history*" \
         -e "data/*" \
+        -e "docs/*" \
         -e "**/*.ipynb"
 fi

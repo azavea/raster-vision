@@ -1,0 +1,82 @@
+[build-system]
+requires = ["setuptools", "setuptools_scm", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rastervision"
+version = "0.31.2-dev"
+description = "An open source framework for deep learning on satellite and aerial imagery."
+readme = "README.md"
+authors = [{ name = "Azavea", email = "info@azavea.com" }]
+license = { text = "Apache License 2.0" }
+classifiers = [
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+keywords = [
+    "computer-vision",
+    "deep-learning",
+    "earth-observation",
+    "machine-learning",
+    "ml",
+    "geospatial",
+    "geospatial-machine-learning",
+    "geospatial-processing",
+    "raster",
+]
+dependencies = [
+    "rastervision_pipeline @ file://${PROJECT_ROOT}/rastervision_pipeline/dist/rastervision_pipeline-0.31.2.dev0-py3-none-any.whl",
+    "rastervision_aws_s3 @ file://${PROJECT_ROOT}/rastervision_aws_s3/dist/rastervision_aws_s3-0.31.2.dev0-py3-none-any.whl",
+    "rastervision_aws_batch @ file://${PROJECT_ROOT}/rastervision_aws_batch/dist/rastervision_aws_batch-0.31.2.dev0-py3-none-any.whl",
+    "rastervision_core @ file://${PROJECT_ROOT}/rastervision_core/dist/rastervision_core-0.31.2.dev0-py3-none-any.whl",
+    "rastervision_pytorch_learner @ file://${PROJECT_ROOT}/rastervision_pytorch_learner/dist/rastervision_pytorch_learner-0.31.2.dev0-py3-none-any.whl",
+    "rastervision_pytorch_backend @ file://${PROJECT_ROOT}/rastervision_pytorch_backend/dist/rastervision_pytorch_backend-0.31.2.dev0-py3-none-any.whl",
+]
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.in"] }
+
+[project.optional-dependencies]
+debugging = []
+full = [
+    "rastervision_aws_sagemaker @ file://${PROJECT_ROOT}/rastervision_aws_sagemaker/dist/rastervision_aws_sagemaker-0.31.2.dev0-py3-none-any.whl",
+    "rastervision_gdal_vsi @ file://${PROJECT_ROOT}/rastervision_gdal_vsi/dist/rastervision_gdal_vsi-0.31.2.dev0-py3-none-any.whl",
+]
+dev = [
+    "awscli==1.33.40",
+    "build",
+    "coverage==7.2.0",
+    "flake8==5.0.4",
+    "jupyter_contrib_nbextensions==0.7.0",
+    "jupyter==1.0.0",
+    "jupyterlab==4.2.5",
+    "moto[s3]==5.0.5",
+    "pystac_client==0.8.3",
+    "seaborn==0.13.2",
+    "sphinx-autobuild==2021.3.14",
+    "unify==0.5",
+    "yapf==0.23.0",
+]
+docs = [
+    "autodoc-pydantic==2.2.0",
+    "furo==2022.9.29",
+    # Needed to make syntax highlighting work correctly on readthedocs.
+    # See https://github.com/spatialaudio/nbsphinx/issues/24.
+    "ipython>=8.26.0",
+    "myst-parser==0.18.1",
+    "nbsphinx==0.8.9",
+    "sphinx-copybutton==0.5.*",
+    # update when this is resolved: https://github.com/spatialaudio/nbsphinx/issues/655
+    "sphinx-gallery>=0.10,<0.11",
+    "sphinx==5.3.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/azavea/raster-vision"
+"GitHub" = "https://github.com/azavea/raster-vision"
+
+[tool.setuptools]
+include-package-data = true
+packages = []

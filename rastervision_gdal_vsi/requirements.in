@@ -1,2 +1,2 @@
+gdal==3.6.3
 rastervision_pipeline==0.31.2-dev
-boto3==1.34.155

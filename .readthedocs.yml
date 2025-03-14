@@ -10,6 +10,9 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.11"
+  jobs:
+    post_install:
+      - scripts/setup_dev_env --rtd
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
@@ -23,25 +26,6 @@ sphinx:
 # Disabled due to: https://github.com/readthedocs/readthedocs.org/issues/10015
 # formats:
 #   - pdf
-
-# Optionally set the version of Python and requirements required to build your docs
-python:
-  install:
-    - requirements: docs/requirements.txt
-    - method: pip
-      path: rastervision_pipeline/
-    - method: pip
-      path: rastervision_aws_s3/
-    - method: pip
-      path: rastervision_aws_batch/
-    - method: pip
-      path: rastervision_core/
-    - method: pip
-      path: rastervision_pytorch_learner/
-    - method: pip
-      path: rastervision_pytorch_backend/
-    - method: pip
-      path: rastervision_aws_sagemaker/
 
 # https://docs.readthedocs.io/en/stable/config-file/v2.html#search
 search:

@@ -163,7 +163,7 @@ class GeoDataset(AlbumentationsDataset):
             self, transform: A.BasicTransform | None,
             out_size: tuple[PosInt, PosInt]) -> A.Resize | A.Compose:
         """Get transform to use for resizing windows to out_size."""
-        resize_tf = A.Resize(*out_size, always_apply=True)
+        resize_tf = A.Resize(*out_size, p=1.)
         if transform is None:
             transform = resize_tf
         else:
