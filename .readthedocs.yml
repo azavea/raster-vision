@@ -12,7 +12,7 @@ build:
     python: "3.11"
   jobs:
     post_install:
-      - scripts/setup_dev_env.sh --rtd
+      - scripts/setup_dev_env --rtd
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
