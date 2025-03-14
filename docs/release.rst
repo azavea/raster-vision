@@ -93,7 +93,7 @@ Minor or Major Version Release
 
     .. code-block:: console
 
-        scripts/pypi_build
+        scripts/build_packages
 
     Publish to TestPyPI:
 

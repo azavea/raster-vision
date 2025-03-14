@@ -67,14 +67,14 @@ function publish_all() {
 }
 
 # Check for command-line arguments
-if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+if [[ ${1:-} == "--help" || ${1:-} == "-h" ]]; then
     usage
     exit
 fi
 
 # Check if the --test flag is passed
 publish_to_test=false
-if [[ "$1" == "--test" ]]; then
+if [[ ${1:-} == "--test" ]]; then
     publish_to_test=true
     # Remove the --test flag from the arguments
     shift
@@ -87,7 +87,7 @@ if [ "$publish_to_test" = true ]; then
 fi
 
 # If actually publishing: prompt for confirmation
-if [[ "$1" == "-y" ]]; then
+if [[ ${1:-} == "-y" ]]; then
     response="y"
 else
     read -r -p "Actually publish to PyPI? (y/N): " response

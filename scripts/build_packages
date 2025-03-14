@@ -27,7 +27,7 @@ function usage() {
 }
 
 # Check for command-line arguments
-if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+if [[ ${1:-} == "--help" || ${1:-} == "-h" ]]; then
     usage
     exit
 fi
