@@ -192,3 +192,13 @@ class RasterioSource(RasterSource):
 
         chip = self.get_chip(window, bands=c, out_shape=out_shape)
         return chip
+
+    def __repr__(self):
+        arg_keys = [
+            'uris', 'channel_order', 'bbox', 'raster_transformers',
+            'allow_streaming', 'tmp_dir'
+        ]
+        arg_vals = [getattr(self, k) for k in arg_keys]
+        arg_strs = [f'{k}={v!r}' for k, v in zip(arg_keys, arg_vals)]
+        arg_str = ', '.join(arg_strs)
+        return f'{type(self).__name__}({arg_str})'

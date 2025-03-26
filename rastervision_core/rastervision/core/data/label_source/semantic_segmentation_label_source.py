@@ -101,3 +101,10 @@ class SemanticSegmentationLabelSource(LabelSource):
             return self.get_label_arr(key)
         else:
             return super().__getitem__(key)
+
+    def __repr__(self):
+        arg_keys = ['raster_source', 'class_config', 'bbox']
+        arg_vals = [getattr(self, k) for k in arg_keys]
+        arg_strs = [f'{k}={v!r}' for k, v in zip(arg_keys, arg_vals)]
+        arg_str = ', '.join(arg_strs)
+        return f'{type(self).__name__}({arg_str})'

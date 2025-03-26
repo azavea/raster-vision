@@ -103,17 +103,41 @@ def match_bboxes(raster_source: 'RasterSource',
         label_source (LabelSource | LabelStore): Source of labels for a
             scene. Can be a ``LabelStore``.
     """
+    from rastervision.core.data import (RasterioCRSTransformer,
+                                        SemanticSegmentationLabelSource)
     crs_tf_img = raster_source.crs_transformer
     crs_tf_label = label_source.crs_transformer
     bbox_img_map = crs_tf_img.pixel_to_map(raster_source.bbox)
+
+    # For SS, if a label file is not georeferenced but is the same size as
+    # the corresponding raster source (as is the case in the Potsdam dataset),
+    # implicitly assume that they are aligned.
+    if isinstance(label_source,
+                  SemanticSegmentationLabelSource) and isinstance(
+                      crs_tf_label, RasterioCRSTransformer):
+        if crs_tf_label.image_crs is None:
+            if raster_source.extent != label_source.extent:
+                raise ValueError(
+                    f'Label source ({label_source}) is not georeferenced and '
+                    f'has a different extent ({label_source.extent}) than the '
+                    f"corresponding raster source's ({raster_source}) extent "
+                    f'({raster_source.extent}).')
+            log.warning(
+                f'Label source ({label_source}) is not georeferenced but has '
+                f'the same extent ({label_source.extent}) as the '
+                f'corresponding raster source ({raster_source}). '
+                'Will assume they are aligned.')
+            return
+
     if label_source.bbox is not None:
         bbox_label_map = crs_tf_label.pixel_to_map(label_source.bbox)
         if not bbox_img_map.intersects(bbox_label_map):
             rs_cls = type(raster_source).__name__
             ls_cls = type(label_source).__name__
-            log.warning(f'{rs_cls} bbox ({bbox_img_map}) does '
-                        f'not intersect with {ls_cls} bbox '
-                        f'({bbox_label_map}).')
+            raise ValueError(f'{rs_cls} bbox ({bbox_img_map}) does '
+                             f'not intersect with {ls_cls} bbox '
+                             f'({bbox_label_map}).')
+
     # set LabelStore bbox to RasterSource bbox
     bbox_label_pixel = crs_tf_label.map_to_pixel(bbox_img_map)
     label_source.set_bbox(bbox_label_pixel)
