@@ -44,6 +44,7 @@ def get_config(runner,
                external_model: bool = True,
                augment: bool = False,
                nochip: bool = True,
+               allow_streaming: bool = False,
                num_epochs: int = 10,
                batch_sz: int = 8,
                test: bool = False) -> SemanticSegmentationConfig:
@@ -69,6 +70,8 @@ def get_config(runner,
             training instead of from pre-generated chips. The analyze and chip
             commands should not be run, if this is set to True. Defaults to
             True.
+        allow_streaming (bool): If True, read directly from remote files
+            instead of downloading them. Defaults to False.
         num_epochs (int): Number of epochs to train for.
         batch_sz (int): Batch size.
         test (bool): If True, does the following simplifications:
@@ -142,7 +145,9 @@ def get_config(runner,
             label_uri = label_crop_uri
 
         raster_source = RasterioSourceConfig(
-            uris=[raster_uri], channel_order=channel_order)
+            uris=[raster_uri],
+            channel_order=channel_order,
+            allow_streaming=allow_streaming)
 
         # Using with_rgb_class_map because label TIFFs have classes encoded as
         # RGB colors.
@@ -151,7 +156,8 @@ def get_config(runner,
                 uris=[label_uri],
                 transformers=[
                     RGBClassTransformerConfig(class_config=class_config)
-                ]))
+                ],
+                allow_streaming=allow_streaming))
 
         # URI will be injected by scene config.
         # Using rgb=True because we want prediction TIFFs to be in
