@@ -81,3 +81,7 @@ Everyone who contributes code to Raster Vision will be asked to sign a Contribut
 Raster Vision is licensed under the Apache 2 license. See license [here](./LICENSE).
 
 3rd party licenses for all dependecies used by Raster Vision can be found [here](./THIRD_PARTY_LICENSES.txt).
+
+---
+
+*[Mukller](https://github.com/Mukller)*
