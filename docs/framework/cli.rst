@@ -26,6 +26,7 @@ It has a main command, with some top level options, and several subcommands.
     --help              Show this message and exit.
 
     Commands:
+    check          Validate URIs in a PipelineConfig without running.
     predict        Use a model bundle to predict on new images.
     predict_scene  Use a model bundle to predict on a new scene.
     run            Run sequence of commands within pipeline(s).
@@ -98,6 +99,48 @@ This is likely only interesting to people writing :ref:`custom runners <runners>
                             commands
     --runner TEXT         Name of runner to use
     --help                Show this message and exit.
+
+.. _check cli command:
+
+``check``
+^^^^^^^^^
+
+Check validates all input file URIs in a PipelineConfig without running the pipeline.
+
+.. code-block:: console
+
+    > rastervision check --help
+
+    Usage: rastervision check [OPTIONS] CFG_MODULE
+
+    Validate all URIs in CFG_MODULE without running the pipeline.
+
+    Loads the PipelineConfig(s) from CFG_MODULE, walks the config tree to
+    find all URI fields, and checks whether each URI is accessible.
+
+    CFG_MODULE: the module with get_configs() function that returns
+    PipelineConfigs. This can either be a Python module path or a local
+    path to a .py file.
+
+    Options:
+    -a, --arg  KEY VALUE  Arguments to pass to get_config function
+    --help                Show this message and exit.
+
+Useful for catching invalid S3 paths or missing local files before
+starting a long-running pipeline.
+
+.. code-block:: console
+
+    > rastervision check my_config.py -a root_uri /tmp/output
+
+    ============================================================
+      PipelineConfig [0]
+    ============================================================
+      [✓] dataset.train_scenes[0].raster_source.uris[0]: /data/img.tif
+      [✓] dataset.train_scenes[0].aoi_uris[0]: /data/aoi.geojson
+      [ ] dataset.validation_scenes[0].raster_source.uris[0]: /data/missing.tif
+
+      Summary: 3 URI(s) checked, 2 found, 1 missing
 
 .. _predict cli command:
 
