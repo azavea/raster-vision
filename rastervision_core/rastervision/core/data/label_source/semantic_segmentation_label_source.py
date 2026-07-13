@@ -19,22 +19,32 @@ class SemanticSegmentationLabelSource(LabelSource):
     def __init__(self,
                  raster_source: RasterSource,
                  class_config: ClassConfig,
-                 bbox: Box | None = None):
+                 bbox: Box | None = None,
+                 null_class_id: int | None = None):
         """Constructor.
 
         Args:
             raster_source: A raster source that returns a single channel raster
                 with class_ids as values.
-            null_class_id: the null class id used as fill values for when
-                windows go over the edge of the label array. This can be
-                retrieved using ``class_config.null_class_id``.
+            class_config: Configuration for the classes used in the label
+                source.
             bbox: User-specified crop of the extent. If ``None``, the full
                 extent available in the source file is used.
+            null_class_id: Override for the null class id used as fill value
+                when windows go over the edge of the label array. If ``None``,
+                uses ``class_config.null_class_id``.
         """
         self.raster_source = raster_source
         self.class_config = class_config
+        self._null_class_id = null_class_id
         if bbox is not None:
             self.set_bbox(bbox)
+
+    @property
+    def null_class_id(self) -> int:
+        if self._null_class_id is not None:
+            return self._null_class_id
+        return self.class_config.null_class_id
 
     def get_labels(self,
                    window: Box | None = None) -> SemanticSegmentationLabels:
@@ -82,7 +92,7 @@ class SemanticSegmentationLabelSource(LabelSource):
         h, w = label_arr.shape
         if h < window.height or w < window.width:
             label_arr = pad_to_window_size(label_arr, window, self.extent,
-                                           self.class_config.null_class_id)
+                                           self.null_class_id)
         return label_arr
 
     @property
