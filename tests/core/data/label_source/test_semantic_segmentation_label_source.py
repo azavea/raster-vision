@@ -80,6 +80,40 @@ class TestSemanticSegmentationLabelSource(unittest.TestCase):
         expected_label_arr = np.zeros((3, 3))
         np.testing.assert_array_equal(label_arr, expected_label_arr)
 
+    def test_null_class_id_default(self):
+        """Default null_class_id is taken from class_config."""
+        class_config = ClassConfig(names=['bg', 'fg', 'null'])
+        raster_source = MockRasterSource([0], 1)
+        raster_source.set_raster(np.zeros((10, 10, 1), dtype=np.uint8))
+        label_source = SemanticSegmentationLabelSource(
+            raster_source, class_config)
+        self.assertEqual(
+            label_source.null_class_id, class_config.null_class_id)
+
+    def test_null_class_id_override(self):
+        """Explicit null_class_id overrides class_config."""
+        class_config = ClassConfig(names=['bg', 'fg', 'null'])
+        raster_source = MockRasterSource([0], 1)
+        raster_source.set_raster(np.zeros((10, 10, 1), dtype=np.uint8))
+        label_source = SemanticSegmentationLabelSource(
+            raster_source, class_config, null_class_id=255)
+        self.assertEqual(label_source.null_class_id, 255)
+
+    def test_null_class_id_override_off_edge(self):
+        """Custom null_class_id is used as fill when window goes off edge."""
+        data = np.zeros((10, 10, 1), dtype=np.uint8)
+        data[7:, 7:, 0] = 1
+        class_config = ClassConfig(names=['bg', 'fg', 'null'])
+        raster_source = MockRasterSource([0], 1)
+        raster_source.set_raster(data)
+        label_source = SemanticSegmentationLabelSource(
+            raster_source, class_config, null_class_id=255)
+        window = Box.make_square(7, 7, 6)
+        label_arr = label_source.get_label_arr(window)
+        expected_label_arr = np.full((6, 6), 255)
+        expected_label_arr[0:3, 0:3] = 1
+        np.testing.assert_array_equal(label_arr, expected_label_arr)
+
 
 if __name__ == '__main__':
     unittest.main()
