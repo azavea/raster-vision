@@ -267,6 +267,33 @@ class TestRasterioSource(unittest.TestCase):
         self.assertTrue(np.all(out[mask] == 1))
         self.assertTrue(np.all(out[~mask] == 0))
 
+    def test_keep_native_crs_default(self):
+        img_path = data_file_path('3857.tif')
+        config = RasterioSourceConfig(uris=[img_path])
+        source = config.build(tmp_dir=self.tmp_dir)
+        self.assertEqual(source.crs_transformer.map_crs.lower(), 'epsg:4326')
+        self.assertNotEqual(
+            source.crs_transformer.map_crs,
+            source.crs_transformer.image_crs)
+
+    def test_keep_native_crs_true(self):
+        img_path = data_file_path('3857.tif')
+        config = RasterioSourceConfig(
+            uris=[img_path], keep_native_crs=True)
+        source = config.build(tmp_dir=self.tmp_dir)
+        self.assertEqual(
+            source.crs_transformer.map_crs,
+            source.crs_transformer.image_crs)
+
+    def test_keep_native_crs_true_on_4326(self):
+        img_path = data_file_path('small-rgb-tile.tif')
+        config = RasterioSourceConfig(
+            uris=[img_path], keep_native_crs=True)
+        source = config.build(tmp_dir=self.tmp_dir)
+        self.assertEqual(
+            source.crs_transformer.map_crs,
+            source.crs_transformer.image_crs)
+
 
 if __name__ == '__main__':
     unittest.main()
