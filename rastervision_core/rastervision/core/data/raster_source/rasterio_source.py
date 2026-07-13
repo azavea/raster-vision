@@ -44,7 +44,8 @@ class RasterioSource(RasterSource):
                  allow_streaming: bool = False,
                  channel_order: Sequence[int] | None = None,
                  bbox: Box | None = None,
-                 tmp_dir: str | None = None):
+                 tmp_dir: str | None = None,
+                 keep_native_crs: bool = False):
         """Constructor.
 
         Args:
@@ -63,9 +64,15 @@ class RasterioSource(RasterSource):
             tmp_dir: Directory to use for storing the VRT (needed if multiple
                 ``uris`` or ``allow_streaming=True``). If ``None``,
                 will be auto-generated. Defaults to ``None``.
+            keep_native_crs: If ``True``, use the input raster's native CRS
+                for both image_crs and map_crs instead of defaulting map_crs
+                to EPSG:4326. This eliminates precision loss from unnecessary
+                CRS transformations and avoids edge artifacts at tile
+                boundaries. Defaults to ``False``.
         """
         self.uris = listify_uris(uris)
         self.allow_streaming = allow_streaming
+        self.keep_native_crs = keep_native_crs
         self._num_channels = None
         self._dtype = None
 
@@ -90,8 +97,12 @@ class RasterioSource(RasterSource):
                         f'{block_shapes}. This can slow down reading. '
                         'Consider re-tiling using GDAL.')
 
-        self._crs_transformer = RasterioCRSTransformer.from_dataset(
-            self.image_dataset)
+        if keep_native_crs:
+            self._crs_transformer = RasterioCRSTransformer.from_dataset(
+                self.image_dataset, map_crs=None)
+        else:
+            self._crs_transformer = RasterioCRSTransformer.from_dataset(
+                self.image_dataset)
 
         dtype_raw = np.dtype(self.image_dataset.dtypes[0])
         num_channels_raw = self.image_dataset.count
@@ -196,7 +207,7 @@ class RasterioSource(RasterSource):
     def __repr__(self):
         arg_keys = [
             'uris', 'channel_order', 'bbox', 'raster_transformers',
-            'allow_streaming', 'tmp_dir'
+            'allow_streaming', 'tmp_dir', 'keep_native_crs'
         ]
         arg_vals = [getattr(self, k) for k in arg_keys]
         arg_strs = [f'{k}={v!r}' for k, v in zip(arg_keys, arg_vals)]

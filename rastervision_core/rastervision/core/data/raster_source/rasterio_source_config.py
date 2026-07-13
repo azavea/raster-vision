@@ -33,6 +33,11 @@ class RasterioSourceConfig(RasterSourceConfig):
     allow_streaming: bool = Field(
         False,
         description='Stream assets as needed rather than downloading them.')
+    keep_native_crs: bool = Field(
+        False,
+        description='If True, use the input raster\'s native CRS for both '
+        'image_crs and map_crs instead of defaulting map_crs to EPSG:4326. '
+        'This eliminates precision loss from unnecessary CRS transformations.')
 
     def build(self, tmp_dir: str | None,
               use_transformers: bool = True) -> RasterioSource:
@@ -50,4 +55,5 @@ class RasterioSourceConfig(RasterSourceConfig):
             tmp_dir=tmp_dir,
             allow_streaming=self.allow_streaming,
             channel_order=self.channel_order,
-            bbox=bbox)
+            bbox=bbox,
+            keep_native_crs=self.keep_native_crs)
