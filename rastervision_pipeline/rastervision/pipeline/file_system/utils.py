@@ -9,6 +9,7 @@ import json
 import zipfile
 from urllib.parse import urlparse
 
+from pydantic import BaseModel
 from tqdm.auto import tqdm
 
 from rastervision.pipeline import rv_config_ as rv_config
@@ -403,3 +404,57 @@ def uri_to_vsi_path(uri: str) -> str:
         return join('/', URI_SCHEME_TO_VSI[scheme], f'{netloc}{path}')
     # assume file schema
     return abspath(join(netloc, path))
+
+
+def collect_uris(cfg: Any, prefix: str = '') -> list[tuple[str, str]]:
+    """Recursively collect URI fields from a pydantic BaseModel tree.
+
+    Walks the model and its nested models/lists/dicts to find all fields
+    whose names end with 'uri' or 'uris' and are strings or lists of strings.
+
+    Args:
+        cfg: A pydantic BaseModel (typically a Config subclass) to walk.
+        prefix: Dot-separated path prefix used internally for recursion.
+
+    Returns:
+        List of (field_path, uri_value) tuples, where field_path is a
+        dot-separated path describing where the URI was found (e.g.,
+        "dataset.train_scenes[0].raster_source.uris[0]").
+    """
+    results: list[tuple[str, str]] = []
+
+    if isinstance(cfg, BaseModel):
+        for field_name in type(cfg).model_fields:
+            field_value = getattr(cfg, field_name)
+            field_path = f'{prefix}.{field_name}' if prefix else field_name
+
+            if field_value is None:
+                continue
+
+            is_uri_field = field_name.endswith('uri') or field_name.endswith(
+                'uris')
+
+            if is_uri_field:
+                if isinstance(field_value, str):
+                    results.append((field_path, field_value))
+                elif isinstance(field_value, list):
+                    for i, item in enumerate(field_value):
+                        if isinstance(item, str):
+                            results.append((f'{field_path}[{i}]', item))
+                        else:
+                            results.extend(
+                                collect_uris(item, f'{field_path}[{i}]'))
+            else:
+                results.extend(collect_uris(field_value, field_path))
+
+    elif isinstance(cfg, list):
+        for i, item in enumerate(cfg):
+            if item is not None:
+                results.extend(collect_uris(item, f'{prefix}[{i}]'))
+
+    elif isinstance(cfg, dict):
+        for key, value in cfg.items():
+            if value is not None:
+                results.extend(collect_uris(value, f'{prefix}.{key}'))
+
+    return results
