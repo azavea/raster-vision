@@ -8,6 +8,8 @@ import click
 from rastervision.pipeline import (registry_ as registry, rv_config_ as
                                    rv_config)
 from rastervision.pipeline.file_system import (file_to_json, get_tmp_dir)
+from rastervision.pipeline.file_system.utils import (collect_uris,
+                                                      file_exists)
 from rastervision.pipeline.config import (build_config, Config,
                                           save_pipeline_config)
 from rastervision.pipeline.pipeline_config import PipelineConfig
@@ -195,6 +197,68 @@ def run(runner: str, cfg_module: str, commands: list[str],
     for cfg in cfgs:
         _run_pipeline(cfg, runner, tmp_dir, splits, commands,
                       pipeline_run_name)
+
+
+@main.command(
+    'check', short_help='Validate URIs in a PipelineConfig without running.')
+@click.argument('cfg_module')
+@click.option(
+    '--arg',
+    '-a',
+    type=(str, str),
+    multiple=True,
+    metavar='KEY VALUE',
+    help='Arguments to pass to get_config function')
+def check(cfg_module: str, arg: list[tuple[str, str]]):
+    """Validate all URIs in CFG_MODULE without running the pipeline.
+
+    Loads the PipelineConfig(s) from CFG_MODULE, walks the config tree to
+    find all URI fields, and checks whether each URI is accessible.
+
+    CFG_MODULE: the module with get_configs() function that returns
+    PipelineConfigs. This can either be a Python module path or a local
+    path to a .py file.
+
+    Examples:
+
+        rastervision check rastervision.core.example_config
+
+        rastervision check path/to/config.py -a root_uri /tmp/test
+    """
+    cfgs = get_configs(cfg_module, 'inprocess', dict(arg))
+
+    for cfg_idx, cfg in enumerate(cfgs):
+        label = f'PipelineConfig [{cfg_idx}]'
+        click.secho(f'\n{"=" * 60}', fg='white', bold=True)
+        click.secho(f'  {label}', fg='white', bold=True)
+        click.secho(f'{"=" * 60}', fg='white', bold=True)
+
+        uris = collect_uris(cfg)
+        if not uris:
+            click.secho('  No URIs found.', fg='yellow')
+            continue
+
+        not_found = 0
+        errors = 0
+        for field_path, uri in uris:
+            try:
+                if file_exists(uri):
+                    click.secho(f'  [\u2713] {field_path}: {uri}', fg='green')
+                else:
+                    click.secho(f'  [  ] {field_path}: {uri}', fg='red')
+                    not_found += 1
+            except Exception:
+                click.secho(
+                    f'  [!] {field_path}: {uri} (error checking)', fg='yellow')
+                errors += 1
+
+        total = len(uris)
+        click.secho(f'\n  Summary: {total} URI(s) checked, '
+                    f'{total - not_found - errors} found, '
+                    f'{not_found} missing'
+                    f'{", " + str(errors) + " error(s)" if errors else ""}',
+                    fg='cyan',
+                    bold=True)
 
 
 def _run_command(cfg_json_uri: str,
